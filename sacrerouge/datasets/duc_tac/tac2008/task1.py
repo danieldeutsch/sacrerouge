@@ -118,32 +118,42 @@ def load_topics(file_path: str):
 
 
 def save_instances(documents, selectors, summaries, topics, output_dir: str) -> None:
-    with JsonlWriter(f'{args.output_dir}/task1.A.jsonl') as out_A:
-        with JsonlWriter(f'{args.output_dir}/task1.B.jsonl') as out_B:
-            for instance_id in sorted(documents.keys()):
-                topic = topics[instance_id]
-                selector = selectors[instance_id]
+    with JsonlWriter(f'{args.output_dir}/task1.A-B.jsonl') as out_A_B:
+        with JsonlWriter(f'{args.output_dir}/task1.A.jsonl') as out_A:
+            with JsonlWriter(f'{args.output_dir}/task1.B.jsonl') as out_B:
+                for instance_id in sorted(documents.keys()):
+                    topic = topics[instance_id]
+                    selector = selectors[instance_id]
 
-                documents_A = documents[instance_id]['A']
-                documents_B = documents[instance_id]['B']
+                    documents_A = documents[instance_id]['A']
+                    documents_B = documents[instance_id]['B']
 
-                summaries_A = summaries[instance_id]['A']
-                summaries_B = summaries[instance_id]['B']
+                    summaries_A = summaries[instance_id]['A']
+                    summaries_B = summaries[instance_id]['B']
 
-                out_A.write({
-                    'instance_id': instance_id,
-                    'selector': selector,
-                    'topic': topic,
-                    'documents': documents_A,
-                    'summaries': summaries_A
-                })
-                out_B.write({
-                    'instance_id': instance_id,
-                    'selector': selector,
-                    'topic': topic,
-                    'documents': documents_B,
-                    'summaries': summaries_B
-                })
+                    out_A.write({
+                        'instance_id': f'{instance_id}-A',
+                        'selector': selector,
+                        'topic': topic,
+                        'documents': documents_A,
+                        'summaries': summaries_A
+                    })
+                    out_B.write({
+                        'instance_id': f'{instance_id}-B',
+                        'selector': selector,
+                        'topic': topic,
+                        'documents': documents_B,
+                        'summaries': summaries_B
+                    })
+                    out_A_B.write({
+                        'instance_id': instance_id,
+                        'selector': selector,
+                        'topic': topic,
+                        'documents_A': documents_A,
+                        'documents_B': documents_B,
+                        'summaries_A': summaries_A,
+                        'summaries_B': summaries_B
+                    })
 
 
 def main(args):

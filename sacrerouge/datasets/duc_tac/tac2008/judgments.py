@@ -23,10 +23,16 @@ def load_summaries(eval_tar: str):
                 filename = path[-1]
                 instance_id, group, summary_id = parse_filename(filename)
 
+                if summary_id.isalpha():
+                    summary_type = 'reference'
+                else:
+                    summary_type = 'peer'
+
                 sentences = tar.extractfile(member).read().decode(errors='replace').splitlines()
                 sentences = list(filter(None, map(lambda sentence: sentence.strip(), sentences)))
                 summary = {
-                    'id': summary_id,
+                    'peer_id': summary_id,
+                    'summary_type': summary_type,
                     'text': sentences
                 }
                 summaries[instance_id][summary_id][group] = summary
@@ -142,40 +148,41 @@ def get_references(summaries, instance_id, summary_id, group):
 
 
 def save_judgments(summaries, judgments, output_dir: str):
-    with JsonlWriter(f'{args.output_dir}/task1.A.judgments.jsonl') as out_A:
-        with JsonlWriter(f'{args.output_dir}/task1.B.judgments.jsonl') as out_B:
-            for instance_id in sorted(summaries.keys()):
-                for summary_id in sorted(summaries[instance_id].keys()):
-                    if summary_id.isalpha():
-                        summary_type = 'reference'
-                    elif summary_id == '0':
-                        summary_type = 'baseline'
-                    else:
-                        summary_type = 'peer'
+    with JsonlWriter(f'{args.output_dir}/task1.A-B.judgments.jsonl') as out_A_B:
+        with JsonlWriter(f'{args.output_dir}/task1.A.judgments.jsonl') as out_A:
+            with JsonlWriter(f'{args.output_dir}/task1.B.judgments.jsonl') as out_B:
+                for instance_id in sorted(summaries.keys()):
+                    for summary_id in sorted(summaries[instance_id].keys()):
+                        summary_A = summaries[instance_id][summary_id]['A']
+                        summary_B = summaries[instance_id][summary_id]['B']
 
-                    summary_A = summaries[instance_id][summary_id]['A']
-                    summary_B = summaries[instance_id][summary_id]['B']
+                        references_A = get_references(summaries, instance_id, summary_id, 'A')
+                        references_B = get_references(summaries, instance_id, summary_id, 'B')
 
-                    references_A = get_references(summaries, instance_id, summary_id, 'A')
-                    references_B = get_references(summaries, instance_id, summary_id, 'B')
+                        judgments_A = judgments[instance_id]['A'][summary_id]
+                        judgments_B = judgments[instance_id]['B'][summary_id]
 
-                    judgments_A = judgments[instance_id]['A'][summary_id]
-                    judgments_B = judgments[instance_id]['B'][summary_id]
+                        instance_A = {
+                            'instance_id': f'{instance_id}-A',
+                            'peer_id': summary_id,
+                            'summary_type': summary_A['summary_type'],
+                            'summary': summary_A,
+                            'references': references_A,
+                            'judgments': judgments_A
+                        }
+                        instance_B = {
+                            'instance_id': f'{instance_id}-B',
+                            'peer_id': summary_id,
+                            'summary_type': summary_B['summary_type'],
+                            'summary': summary_B,
+                            'references': references_B,
+                            'judgments': judgments_B
+                        }
 
-                    out_A.write({
-                        'instance_id': instance_id,
-                        'type': summary_type,
-                        'summary': summary_A,
-                        'references': references_A,
-                        'judgments': judgments_A
-                    })
-                    out_B.write({
-                        'instance_id': instance_id,
-                        'type': summary_type,
-                        'summary': summary_B,
-                        'references': references_B,
-                        'judgments': judgments_B
-                    })
+                        out_A.write(instance_A)
+                        out_B.write(instance_B)
+                        out_A_B.write(instance_A)
+                        out_A_B.write(instance_B)
 
 
 def main(args):
