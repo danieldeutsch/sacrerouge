@@ -31,7 +31,8 @@ class TestTAC2009Rouge(unittest.TestCase):
         # our computation of ROUGE matches the values released by NIST
         instances = JsonlReader(_summaries_file_path).read()
         metrics_list = JsonlReader(_metrics_file_path).read()
-        # TODO: the LCS metrics do not come close to matching
+        # The LCS metrics do not match because the summaries NIST ran on were not sentence-tokenized,
+        # which seems to have a very large effect on the scores. We have sentence-tokenized the summaries.
         metric_names = ['rouge-1', 'rouge-2', 'rouge-3', 'rouge-4', 'rouge-su4']
         submetrics = ['precision', 'recall', 'f1']
         rouge = Rouge(max_ngram=4,
