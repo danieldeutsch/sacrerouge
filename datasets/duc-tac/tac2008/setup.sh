@@ -13,6 +13,6 @@ python -m sacrerouge.datasets.duc_tac.tac2008.task1 \
   ${root}/scrapes/tac.nist.gov/protected/past-aquaint2/2008/UpdateSumm08_test_topics.xml.txt \
   datasets/duc-tac/tac2008/${version}
 
-python -m sacrerouge.datasets.duc_tac.tac2008.judgments \
+python -m sacrerouge.datasets.duc_tac.tac2008.metrics \
   ${root}/scrapes/tac.nist.gov/protected/past-aquaint2/2008/UpdateSumm08_eval.tar.gz \
   datasets/duc-tac/tac2008/${version}
