@@ -77,16 +77,20 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
         values2 = [member['metrics'][metric2] for member in group]
 
         r, _ = pearsonr(values1, values2)
-        p, _ = spearmanr(values1, values2)
+        rho, _ = spearmanr(values1, values2)
 
         pearsons.append(r)
-        spearmans.append(p)
+        spearmans.append(rho)
 
     pearson = sum(pearsons) / len(pearsons)
     spearman = sum(spearmans) / len(spearmans)
     return {
-        'pearson': pearson,
-        'spearman': spearman
+        'pearson': {
+            'r': pearson
+        },
+        'spearman': {
+            'rho': spearman
+        }
     }
 
 
@@ -98,13 +102,19 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
     values1 = [metrics[metric1] for metrics in metrics_list]
     values2 = [metrics[metric2] for metrics in metrics_list]
 
-    r, _ = pearsonr(values1, values2)
-    p, _ = spearmanr(values1, values2)
+    r, r_pvalue = pearsonr(values1, values2)
+    rho, rho_pvalue = spearmanr(values1, values2)
     num_summarizers = len(metrics_list)
 
     return {
-        'pearson': r,
-        'spearman': p,
+        'pearson': {
+            'r': r,
+            'p_value': r_pvalue
+        },
+        'spearman': {
+            'rho': rho,
+            'p_value': rho_pvalue
+        },
         'num_summarizers': num_summarizers
     }
 
