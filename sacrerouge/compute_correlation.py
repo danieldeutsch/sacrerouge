@@ -1,17 +1,44 @@
 import argparse
+import itertools
 import json
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-import warnings
-from collections import defaultdict
 from scipy.stats import pearsonr, spearmanr
 from typing import Any, Dict, List
 
+from sacrerouge.common.util import average_metrics, merge_dict
+from sacrerouge.data.types import MetricsType
 from sacrerouge.io import JsonlReader
 
 
-def flatten_judgments(judgments: Dict[str, Any]) -> Dict[str, float]:
+def load_metrics(metrics_files: List[str]) -> List[Dict[str, Any]]:
+    metrics_lists = []
+    for metrics_file in metrics_files:
+        metrics_lists.append(JsonlReader(metrics_file).read())
+
+    # Merge >= 1 into 0
+    for metrics_list in metrics_lists[1:]:
+        for i, metrics in enumerate(metrics_list):
+            merge_dict(metrics_lists[0][i], metrics)
+
+    return metrics_lists[0]
+
+
+def filter_metrics(metrics_list: List[Dict[str, Any]], summarizer_type: str, metric1: str, metric2: str):
+    filtered = []
+    skipped = 0
+    for metrics in metrics_list:
+        if summarizer_type == 'all' or summarizer_type == metrics['summarizer_type']:
+            if metric1 in metrics['metrics'] and metric2 in metrics['metrics']:
+                filtered.append(metrics)
+            else:
+                skipped += 1
+
+    if skipped > 0:
+        print(f'Warning: Skipped {skipped} inputs because at least one metric was missing')
+    return filtered
+
+
+def flatten_metrics(metrics_list: List[Dict[str, Any]]) -> None:
     def nested_iterate(d: Dict[str, Any], prefix: List[str]):
         for key, value in d.items():
             if isinstance(value, dict):
@@ -19,144 +46,83 @@ def flatten_judgments(judgments: Dict[str, Any]) -> Dict[str, float]:
             else:
                 yield (prefix + [key], value)
 
-    flat = {}
-    for path, value in nested_iterate(judgments, []):
-        name = '_'.join(path)
-        flat[name] = value
-    return flat
+    for metrics in metrics_list:
+        flat = {}
+        for path, value in nested_iterate(metrics['metrics'], []):
+            name = '_'.join(path)
+            flat[name] = value
+        metrics['metrics'] = flat
 
 
-def load_judgments(judgments_jsonl: str, metric1: str, metric2: str, summary_type: str):
-    judgments_list = []
-    skipped_instances_count = 0
-    with JsonlReader(judgments_jsonl) as f:
-        for judgments in f:
-            # Flatten the judgments dictionary
-            judgments['judgments'] = flatten_judgments(judgments['judgments'])
-
-            # Only keep the judgments of the desired type
-            if summary_type != 'all' and judgments['summary_type'] != summary_type:
-                continue
-
-            if metric1 not in judgments['judgments'] or metric2 not in judgments['judgments']:
-                skipped_instances_count += 1
-            else:
-                judgments_list.append(judgments)
-
-    if skipped_instances_count > 0:
-        print(f'Warning: skipped {skipped_instances_count} judgments')
-
-    return judgments_list
+def aggregate_metrics(metrics_list: List[Dict[str, Any]], group_key: str) -> Dict[str, MetricsType]:
+    # The instances must be sorted by the key in order to use itertools.groupby
+    metrics_list = sorted(metrics_list, key=lambda metrics: metrics[group_key])
+    key_to_metrics = {}
+    for key, group in itertools.groupby(metrics_list, lambda metrics: metrics[group_key]):
+        group_metrics = [member['metrics'] for member in group]
+        key_to_metrics[key] = average_metrics(group_metrics)
+    return key_to_metrics
 
 
-def group_by_instance_id(judgments_list):
-    instance_id_to_judgments_list = defaultdict(list)
-    for judgments in judgments_list:
-        instance_id_to_judgments_list[judgments['instance_id']].append(judgments)
-    return instance_id_to_judgments_list
-
-
-def compute_summary_level_correlations(judgments_list, metric1: str, metric2: str):
-    groups = group_by_instance_id(judgments_list)
-
+def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
+                                       metric1: str,
+                                       metric2: str) -> Dict[str, float]:
     pearsons = []
     spearmans = []
 
-    total_num_peers = 0
-    num_instances = 0
-    num_skipped = 0
-    for judgments in groups.values():
-        metrics1 = [j['judgments'][metric1] for j in judgments]
-        metrics2 = [j['judgments'][metric2] for j in judgments]
+    metrics_list = sorted(metrics_list, key=lambda metrics: metrics['instance_id'])
+    for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics['instance_id']):
+        group = list(group)
+        values1 = [member['metrics'][metric1] for member in group]
+        values2 = [member['metrics'][metric2] for member in group]
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            r, _ = pearsonr(metrics1, metrics2)
-            p, _ = spearmanr(metrics1, metrics2)
-
-        if np.isnan(r) or np.isnan(p):
-            num_skipped += 1
-            continue
-
-        total_num_peers += len(metrics1)
-        num_instances += 1
+        r, _ = pearsonr(values1, values2)
+        p, _ = spearmanr(values1, values2)
 
         pearsons.append(r)
         spearmans.append(p)
 
     pearson = sum(pearsons) / len(pearsons)
     spearman = sum(spearmans) / len(spearmans)
-
-    num_peers = total_num_peers / num_instances
-
-    if num_skipped > 0:
-        print(f'Warning: Skipped {num_skipped} rankings for summary-level correlation')
-
     return {
         'pearson': pearson,
-        'spearman': spearman,
-        'num_peers': num_peers,
-        'num_instances': num_instances
+        'spearman': spearman
     }
 
 
-def group_by_peer_id(judgments_list):
-    peer_id_to_judgments_list = defaultdict(list)
-    for judgments in judgments_list:
-        peer_id_to_judgments_list[judgments['peer_id']].append(judgments)
-    return peer_id_to_judgments_list
+def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
+                                      metric1: str,
+                                      metric2: str) -> Dict[str, float]:
+    metrics_list = list(aggregate_metrics(metrics_list, 'summarizer_id').values())
 
+    values1 = [metrics[metric1] for metrics in metrics_list]
+    values2 = [metrics[metric2] for metrics in metrics_list]
 
-def plot_metrics(metric1: str, metrics1: List[float], metric2: str, metrics2: List[float], plot_file: str):
-    figure = plt.figure()
-    plt.scatter(metrics1, metrics2)
-    plt.title('System-Level Scatter Plot')
-    plt.xlabel(metric1)
-    plt.ylabel(metric2)
-    dirname = os.path.dirname(plot_file)
-    if dirname:
-        os.makedirs(dirname, exist_ok=True)
-    figure.savefig(plot_file)
-
-
-def compute_system_level_correlations(judgments_list, metric1: str, metric2: str, plot_file: str):
-    groups = group_by_peer_id(judgments_list)
-
-    metrics1 = []
-    metrics2 = []
-    for judgments in groups.values():
-        metrics1.append(sum(j['judgments'][metric1] for j in judgments) / len(judgments))
-        metrics2.append(sum(j['judgments'][metric2] for j in judgments) / len(judgments))
-
-    pearson, _ = pearsonr(metrics1, metrics2)
-    spearman, _ = spearmanr(metrics1, metrics2)
-
-    num_peers = len(groups)
-    num_instances = len(list(groups.values())[0])
-
-    if plot_file is not None:
-        plot_metrics(metric1, metrics1, metric2, metrics2, plot_file)
+    r, _ = pearsonr(values1, values2)
+    p, _ = spearmanr(values1, values2)
+    num_summarizers = len(metrics_list)
 
     return {
-        'pearson': pearson,
-        'spearman': spearman,
-        'num_peers': num_peers,
-        'num_instances': num_instances
+        'pearson': r,
+        'spearman': p,
+        'num_summarizers': num_summarizers
     }
 
 
 def main(args):
-    judgments_list = load_judgments(args.judgments_jsonl, args.metric1, args.metric2, args.summary_type)
+    metrics_list = load_metrics(args.metrics_jsonl_files)
+    flatten_metrics(metrics_list)
 
-    summary_level = compute_summary_level_correlations(judgments_list, args.metric1, args.metric2)
-    system_level = compute_system_level_correlations(judgments_list, args.metric1, args.metric2, args.plot_file)
+    metric1, metric2 = args.metrics
+    metrics_list = filter_metrics(metrics_list, args.summarizer_type, metric1, metric2)
 
+    summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
+    system_level = compute_system_level_correlations(metrics_list, metric1, metric2)
     results = {
-        'metrics': [args.metric1, args.metric2],
-        'summary_type': args.summary_type,
         'summary_level': summary_level,
         'system_level': system_level
     }
+
     if args.output_file:
         dirname = os.path.dirname(args.output_file)
         if dirname:
@@ -170,12 +136,10 @@ def main(args):
 
 if __name__ == '__main__':
     argp = argparse.ArgumentParser()
-    argp.add_argument('judgments_jsonl')
-    argp.add_argument('metric1')
-    argp.add_argument('metric2')
-    argp.add_argument('summary_type', choices=['all', 'reference', 'peer'])
+    argp.add_argument('--metrics-jsonl-files', nargs='+')
+    argp.add_argument('--metrics', nargs=2)
+    argp.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
     argp.add_argument('--output-file')
     argp.add_argument('--silent', action='store_true')
-    argp.add_argument('--plot-file')
     args = argp.parse_args()
     main(args)
