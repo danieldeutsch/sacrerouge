@@ -133,6 +133,24 @@ def load_rouge_jk_output(eval_tar: str, file_path1: str, file_path2: str):
     return metrics
 
 
+def load_aesop_metrics(aesop_tar: str):
+    metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict))))
+    with tarfile.open(aesop_tar, 'r') as tar:
+        for member in tar.getmembers():
+            for group, filename in zip(['A', 'B'], ['AESOP2010_eval/data/aesop_allpeers_A', 'AESOP2010_eval/data/aesop_allpeers_B']):
+                lines = tar.extractfile(filename).read().decode().splitlines()
+                for line in lines[1:]:
+                    columns = line.split()
+                    summarizer_id = columns[0][1:]
+                    instance_number = int(columns[1][1:])
+                    instance_id = 'd' + str(1000 + instance_number)
+                    for i, value in enumerate(columns[2:]):
+                        if value != 'NaN':
+                            metrics[instance_id][group][summarizer_id]['aesop'][str(i + 1)] = float(value)
+
+    return metrics
+
+
 def get_references(summaries, instance_id, summarizer_id, group):
     summarizer_ids = list(summaries[instance_id].keys())
     reference_ids = list(filter(lambda sid: sid.isalpha(), summarizer_ids))
@@ -209,12 +227,14 @@ def main(args):
     rouge_jk = load_rouge_jk_output(args.eval_tar, 'GuidedSumm2010_eval/ROUGE/rougejk_A.m.out', 'GuidedSumm2010_eval/ROUGE/rougejk_B.m.out')
     be = load_rouge_output(args.eval_tar, 'GuidedSumm2010_eval/BE/simple_A.m.hm.out', 'GuidedSumm2010_eval/BE/simple_B.m.hm.out')
     be_jk = load_rouge_jk_output(args.eval_tar, 'GuidedSumm2010_eval/BE/simplejk_A.m.hm.out', 'GuidedSumm2010_eval/BE/simplejk_B.m.hm.out')
+    aesop = load_aesop_metrics(args.aesop_tar)
 
     metrics = judgments
     merge_dict(metrics, rouge)
     merge_dict(metrics, rouge_jk)
     merge_dict(metrics, be)
     merge_dict(metrics, be_jk)
+    merge_dict(metrics, aesop)
 
     save_summaries_and_metrics(summaries, metrics, args.output_dir)
 
@@ -222,6 +242,7 @@ def main(args):
 if __name__ == '__main__':
     argp = argparse.ArgumentParser()
     argp.add_argument('eval_tar')
+    argp.add_argument('aesop_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
     main(args)
