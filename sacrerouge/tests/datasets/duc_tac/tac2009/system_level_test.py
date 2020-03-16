@@ -100,6 +100,13 @@ class TestTAC2009SystemLevel(unittest.TestCase):
         assert system_level_metrics['2']['rouge-be-hm_jk']['recall'] == pytest.approx(24.830, 1e-2)
         assert system_level_metrics['34']['rouge-be-hm_jk']['recall'] == pytest.approx(6.379, 1e-2)
 
+        # aesop_allpeers_A
+        assert system_level_metrics['A']['aesop']['1'] == pytest.approx(0.154895909090909, 1e-2)
+        assert system_level_metrics['C']['aesop']['8'] == pytest.approx(0.0419939626932389, 1e-2)
+        assert system_level_metrics['4']['aesop']['13'] == pytest.approx(0.2186197727, 1e-2)
+        assert system_level_metrics['8']['aesop']['22'] == pytest.approx(0.1286081818, 1e-2)
+        assert system_level_metrics['16']['aesop']['30'] == pytest.approx(0.2341865909, 1e-2)
+
     @pytest.mark.skipif(not os.path.exists(_metrics_B_file_path), reason='TAC 2009-B metrics file does not exist')
     def test_system_level_B(self):
         summary_level_metrics = JsonlReader(_metrics_B_file_path).read()
@@ -191,3 +198,10 @@ class TestTAC2009SystemLevel(unittest.TestCase):
         assert system_level_metrics['F']['rouge-be-hm_jk']['recall'] == pytest.approx(6.094, 1e-1)
         assert system_level_metrics['2']['rouge-be-hm_jk']['recall'] == pytest.approx(25.042, 1e-2)
         assert system_level_metrics['34']['rouge-be-hm_jk']['recall'] == pytest.approx(6.134, 1e-2)
+
+        # aesop_allpeers_B
+        assert system_level_metrics['B']['aesop']['2'] == pytest.approx(0.04890409091, 1e-2)
+        assert system_level_metrics['E']['aesop']['4'] == pytest.approx(0.2740872727, 1e-2)
+        assert system_level_metrics['6']['aesop']['7'] == pytest.approx(0.5850288957, 1e-2)
+        assert system_level_metrics['9']['aesop']['20'] == pytest.approx(0.06261788636, 1e-2)
+        assert system_level_metrics['14']['aesop']['34'] == pytest.approx(0.3664196656, 1e-2)

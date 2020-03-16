@@ -15,4 +15,5 @@ python -m sacrerouge.datasets.duc_tac.tac2009.task1 \
 
 python -m sacrerouge.datasets.duc_tac.tac2009.metrics \
   ${root}/scrapes/tac.nist.gov/protected/past-aquaint2/2009/UpdateSumm09_eval.tar.gz \
+  ${root}/scrapes/tac.nist.gov/protected/past-aquaint2/2009/AESOP09_eval.tar.gz \
   datasets/duc-tac/tac2009/${version}
