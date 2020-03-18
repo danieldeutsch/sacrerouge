@@ -14,3 +14,8 @@ python -m sacrerouge.datasets.duc_tac.duc2007.tasks \
   ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/testdata/duc2007_topics.sgml \
   ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/testdata/duc2007_UPDATEtopics.sgml \
   datasets/duc-tac/duc2007/${version}
+
+python -m sacrerouge.datasets.duc_tac.duc2007.metrics \
+  ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/mainEval.tar.gz \
+  ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/updateEval.tar.gz \
+  datasets/duc-tac/duc2007/${version}
