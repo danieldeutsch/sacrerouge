@@ -164,12 +164,12 @@ def get_references(summaries, instance_id, summarizer_id, group):
 
 
 def save_summaries_and_metrics(summaries, metrics, output_dir: str):
-    with JsonlWriter(f'{args.output_dir}/task1.A-B.summaries.jsonl') as out_summaries_A_B:
-        with JsonlWriter(f'{args.output_dir}/task1.A.summaries.jsonl') as out_summaries_A:
-            with JsonlWriter(f'{args.output_dir}/task1.B.summaries.jsonl') as out_summaries_B:
-                with JsonlWriter(f'{args.output_dir}/task1.A-B.metrics.jsonl') as out_metrics_A_B:
-                    with JsonlWriter(f'{args.output_dir}/task1.A.metrics.jsonl') as out_metrics_A:
-                        with JsonlWriter(f'{args.output_dir}/task1.B.metrics.jsonl') as out_metrics_B:
+    with JsonlWriter(f'{output_dir}/task1.A-B.summaries.jsonl') as out_summaries_A_B:
+        with JsonlWriter(f'{output_dir}/task1.A.summaries.jsonl') as out_summaries_A:
+            with JsonlWriter(f'{output_dir}/task1.B.summaries.jsonl') as out_summaries_B:
+                with JsonlWriter(f'{output_dir}/task1.A-B.metrics.jsonl') as out_metrics_A_B:
+                    with JsonlWriter(f'{output_dir}/task1.A.metrics.jsonl') as out_metrics_A:
+                        with JsonlWriter(f'{output_dir}/task1.B.metrics.jsonl') as out_metrics_B:
                             for instance_id in sorted(summaries.keys()):
                                 for summarizer_id in sorted(summaries[instance_id].keys()):
                                     summary_A = summaries[instance_id][summarizer_id]['A']
@@ -220,14 +220,20 @@ def save_summaries_and_metrics(summaries, metrics, output_dir: str):
                                     out_metrics_B.write(metric_instance_B)
 
 
-def main(args):
-    summaries = load_summaries(args.eval_tar)
-    judgments = load_manual_judgments(args.eval_tar)
-    rouge = load_rouge_output(args.eval_tar, 'UpdateSumm09_eval/ROUGE/rouge_A.m.out', 'UpdateSumm09_eval/ROUGE/rouge_B.m.out')
-    rouge_jk = load_rouge_jk_output(args.eval_tar, 'UpdateSumm09_eval/ROUGE/rougejk_A.m.out', 'UpdateSumm09_eval/ROUGE/rougejk_B.m.out')
-    be = load_rouge_output(args.eval_tar, 'UpdateSumm09_eval/BE/simple_A.m.hm.out', 'UpdateSumm09_eval/BE/simple_B.m.hm.out')
-    be_jk = load_rouge_jk_output(args.eval_tar, 'UpdateSumm09_eval/BE/simplejk_A.m.hm.out', 'UpdateSumm09_eval/BE/simplejk_B.m.hm.out')
-    aesop = load_aesop_metrics(args.aesop_tar)
+def setup(data_dir: str, output_dir: str):
+    eval_tar = f'{data_dir}/scrapes/tac.nist.gov/protected/past-aquaint2/2009/UpdateSumm09_eval.tar.gz'
+    aesop_tar = f'{data_dir}/scrapes/tac.nist.gov/protected/past-aquaint2/2009/AESOP09_eval.tar.gz'
+    main(eval_tar, aesop_tar, output_dir)
+
+
+def main(eval_tar, aesop_tar, output_dir):
+    summaries = load_summaries(eval_tar)
+    judgments = load_manual_judgments(eval_tar)
+    rouge = load_rouge_output(eval_tar, 'UpdateSumm09_eval/ROUGE/rouge_A.m.out', 'UpdateSumm09_eval/ROUGE/rouge_B.m.out')
+    rouge_jk = load_rouge_jk_output(eval_tar, 'UpdateSumm09_eval/ROUGE/rougejk_A.m.out', 'UpdateSumm09_eval/ROUGE/rougejk_B.m.out')
+    be = load_rouge_output(eval_tar, 'UpdateSumm09_eval/BE/simple_A.m.hm.out', 'UpdateSumm09_eval/BE/simple_B.m.hm.out')
+    be_jk = load_rouge_jk_output(eval_tar, 'UpdateSumm09_eval/BE/simplejk_A.m.hm.out', 'UpdateSumm09_eval/BE/simplejk_B.m.hm.out')
+    aesop = load_aesop_metrics(aesop_tar)
 
     metrics = judgments
     merge_dict(metrics, rouge)
@@ -236,7 +242,7 @@ def main(args):
     merge_dict(metrics, be_jk)
     merge_dict(metrics, aesop)
 
-    save_summaries_and_metrics(summaries, metrics, args.output_dir)
+    save_summaries_and_metrics(summaries, metrics, output_dir)
 
 
 if __name__ == '__main__':
@@ -245,4 +251,5 @@ if __name__ == '__main__':
     argp.add_argument('aesop_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.eval_tar, args.aesop_tar, args.output_dir)
