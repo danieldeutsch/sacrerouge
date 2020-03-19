@@ -12,3 +12,7 @@ python -m sacrerouge.datasets.duc_tac.duc2005.task1 \
   ${root}/scrapes/duc.nist.gov/past_duc/duc2005/results/NIST/results.tar \
   ${root}/scrapes/duc.nist.gov/past_duc/duc2005/testdata/duc2005_topics.sgml \
   datasets/duc-tac/duc2005/${version}
+
+python -m sacrerouge.datasets.duc_tac.duc2005.metrics \
+  ${root}/scrapes/duc.nist.gov/past_duc/duc2005/results/NIST/results.tar \
+  datasets/duc-tac/duc2005/${version}
