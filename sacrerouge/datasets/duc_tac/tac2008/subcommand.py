@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.duc_tac.duc2008 import metrics, task1
+from sacrerouge.datasets.duc_tac.tac2008 import metrics, task1
 from sacrerouge.commands import Subcommand
 
 
