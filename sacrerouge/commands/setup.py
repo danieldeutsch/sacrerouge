@@ -2,7 +2,7 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.commands import Subcommand
-from sacrerouge.datasets.duc_tac import duc2005, duc2006, duc2007, tac2008, tac2009
+from sacrerouge.datasets.duc_tac import duc2005, duc2006, duc2007, tac2008, tac2009, tac2010
 
 
 class SetupSubcommand(Subcommand):
@@ -17,6 +17,7 @@ class SetupSubcommand(Subcommand):
             duc2007.DUC2007Subcommand(),
             tac2008.TAC2008Subcommand(),
             tac2009.TAC2009Subcommand(),
+            tac2010.TAC2010Subcommand(),
         ]
         for subcommand in subcommands:
             subcommand.add_subparser(subparsers)

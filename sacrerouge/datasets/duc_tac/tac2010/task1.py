@@ -131,9 +131,9 @@ def load_topics(file_path: str):
 
 
 def save_instances(documents, selectors, summaries, topics, output_dir: str) -> None:
-    with JsonlWriter(f'{args.output_dir}/task1.A-B.jsonl') as out_A_B:
-        with JsonlWriter(f'{args.output_dir}/task1.A.jsonl') as out_A:
-            with JsonlWriter(f'{args.output_dir}/task1.B.jsonl') as out_B:
+    with JsonlWriter(f'{output_dir}/task1.A-B.jsonl') as out_A_B:
+        with JsonlWriter(f'{output_dir}/task1.A.jsonl') as out_A:
+            with JsonlWriter(f'{output_dir}/task1.B.jsonl') as out_B:
                 for instance_id in sorted(documents.keys()):
                     topic = topics[instance_id]
                     selector = selectors[instance_id]
@@ -169,11 +169,18 @@ def save_instances(documents, selectors, summaries, topics, output_dir: str) -> 
                     })
 
 
-def main(args):
-    documents, selectors = load_documents(args.documents_tar)
-    summaries = load_summaries(args.eval_tar)
-    topics = load_topics(args.topics_file)
-    save_instances(documents, selectors, summaries, topics, args.output_dir)
+def setup(data_root: str, output_dir: str):
+    documents_tar = f'{data_root}/from-nist/TAC2010_Summarization_Documents.tgz'
+    eval_tar = f'{data_root}/scrapes/tac.nist.gov/protected/past-aquaint-aquaint2/2010/GuidedSumm2010_eval.tgz'
+    topics_file = f'{data_root}/scrapes/tac.nist.gov/protected/past-aquaint-aquaint2/2010/GuidedSumm10_test_topics.xml.txt'
+    main(documents_tar, eval_tar, topics_file, output_dir)
+
+
+def main(documents_tar, eval_tar, topics_file, output_dir):
+    documents, selectors = load_documents(documents_tar)
+    summaries = load_summaries(eval_tar)
+    topics = load_topics(topics_file)
+    save_instances(documents, selectors, summaries, topics, output_dir)
 
 
 if __name__ == '__main__':
@@ -183,4 +190,5 @@ if __name__ == '__main__':
     argp.add_argument('topics_file')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.documents_tar, args.eval_tar, args.topics_file, args.output_dir)
