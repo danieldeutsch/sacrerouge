@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.duc_tac.duc2007 import metrics, tasks
+from sacrerouge.datasets.duc_tac.duc2008 import metrics, task1
 from sacrerouge.commands import Subcommand
 
 
@@ -15,5 +15,5 @@ class TAC2008Subcommand(Subcommand):
 
     @overrides
     def setup(self, args):
-        tasks.setup(args.data_root, args.output_dir)
+        task1.setup(args.data_root, args.output_dir)
         metrics.setup(args.data_root, args.output_dir)
