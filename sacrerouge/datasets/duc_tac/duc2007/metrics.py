@@ -184,8 +184,8 @@ def get_references(summaries, instance_id, summarizer_id, group=None):
 
 
 def save_main_summaries_metrics(summaries, metrics, output_dir: str):
-    with JsonlWriter(f'{args.output_dir}/task1.summaries.jsonl') as out_summaries:
-        with JsonlWriter(f'{args.output_dir}/task1.metrics.jsonl') as out_metrics:
+    with JsonlWriter(f'{output_dir}/task1.summaries.jsonl') as out_summaries:
+        with JsonlWriter(f'{output_dir}/task1.metrics.jsonl') as out_metrics:
             for instance_id in sorted(summaries.keys()):
                 for summarizer_id in summaries[instance_id].keys():
                     summary = summaries[instance_id][summarizer_id]
@@ -208,14 +208,14 @@ def save_main_summaries_metrics(summaries, metrics, output_dir: str):
 
 
 def save_update_summaries_metrics(summaries, metrics, output_dir: str):
-    with JsonlWriter(f'{args.output_dir}/task2.A-B-C.summaries.jsonl') as out_summaries_A_B_C:
-        with JsonlWriter(f'{args.output_dir}/task2.A.summaries.jsonl') as out_summaries_A:
-            with JsonlWriter(f'{args.output_dir}/task2.B.summaries.jsonl') as out_summaries_B:
-                with JsonlWriter(f'{args.output_dir}/task2.C.summaries.jsonl') as out_summaries_C:
-                    with JsonlWriter(f'{args.output_dir}/task2.A-B-C.metrics.jsonl') as out_metrics_A_B_C:
-                        with JsonlWriter(f'{args.output_dir}/task2.A.metrics.jsonl') as out_metrics_A:
-                            with JsonlWriter(f'{args.output_dir}/task2.B.metrics.jsonl') as out_metrics_B:
-                                with JsonlWriter(f'{args.output_dir}/task2.C.metrics.jsonl') as out_metrics_C:
+    with JsonlWriter(f'{output_dir}/task2.A-B-C.summaries.jsonl') as out_summaries_A_B_C:
+        with JsonlWriter(f'{output_dir}/task2.A.summaries.jsonl') as out_summaries_A:
+            with JsonlWriter(f'{output_dir}/task2.B.summaries.jsonl') as out_summaries_B:
+                with JsonlWriter(f'{output_dir}/task2.C.summaries.jsonl') as out_summaries_C:
+                    with JsonlWriter(f'{output_dir}/task2.A-B-C.metrics.jsonl') as out_metrics_A_B_C:
+                        with JsonlWriter(f'{output_dir}/task2.A.metrics.jsonl') as out_metrics_A:
+                            with JsonlWriter(f'{output_dir}/task2.B.metrics.jsonl') as out_metrics_B:
+                                with JsonlWriter(f'{output_dir}/task2.C.metrics.jsonl') as out_metrics_C:
                                     for instance_id in sorted(summaries.keys()):
                                         for summarizer_id in sorted(summaries[instance_id].keys()):
                                             summary_A = summaries[instance_id][summarizer_id]['A']
@@ -287,20 +287,26 @@ def save_update_summaries_metrics(summaries, metrics, output_dir: str):
                                             out_metrics_C.write(metric_instance_C)
 
 
-def main(args):
-    main_summaries = load_main_summaries(args.main_eval_tar)
-    update_summaries = load_update_summaries(args.update_eval_tar)
+def setup(data_root: str, output_dir: str):
+    main_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/mainEval.tar.gz'
+    update_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/updateEval.tar.gz'
+    main(main_eval_tar, update_eval_tar, output_dir)
 
-    main_rouge = load_main_rouge_jk_output(args.main_eval_tar, 'mainEval/ROUGE/rougejk.m.out')
-    update_rouge = load_update_rouge_jk_output(args.update_eval_tar, 'updateEval/ROUGE/rougejk.m.out')
 
-    main_content = load_main_content_table(args.main_eval_tar)
-    update_content = load_update_content_table(args.update_eval_tar)
+def main(main_eval_tar, update_eval_tar, output_dir):
+    main_summaries = load_main_summaries(main_eval_tar)
+    update_summaries = load_update_summaries(update_eval_tar)
 
-    main_linguistic_quality = load_main_linguistic_quality_table(args.main_eval_tar)
+    main_rouge = load_main_rouge_jk_output(main_eval_tar, 'mainEval/ROUGE/rougejk.m.out')
+    update_rouge = load_update_rouge_jk_output(update_eval_tar, 'updateEval/ROUGE/rougejk.m.out')
 
-    main_be = load_main_rouge_jk_output(args.main_eval_tar, 'mainEval/BE/simplejk.m.hm.out')
-    update_be = load_update_rouge_jk_output(args.update_eval_tar, 'updateEval/BE/simplejk.m.hm.out')
+    main_content = load_main_content_table(main_eval_tar)
+    update_content = load_update_content_table(update_eval_tar)
+
+    main_linguistic_quality = load_main_linguistic_quality_table(main_eval_tar)
+
+    main_be = load_main_rouge_jk_output(main_eval_tar, 'mainEval/BE/simplejk.m.hm.out')
+    update_be = load_update_rouge_jk_output(update_eval_tar, 'updateEval/BE/simplejk.m.hm.out')
 
     main_metrics = main_rouge
     merge_dict(main_metrics, main_content)
@@ -311,8 +317,8 @@ def main(args):
     merge_dict(update_metrics, update_content)
     merge_dict(update_metrics, update_be)
 
-    save_main_summaries_metrics(main_summaries, main_metrics, args.output_dir)
-    save_update_summaries_metrics(update_summaries, update_metrics, args.output_dir)
+    save_main_summaries_metrics(main_summaries, main_metrics, output_dir)
+    save_update_summaries_metrics(update_summaries, update_metrics, output_dir)
 
 
 if __name__ == '__main__':
@@ -321,4 +327,5 @@ if __name__ == '__main__':
     argp.add_argument('update_eval_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.main_eval_tar, args.update_eval_tar, args.output_dir)

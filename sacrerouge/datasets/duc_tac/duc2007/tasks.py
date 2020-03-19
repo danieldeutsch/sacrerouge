@@ -203,20 +203,29 @@ def save_update_data(clusters: Dict[str, Dict[str, List[str]]],
                         out_A_B_C.write(data_A_B_C)
 
 
-def main(args):
-    main_documents_ids, update_documents_ids, documents, selectors \
-        = load_documents(args.documents_tar)
-    main_summaries = load_main_summaries(args.main_eval_tar)
-    update_summaries = load_update_summaries(args.update_eval_tar)
-    main_topics = load_topics(args.main_topics)
-    update_topics = load_topics(args.update_topics)
+def setup(data_root: str, output_dir: str):
+    documents_tar = f'{data_root}/from-nist/DUC2007_Summarization_Documents.tgz'
+    main_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/mainEval.tar.gz'
+    update_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/updateEval.tar.gz'
+    main_topics = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/testdata/duc2007_topics.sgml'
+    update_topics = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/testdata/duc2007_UPDATEtopics.sgml'
+    main(documents_tar, main_eval_tar, update_eval_tar, main_topics, update_topics, output_dir)
 
-    save_main_data(main_documents_ids, documents, main_summaries, main_topics, selectors, f'{args.output_dir}/task1.jsonl')
+
+def main(documents_tar, main_eval_tar, update_eval_tar, main_topics, update_topics, output_dir):
+    main_documents_ids, update_documents_ids, documents, selectors \
+        = load_documents(documents_tar)
+    main_summaries = load_main_summaries(main_eval_tar)
+    update_summaries = load_update_summaries(update_eval_tar)
+    main_topics = load_topics(main_topics)
+    update_topics = load_topics(update_topics)
+
+    save_main_data(main_documents_ids, documents, main_summaries, main_topics, selectors, f'{output_dir}/task1.jsonl')
     save_update_data(update_documents_ids, documents, update_summaries, update_topics, selectors,
-                     f'{args.output_dir}/task2.A.jsonl',
-                     f'{args.output_dir}/task2.B.jsonl',
-                     f'{args.output_dir}/task2.C.jsonl',
-                     f'{args.output_dir}/task2.A-B-C.jsonl')
+                     f'{output_dir}/task2.A.jsonl',
+                     f'{output_dir}/task2.B.jsonl',
+                     f'{output_dir}/task2.C.jsonl',
+                     f'{output_dir}/task2.A-B-C.jsonl')
 
 
 if __name__ == '__main__':
@@ -228,4 +237,6 @@ if __name__ == '__main__':
     argp.add_argument('update_topics')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.documents_tar, args.main_eval_tar, args.update_eval_tar,
+         args.main_topics, args.update_topics, args.output_dir)
