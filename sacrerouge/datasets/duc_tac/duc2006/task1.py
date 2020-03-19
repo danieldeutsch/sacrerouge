@@ -114,11 +114,18 @@ def save_data(clusters: Dict[str, List[str]],
             out.write(data)
 
 
-def main(args):
-    clusters, documents, selectors = load_documents(args.documents_tar)
-    summaries = load_summaries(args.eval_tar)
-    topics = load_topics(args.topics_file_path)
-    save_data(clusters, documents, summaries, topics, selectors, f'{args.output_dir}/task1.jsonl')
+def setup(data_root: str, output_dir: str):
+    documents_tar = f'{data_root}/from-nist/DUC2006_Summarization_Documents.tgz'
+    eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST/NISTeval.tar.gz'
+    topics_file_path = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/testdata/duc2006_topics.sgml'
+    main(documents_tar, eval_tar, topics_file_path, output_dir)
+
+
+def main(documents_tar, eval_tar, topics_file_path, output_dir):
+    clusters, documents, selectors = load_documents(documents_tar)
+    summaries = load_summaries(eval_tar)
+    topics = load_topics(topics_file_path)
+    save_data(clusters, documents, summaries, topics, selectors, f'{output_dir}/task1.jsonl')
 
 
 if __name__ == '__main__':

@@ -142,19 +142,25 @@ def save_metrics(summaries: Dict[str, Dict[str, List[str]]],
                     })
 
 
-def main(args):
-    summaries = load_summaries(args.eval_tar_2)
-    rouge = load_rouge_jk_output(args.eval_tar_2, 'NISTeval2/ROUGE/rougejk.m.out')
-    be = load_rouge_jk_output(args.eval_tar_2, 'NISTeval2/BE/simplejk.m.hm.out')
-    responsiveness = load_responsiveness_tables(args.eval_tar)
-    linguistic_quality = load_linguistic_quality_table(args.eval_tar)
+def setup(data_root: str, output_dir: str):
+    eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST/NISTeval.tar.gz'
+    eval_tar_2 = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST-secondary-automatic/NISTeval2.tar.gz'
+    main(eval_tar, eval_tar_2, output_dir)
+
+
+def main(eval_tar, eval_tar_2, output_dir):
+    summaries = load_summaries(eval_tar_2)
+    rouge = load_rouge_jk_output(eval_tar_2, 'NISTeval2/ROUGE/rougejk.m.out')
+    be = load_rouge_jk_output(eval_tar_2, 'NISTeval2/BE/simplejk.m.hm.out')
+    responsiveness = load_responsiveness_tables(eval_tar)
+    linguistic_quality = load_linguistic_quality_table(eval_tar)
 
     metrics = rouge
     merge_dict(metrics, be)
     merge_dict(metrics, responsiveness)
     merge_dict(metrics, linguistic_quality)
 
-    save_metrics(summaries, metrics, args.output_dir)
+    save_metrics(summaries, metrics, output_dir)
 
 
 if __name__ == '__main__':
@@ -163,4 +169,5 @@ if __name__ == '__main__':
     argp.add_argument('eval_tar_2')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.eval_tar, args.eval_tar_2, args.output_dir)
