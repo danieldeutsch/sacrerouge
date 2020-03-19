@@ -12,3 +12,8 @@ python -m sacrerouge.datasets.duc_tac.duc2006.task1 \
   ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST/NISTeval.tar.gz \
   ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/testdata/duc2006_topics.sgml \
   datasets/duc-tac/duc2006/${version}
+
+python -m sacrerouge.datasets.duc_tac.duc2006.metrics \
+  ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST/NISTeval.tar.gz \
+  ${root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST-secondary-automatic/NISTeval2.tar.gz \
+  datasets/duc-tac/duc2006/${version}
