@@ -111,11 +111,18 @@ def save_data(clusters: Dict[str, List[str]],
             out.write(data)
 
 
-def main(args):
-    clusters, documents, selectors = load_documents(args.documents_tar)
-    summaries = load_summaries(args.results_tar)
-    topics = load_topics(args.topics_file_path)
-    save_data(clusters, documents, summaries, topics, selectors, f'{args.output_dir}/task1.jsonl')
+def setup(data_root: str, output_dir: str) -> None:
+    documents_tar = f'{data_root}/from-nist/DUC2005_Summarization_Documents.tgz'
+    results_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc/duc2005/results/NIST/results.tar'
+    topics_file_path = f'{data_root}/scrapes/duc.nist.gov/past_duc/duc2005/testdata/duc2005_topics.sgml'
+    main(documents_tar, results_tar, topics_file_path, output_dir)
+
+
+def main(documents_tar, results_tar, topics_file_path, output_dir):
+    clusters, documents, selectors = load_documents(documents_tar)
+    summaries = load_summaries(results_tar)
+    topics = load_topics(topics_file_path)
+    save_data(clusters, documents, summaries, topics, selectors, f'{output_dir}/task1.jsonl')
 
 
 if __name__ == '__main__':
@@ -125,4 +132,5 @@ if __name__ == '__main__':
     argp.add_argument('topics_file_path')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.documents_tar, args.results_tar, args.topics_file_path, args.output_dir)

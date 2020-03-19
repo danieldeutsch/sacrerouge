@@ -131,22 +131,28 @@ def save_metrics(summaries: Dict[str, Dict[str, List[str]]],
                     })
 
 
-def main(args):
-    summaries = load_summaries(args.eval_tar)
-    rouge = load_rouge_jk_output(args.eval_tar, 'results/ROUGE/rougejk.m.out')
-    responsiveness = load_responsiveness_table(args.eval_tar)
-    linguistic_quality = load_linguistic_quality_table(args.eval_tar)
+def setup(data_root: str, output_dir: str) -> None:
+    results_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc/duc2005/results/NIST/results.tar'
+    main(results_tar, output_dir)
+
+
+def main(results_tar, output_dir):
+    summaries = load_summaries(results_tar)
+    rouge = load_rouge_jk_output(results_tar, 'results/ROUGE/rougejk.m.out')
+    responsiveness = load_responsiveness_table(results_tar)
+    linguistic_quality = load_linguistic_quality_table(results_tar)
 
     metrics = rouge
     merge_dict(metrics, responsiveness)
     merge_dict(metrics, linguistic_quality)
 
-    save_metrics(summaries, metrics, args.output_dir)
+    save_metrics(summaries, metrics, output_dir)
 
 
 if __name__ == '__main__':
     argp = argparse.ArgumentParser()
-    argp.add_argument('eval_tar')
+    argp.add_argument('results_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
-    main(args)
+
+    main(args.results_tar, args.output_dir)
