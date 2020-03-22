@@ -7,32 +7,24 @@ from sacrerouge.data.types import MetricsType, SummaryType
 class Metric(object):
     _registry: Dict[str, Type] = {}
 
-    def score(self,
-              summary: SummaryType,
-              references: List[SummaryType]) -> MetricsType:
-        return self.score_all([summary], [references])[0]
+    def score(self, summary: SummaryType, *args: List[Any]) -> MetricsType:
+        args = [[arg] for arg in args]
+        return self.score_all([summary], *args)[0]
 
-    def score_multi(self,
-                    summaries: List[SummaryType],
-                    references: List[SummaryType]) -> List[MetricsType]:
-        return self.score_multi_all([summaries], [references])[0]
+    def score_multi(self, summaries: List[SummaryType], *args: List[Any]) -> List[MetricsType]:
+        args = [[arg] for arg in args]
+        return self.score_multi_all([summaries], *args)[0]
 
-    def score_all(self,
-                  summaries: List[SummaryType],
-                  references_list: List[List[SummaryType]]) -> List[MetricsType]:
+    def score_all(self, summaries: List[SummaryType], *args: List[List[Any]]) -> List[MetricsType]:
         summaries_list = [[summary] for summary in summaries]
-        metrics_lists = self.score_multi_all(summaries_list, references_list)
+        metrics_lists = self.score_multi_all(summaries_list, *args)
         return [metrics_list[0] for metrics_list in metrics_lists]
 
-    def score_multi_all(self,
-                        summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+    def score_multi_all(self, summaries_list: List[List[SummaryType]], *args: List[List[Any]]) -> List[List[MetricsType]]:
         raise NotImplementedError
 
-    def evaluate(self,
-                 summaries: List[SummaryType],
-                 references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
-        micro_metrics_list = self.score_all(summaries, references_list)
+    def evaluate(self, summaries: List[SummaryType], *args: List[List[Any]]) -> Tuple[MetricsType, List[MetricsType]]:
+        micro_metrics_list = self.score_all(summaries, *args)
         macro_metrics = self.aggregate(micro_metrics_list)
         return macro_metrics, micro_metrics_list
 
