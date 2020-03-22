@@ -259,7 +259,6 @@ class TestPythonRouge(unittest.TestCase):
 
     @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
     def test_hong2014(self):
-        python_rouge = PythonRouge()
         duc2004 = self._load_multiple_summaries(_duc2004_file_path)
         centroid = self._load_summaries(_centroid_file_path)
 
@@ -288,3 +287,22 @@ class TestPythonRouge(unittest.TestCase):
         assert math.isclose(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], abs_tol=1e-1)
         assert math.isclose(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], abs_tol=1e-1)
         assert math.isclose(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], abs_tol=1e-1)
+
+    @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
+    def test_score_multi_all_order(self):
+        """Tests to ensure the scoring returns the same results, no matter the order."""
+        python_rouge = PythonRouge()
+        duc2004 = self._load_multiple_summaries(_duc2004_file_path)
+        centroid1 = self._load_summaries(_centroid_file_path)
+        centroid2 = list(reversed(centroid1))  # Just create a second fake dataset
+
+        summaries_list = list(zip(*[centroid1, centroid2]))
+        metrics_lists1 = python_rouge.score_multi_all(summaries_list, duc2004)
+        metrics_lists1 = list(zip(*metrics_lists1))
+
+        summaries_list = list(zip(*[centroid2, centroid1]))
+        metrics_lists2 = python_rouge.score_multi_all(summaries_list, duc2004)
+        metrics_lists2 = list(zip(*metrics_lists2))
+
+        metrics_lists2 = list(reversed(metrics_lists2))
+        assert metrics_lists1 == metrics_lists2
