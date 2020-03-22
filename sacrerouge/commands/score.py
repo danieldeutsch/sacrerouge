@@ -1,8 +1,10 @@
 import argparse
 import json
+from overrides import overrides
 from tqdm import tqdm
 from typing import Any, Dict, List
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import merge_dict
 from sacrerouge.io import JsonlReader, JsonlWriter
 from sacrerouge.metrics import Metric, SummaryType
@@ -63,39 +65,40 @@ def run_jackknifing(metrics: List[Metric], summary: SummaryType, references: Lis
     return results
 
 
-def main(args):
-    config = json.load(open(args.config, 'r'))
-    metrics = load_metrics(config)
-    instances = JsonlReader(args.summaries_jsonl).read()
+class ScoreSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('score')
+        self.parser.add_argument('summaries_jsonl')
+        self.parser.add_argument('config')
+        self.parser.add_argument('output_jsonl')
+        self.parser.set_defaults(func=self.run)
 
-    with JsonlWriter(args.output_jsonl) as out:
-        for instance in tqdm(instances):
-            summarizer_type = instance['summarizer_type']
-            summary = instance['summary']['text']
-            references = [reference['text'] for reference in instance['references']]
+    @overrides
+    def run(self, args):
+        config = json.load(open(args.config, 'r'))
+        metrics = load_metrics(config)
+        instances = JsonlReader(args.summaries_jsonl).read()
 
-            if summarizer_type == 'reference':
-                # No additional jackknifing needs to be done because the input
-                # for reference summaries is already "missing" a reference
-                # (i.e., itself), but the metric should be nammed the jackknifing version
-                results = score(metrics, summary, references, True)
-            elif summarizer_type == 'peer':
-                # Score normally using all of the references
-                results = score(metrics, summary, references, False)
+        with JsonlWriter(args.output_jsonl) as out:
+            for instance in tqdm(instances):
+                summarizer_type = instance['summarizer_type']
+                summary = instance['summary']['text']
+                references = [reference['text'] for reference in instance['references']]
 
-                # Run jackknifing and combine results
-                jk_results = run_jackknifing(metrics, summary, references)
-                merge_dict(results, jk_results)
-            else:
-                raise Exception(f'Unknown summarizer type: {summarizer_type}')
+                if summarizer_type == 'reference':
+                    # No additional jackknifing needs to be done because the input
+                    # for reference summaries is already "missing" a reference
+                    # (i.e., itself), but the metric should be nammed the jackknifing version
+                    results = score(metrics, summary, references, True)
+                elif summarizer_type == 'peer':
+                    # Score normally using all of the references
+                    results = score(metrics, summary, references, False)
 
-            out.write({'metrics': results})
+                    # Run jackknifing and combine results
+                    jk_results = run_jackknifing(metrics, summary, references)
+                    merge_dict(results, jk_results)
+                else:
+                    raise Exception(f'Unknown summarizer type: {summarizer_type}')
 
-
-if __name__ == '__main__':
-    argp = argparse.ArgumentParser()
-    argp.add_argument('summaries_jsonl')
-    argp.add_argument('config')
-    argp.add_argument('output_jsonl')
-    args = argp.parse_args()
-    main(args)
+                out.write({'metrics': results})

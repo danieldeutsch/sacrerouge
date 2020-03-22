@@ -5,5 +5,5 @@ class Subcommand(object):
     def add_subparser(self, parser: argparse._SubParsersAction) -> None:
         raise NotImplementedError
 
-    def setup(self, args):
+    def run(self, args):
         raise NotImplementedError

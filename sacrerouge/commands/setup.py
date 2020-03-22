@@ -22,10 +22,10 @@ class SetupSubcommand(Subcommand):
         for subcommand in subcommands:
             subcommand.add_subparser(subparsers)
 
-        self.parser.set_defaults(func=self.setup)
+        self.parser.set_defaults(func=self.run)
 
     @overrides
-    def setup(self, args):
+    def run(self, args):
         if 'subfunc' in dir(args):
             args.subfunc(args)
         else:

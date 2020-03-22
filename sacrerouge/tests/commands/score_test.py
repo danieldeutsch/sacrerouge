@@ -1,6 +1,6 @@
 import unittest
 
-from sacrerouge.score import average_jackknifing_metrics, get_jackknifing_references_list
+from sacrerouge.commands.score import average_jackknifing_metrics, get_jackknifing_references_list
 
 
 class TestScore(unittest.TestCase):

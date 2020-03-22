@@ -11,9 +11,9 @@ class DUC2006Subcommand(Subcommand):
         self.parser = parser.add_parser('duc2006')
         self.parser.add_argument('data_root')
         self.parser.add_argument('output_dir')
-        self.parser.set_defaults(subfunc=self.setup)
+        self.parser.set_defaults(subfunc=self.run)
 
     @overrides
-    def setup(self, args):
+    def run(self, args):
         task1.setup(args.data_root, args.output_dir)
         metrics.setup(args.data_root, args.output_dir)

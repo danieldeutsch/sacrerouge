@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Rouge
-from sacrerouge.score import run_jackknifing
+from sacrerouge.commands.score import run_jackknifing
 
 _summaries_file_path = 'datasets/duc-tac/duc2006/v1.0/task1.summaries.jsonl'
 _metrics_file_path = 'datasets/duc-tac/duc2006/v1.0/task1.metrics.jsonl'

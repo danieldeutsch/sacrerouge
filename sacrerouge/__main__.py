@@ -1,6 +1,6 @@
 import argparse
 
-from sacrerouge.commands import setup
+from sacrerouge.commands import score, setup
 
 
 def main():
@@ -8,7 +8,8 @@ def main():
     subparsers = parser.add_subparsers()
 
     subcommands = [
-        setup.SetupSubcommand()
+        score.ScoreSubcommand(),
+        setup.SetupSubcommand(),
     ]
     for subcommand in subcommands:
         subcommand.add_subparser(subparsers)
