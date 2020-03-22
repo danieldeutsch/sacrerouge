@@ -276,8 +276,8 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords,
                                    max_words=max_words,
                                    compute_rouge_l=compute_rouge_l)
-        expected_metrics, _ = rouge.score_all(centroid, duc2004)
-        actual_metrics, _ = python_rouge.score_all(centroid, duc2004)
+        expected_metrics, _ = rouge.evaluate(centroid, duc2004)
+        actual_metrics, _ = python_rouge.evaluate(centroid, duc2004)
         assert math.isclose(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], abs_tol=1e-2)
         assert math.isclose(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], abs_tol=2e-2)
         assert math.isclose(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], abs_tol=2e-2)

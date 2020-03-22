@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from subprocess import Popen, PIPE
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.data.types import MetricsType, SummaryType
@@ -34,6 +34,8 @@ class Rouge(Metric):
         self.rouge_eval_home = rouge_eval_home
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
+        dirname = os.path.dirname(file_path)
+        os.makedirs(dirname, exist_ok=True)
         with open(file_path, 'w') as out:
             if isinstance(summary, list):
                 for sentence in summary:
@@ -43,18 +45,19 @@ class Rouge(Metric):
 
     def _save_config_file(self,
                           config_filename: str,
-                          summary_filenames: List[str],
+                          summary_filenames_list: List[List[str]],
                           reference_filenames_list: List[List[str]]):
         output_dir = os.path.dirname(config_filename)
         with open(config_filename, 'w') as out:
             out.write(f'<ROUGE_EVAL version="1.0">\n')
-            for i, (reference_filenames, summary_filename) in enumerate(zip(reference_filenames_list, summary_filenames)):
+            for i, (reference_filenames, summary_filenames) in enumerate(zip(reference_filenames_list, summary_filenames_list)):
                 out.write(f'<EVAL ID="{i + 1}">\n')
                 out.write(f'<INPUT-FORMAT TYPE="SPL"></INPUT-FORMAT>\n')
                 out.write(f'<PEER-ROOT>{output_dir}</PEER-ROOT>\n')
                 out.write(f'<MODEL-ROOT>{output_dir}</MODEL-ROOT>\n')
                 out.write(f'<PEERS>\n')
-                out.write(f'<P ID="1">{summary_filename}</P>\n')
+                for j, summary_filename in enumerate(summary_filenames):
+                    out.write(f'<P ID="{j + 1}">{summary_filename}</P>\n')
                 out.write(f'</PEERS>\n')
                 out.write(f'<MODELS>\n')
                 for j, reference_filename in enumerate(reference_filenames):
@@ -64,7 +67,7 @@ class Rouge(Metric):
                 out.write(f'</EVAL>\n')
             out.write(f'</ROUGE_EVAL>\n')
 
-    def _parse_rouge_average_line(self, columns: List[str]) -> Tuple[str, float, float, float]:
+    def _parse_average_line(self, columns: List[str]) -> Tuple[str, str, float, float, float]:
         assert len(columns) == 8
         if columns[2][-2] == 'R':
             metric = 'recall'
@@ -75,71 +78,77 @@ class Rouge(Metric):
         else:
             raise Exception(f'Unknown metric: {columns[2]}')
 
-        value = float(columns[3])
-        lower_ci = float(columns[5])
-        upper_ci = float(columns[7][:-1])
-        return metric, value, lower_ci, upper_ci
+        summarizer_id = int(columns[0]) - 1
+        value = float(columns[3]) * 100
+        lower_ci = float(columns[5]) * 100
+        upper_ci = float(columns[7][:-1]) * 100
+        return summarizer_id, metric, value, lower_ci, upper_ci
 
-    def _parse_individual_line(self, columns: List[str]) -> Tuple[int, float, float, float]:
+    def _parse_individual_line(self, columns: List[str]) -> Tuple[int, int, float, float, float]:
         assert len(columns) == 7
-        index = int(columns[3][:-2]) - 1
-        recall = float(columns[4][2:])
-        precision = float(columns[5][2:])
-        f1 = float(columns[6][2:])
-        return index, recall, precision, f1
+        period = columns[3].index('.')
+        instance_id = int(columns[3][:period]) - 1
+        summarizer_id = int(columns[3][period + 1:]) - 1
+        recall = float(columns[4][2:]) * 100
+        precision = float(columns[5][2:]) * 100
+        f1 = float(columns[6][2:]) * 100
+        return instance_id, summarizer_id, recall, precision, f1
 
-    def _parse_rouge_stdout(self, stdout: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def _parse_rouge_stdout(self, stdout: str):
         lines = stdout.splitlines()
-        aggregate_metrics = defaultdict(dict)
-        index_to_individual_metrics = defaultdict(dict)
+        macro_metrics_dict = defaultdict(lambda: defaultdict(dict))
+        micro_metrics_dicts = defaultdict(lambda: defaultdict(dict))
         for line in lines:
             if line in ['---------------------------------------------', '.............................................']:
                 continue
             columns = line.split()
             rouge_metric = columns[1].lower()
             if columns[2] == 'Eval':
-                index, recall, precision, f1 = self._parse_individual_line(columns)
-                index_to_individual_metrics[index][rouge_metric] = {
-                    'recall': recall * 100,
-                    'precision': precision * 100,
-                    'f1': f1 * 100
+                instance_id, summarizer_id, recall, precision, f1 = self._parse_individual_line(columns)
+                micro_metrics_dicts[instance_id][summarizer_id][rouge_metric] = {
+                    'recall': recall,
+                    'precision': precision,
+                    'f1': f1
                 }
             else:
-                metric, value, _, _ = self._parse_rouge_average_line(columns)
-                aggregate_metrics[rouge_metric][metric] = value * 100
+                summarizer_id, metric, value, lower_ci, upper_ci = self._parse_average_line(columns)
+                macro_metrics_dict[summarizer_id][rouge_metric][metric] = value
 
-        individual_metrics = [None] * len(index_to_individual_metrics)
-        for index, metrics in index_to_individual_metrics.items():
-            individual_metrics[index] = metrics
+        # Flatten the metrics into arrays instead of dicts
+        macro_metrics_list = [None] * len(macro_metrics_dict)
+        for summarizer_id, metrics in macro_metrics_dict.items():
+            macro_metrics_list[summarizer_id] = metrics
 
-        return aggregate_metrics, individual_metrics
+        micro_metrics_lists = [None] * len(micro_metrics_dicts)
+        for instance_id, metrics_dict in micro_metrics_dicts.items():
+            micro_metrics_lists[instance_id] = [None] * len(metrics_dict)
+            for summarizer_id, metrics in metrics_dict.items():
+                micro_metrics_lists[instance_id][summarizer_id] = metrics
+        return macro_metrics_list, micro_metrics_lists
 
-    def score_all(self,
-                  summaries: List[SummaryType],
-                  references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
-        # It is faster and easier to run ROUGE on the entire set and extract
-        # the individual scores than it is to run ROUGE on each individual instance
-        # and then aggregate the metrics. Therefore, we override `score_all` and
-        # make `score` call `score_all`.
+    def _run(self,
+             summaries_list: List[List[SummaryType]],
+             references_list: List[List[SummaryType]]) -> Tuple[List[MetricsType], List[List[MetricsType]]]:
         with TemporaryDirectory() as temp_dir:
-            summary_filenames = []
+            summary_filenames_list = []
             reference_filenames_list = []
 
-            for i, (summary, references) in enumerate(zip(summaries, references_list)):
-                summary_filename = f'model.{i}.txt'
-                summary_filenames.append(summary_filename)
-                self._save_summary(summary, f'{temp_dir}/{summary_filename}')
+            for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
+                summary_filenames_list.append([])
+                reference_filenames_list.append([])
+                for j, summary in enumerate(summaries):
+                    summary_filename = f'{i}/model.{j}.txt'
+                    summary_filenames_list[-1].append(summary_filename)
+                    self._save_summary(summary, f'{temp_dir}/{summary_filename}')
 
-                reference_filenames = []
                 for j, reference in enumerate(references):
                     symbol = chr(j + 65)
-                    reference_filename = f'gold.{symbol}.{i}.txt'
-                    reference_filenames.append(reference_filename)
+                    reference_filename = f'{i}/gold.{symbol}.txt'
+                    reference_filenames_list[-1].append(reference_filename)
                     self._save_summary(reference, f'{temp_dir}/{reference_filename}')
-                reference_filenames_list.append(reference_filenames)
 
-                config_filename = f'{temp_dir}/config.xml'
-                self._save_config_file(config_filename, summary_filenames, reference_filenames_list)
+            config_filename = f'{temp_dir}/config.xml'
+            self._save_config_file(config_filename, summary_filenames_list, reference_filenames_list)
 
             command = [
                 self.rouge_script_location,
@@ -174,10 +183,21 @@ class Rouge(Metric):
             if stderr:
                 raise Exception(f'Rouge failed with stderr: {stderr.decode()}')
 
-            aggregate_metrics, individual_metrics = self._parse_rouge_stdout(stdout.decode())
-            return aggregate_metrics, individual_metrics
+            macro_metrics_list, micro_metrics_lists = self._parse_rouge_stdout(stdout.decode())
+            return macro_metrics_list, micro_metrics_lists
 
-    def score(self,
-              summary: SummaryType,
-              references: List[SummaryType]) -> MetricsType:
-        return self.score_all([summary], [references])[0]
+    def score_multi_all(self,
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+        _, micro_metrics_lists = self._run(summaries_list, references_list)
+        return micro_metrics_lists
+
+    def evaluate(self,
+                 summaries: List[List[SummaryType]],
+                 references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
+        summaries_list = [[summary] for summary in summaries]
+        macro_metrics_list, micro_metrics_lists = self._run(summaries_list, references_list)
+
+        macro_metrics = macro_metrics_list[0]
+        micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
+        return macro_metrics, micro_metrics_list

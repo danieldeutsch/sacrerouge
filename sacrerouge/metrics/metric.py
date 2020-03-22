@@ -7,21 +7,37 @@ from sacrerouge.data.types import MetricsType, SummaryType
 class Metric(object):
     _registry: Dict[str, Type] = {}
 
-    def score_all(self,
-                  summaries: List[SummaryType],
-                  references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
-        individual_results = []
-        for summary, references in zip(summaries, references_list):
-            results = self.score(summary, references)
-            individual_results.append(results)
-
-        aggregated_results = average_metrics(individual_results)
-        return aggregated_results, individual_results
-
     def score(self,
               summary: SummaryType,
               references: List[SummaryType]) -> MetricsType:
+        return self.score_all([summary], [references])[0]
+
+    def score_multi(self,
+                    summaries: List[SummaryType],
+                    references: List[SummaryType]) -> List[MetricsType]:
+        return self.score_multi_all([summaries], [references])[0]
+
+    def score_all(self,
+                  summaries: List[SummaryType],
+                  references_list: List[List[SummaryType]]) -> List[MetricsType]:
+        summaries_list = [[summary] for summary in summaries]
+        metrics_lists = self.score_multi_all(summaries_list, references_list)
+        return [metrics_list[0] for metrics_list in metrics_lists]
+
+    def score_multi_all(self,
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
         raise NotImplementedError
+
+    def evaluate(self,
+                 summaries: List[SummaryType],
+                 references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
+        micro_metrics_list = self.score_all(summaries, references_list)
+        macro_metrics = self.aggregate(micro_metrics_list)
+        return macro_metrics, micro_metrics_list
+
+    def aggregate(self, metrics_list: List[MetricsType]) -> MetricsType:
+        return average_metrics(metrics_list)
 
     @classmethod
     def register(cls: Type, name: str):
