@@ -223,39 +223,47 @@ class PythonRouge(Metric):
             f1 = 0.0
         return precision, recall, f1
 
-    def score(self,
-              summary: SummaryType,
-              references: List[SummaryType]) -> MetricsType:
-        summary = self.preprocess_summary(summary)
-        references = [self.preprocess_summary(reference) for reference in references]
+    def score_multi_all(self,
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+        summaries_list = [[self.preprocess_summary(summary) for summary in summaries] for summaries in summaries_list]
+        references_list = [[self.preprocess_summary(reference) for reference in references] for references in references_list]
 
-        metrics = {}
-        for n in self.ngram_orders:
-            total_reference_count = 0
-            total_summary_count = 0
-            total_intersection = 0
+        metrics_lists = []
+        for summaries, references in zip(summaries_list, references_list):
+            metrics_list = [{} for _ in summaries]
 
-            summary_ngrams = self._count_ngrams(summary, n)
-            for reference in references:
-                reference_ngrams = self._count_ngrams(reference, n)
-                reference_total, summary_total, intersection = self._calculate_intersection(reference_ngrams, summary_ngrams)
+            for n in self.ngram_orders:
+                reference_ngrams_list = [self._count_ngrams(reference, n) for reference in references]
 
-                total_reference_count += reference_total
-                total_summary_count += summary_total
-                total_intersection += intersection
+                for i, summary in enumerate(summaries):
+                    total_reference_count = 0
+                    total_summary_count = 0
+                    total_intersection = 0
 
-            precision, recall, f1 = self._calculate_pr_f1(total_reference_count, total_summary_count, total_intersection)
-            metrics[f'python-rouge-{n}'] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-            }
+                    summary_ngrams = self._count_ngrams(summary, n)
+                    for reference_ngrams in reference_ngrams_list:
+                        reference_total, summary_total, intersection = self._calculate_intersection(reference_ngrams, summary_ngrams)
 
-        if self.compute_rouge_l:
-            precision, recall, f1 = self._calculate_rouge_l(references, summary)
-            metrics['python-rouge-l'] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1
-            }
-        return metrics
+                        total_reference_count += reference_total
+                        total_summary_count += summary_total
+                        total_intersection += intersection
+
+                    precision, recall, f1 = self._calculate_pr_f1(total_reference_count, total_summary_count, total_intersection)
+                    metrics_list[i][f'python-rouge-{n}'] = {
+                        'precision': precision,
+                        'recall': recall,
+                        'f1': f1,
+                    }
+
+            if self.compute_rouge_l:
+                for i, summary in enumerate(summaries):
+                    precision, recall, f1 = self._calculate_rouge_l(references, summary)
+                    metrics_list[i]['python-rouge-l'] = {
+                        'precision': precision,
+                        'recall': recall,
+                        'f1': f1
+                    }
+
+            metrics_lists.append(metrics_list)
+        return metrics_lists
