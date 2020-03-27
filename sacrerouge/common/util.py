@@ -53,3 +53,15 @@ def divide_metrics(metrics: MetricsType, denominator: float) -> MetricsType:
 def average_metrics(metrics_list: List[MetricsType]) -> MetricsType:
     total = sum_metrics(metrics_list)
     return divide_metrics(total, len(metrics_list))
+
+
+def reduce_metrics(metrics: MetricsType) -> MetricsType:
+    reduced = {}
+    for key, value in metrics.items():
+        if isinstance(value, dict):
+            reduced[key] = reduce_metrics(metrics[key])
+        elif isinstance(value, list):
+            reduced[key] = sum(value) / len(value)
+        else:
+            reduced[key] = value
+    return reduced
