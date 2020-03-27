@@ -4,7 +4,8 @@ from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
 from sacrerouge.common import TemporaryDirectory
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -96,8 +97,8 @@ class Rouge(Metric):
 
     def _parse_rouge_stdout(self, stdout: str):
         lines = stdout.splitlines()
-        macro_metrics_dict = defaultdict(lambda: defaultdict(dict))
-        micro_metrics_dicts = defaultdict(lambda: defaultdict(dict))
+        macro_metrics_dict = defaultdict(lambda: defaultdict(MetricsDict))
+        micro_metrics_dicts = defaultdict(lambda: defaultdict(MetricsDict))
         for line in lines:
             if line in ['---------------------------------------------', '.............................................']:
                 continue
@@ -128,7 +129,7 @@ class Rouge(Metric):
 
     def _run(self,
              summaries_list: List[List[SummaryType]],
-             references_list: List[List[SummaryType]]) -> Tuple[List[MetricsType], List[List[MetricsType]]]:
+             references_list: List[List[SummaryType]]) -> Tuple[List[MetricsDict], List[List[MetricsDict]]]:
         with TemporaryDirectory() as temp_dir:
             summary_filenames_list = []
             reference_filenames_list = []
@@ -188,13 +189,13 @@ class Rouge(Metric):
 
     def score_multi_all(self,
                         summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+                        references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
                  summaries: List[List[SummaryType]],
-                 references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
+                 references_list: List[List[SummaryType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
         summaries_list = [[summary] for summary in summaries]
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, references_list)
 
