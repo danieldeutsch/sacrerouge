@@ -4,7 +4,8 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -225,13 +226,13 @@ class PythonRouge(Metric):
 
     def score_multi_all(self,
                         summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+                        references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
         summaries_list = [[self.preprocess_summary(summary) for summary in summaries] for summaries in summaries_list]
         references_list = [[self.preprocess_summary(reference) for reference in references] for references in references_list]
 
         metrics_lists = []
         for summaries, references in zip(summaries_list, references_list):
-            metrics_list = [{} for _ in summaries]
+            metrics_list = [MetricsDict() for _ in summaries]
 
             for n in self.ngram_orders:
                 reference_ngrams_list = [self._count_ngrams(reference, n) for reference in references]
