@@ -1,8 +1,9 @@
 import argparse
 import tarfile
 from collections import defaultdict
+from typing import Dict
 
-from sacrerouge.common.util import merge_dict
+from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
 
 
@@ -55,7 +56,7 @@ def load_update_summaries(update_eval_tar_path: str):
     return summaries
 
 
-def load_main_rouge_jk_output(eval_tar: str, file_path: str):
+def load_main_rouge_jk_output(eval_tar: str, file_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
     jk_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile(file_path).read().decode().splitlines()
@@ -75,7 +76,6 @@ def load_main_rouge_jk_output(eval_tar: str, file_path: str):
                 jk_metrics[instance_id][summarizer_id][rouge_metric]['precision'].append(precision)
                 jk_metrics[instance_id][summarizer_id][rouge_metric]['f1'].append(f1)
 
-        metrics = defaultdict(lambda: defaultdict(dict))
         for instance_id in jk_metrics.keys():
             for summarizer_id in jk_metrics[instance_id].keys():
                 for rouge_metric in jk_metrics[instance_id][summarizer_id].keys():
@@ -87,10 +87,9 @@ def load_main_rouge_jk_output(eval_tar: str, file_path: str):
                         'precision': sum(precisions) / len(precisions),
                         'f1': sum(f1s) / len(f1s)
                     }
-    return metrics
 
 
-def load_update_rouge_jk_output(eval_tar: str, file_path: str):
+def load_update_rouge_jk_output(eval_tar: str, file_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
     jk_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))))
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile(file_path).read().decode().splitlines()
@@ -111,7 +110,6 @@ def load_update_rouge_jk_output(eval_tar: str, file_path: str):
                 jk_metrics[instance_id][group][summarizer_id][rouge_metric]['precision'].append(precision)
                 jk_metrics[instance_id][group][summarizer_id][rouge_metric]['f1'].append(f1)
 
-        metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         for instance_id in jk_metrics.keys():
             for group in ['A', 'B', 'C']:
                 for summarizer_id in jk_metrics[instance_id][group].keys():
@@ -124,11 +122,9 @@ def load_update_rouge_jk_output(eval_tar: str, file_path: str):
                             'precision': sum(precisions) / len(precisions),
                             'f1': sum(f1s) / len(f1s)
                         }
-    return metrics
 
 
-def load_main_content_table(main_eval_tar_path: str):
-    judgments = defaultdict(lambda: defaultdict(dict))
+def load_main_content_table(main_eval_tar_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
     with tarfile.open(main_eval_tar_path, 'r') as tar:
         lines = tar.extractfile('mainEval/manual/content.table').read().decode().splitlines()
         for line in lines[6:]:
@@ -136,12 +132,10 @@ def load_main_content_table(main_eval_tar_path: str):
             instance_id = columns[0].lower()
             summarizer_id = columns[3]
             score = int(columns[4])
-            judgments[instance_id][summarizer_id]['content_responsiveness'] = score
-    return judgments
+            metrics[instance_id][summarizer_id]['content_responsiveness'] = score
 
 
-def load_update_content_table(update_eval_tar_path: str):
-    judgments = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+def load_update_content_table(update_eval_tar_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
     with tarfile.open(update_eval_tar_path, 'r') as tar:
         lines = tar.extractfile('updateEval/Responsiveness/content.table').read().decode().splitlines()
         for line in lines[6:]:
@@ -150,12 +144,10 @@ def load_update_content_table(update_eval_tar_path: str):
             group = columns[0].split('-')[1]
             summarizer_id = columns[3]
             score = int(columns[4])
-            judgments[instance_id][group][summarizer_id]['content_responsiveness'] = score
-    return judgments
+            metrics[instance_id][group][summarizer_id]['content_responsiveness'] = score
 
 
-def load_main_linguistic_quality_table(main_eval_tar_path: str):
-    judgments = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+def load_main_linguistic_quality_table(main_eval_tar_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
     with tarfile.open(main_eval_tar_path, 'r') as tar:
         lines = tar.extractfile('mainEval/manual/linguistic_quality.table').read().decode().splitlines()
         for line in lines[7:]:
@@ -164,8 +156,7 @@ def load_main_linguistic_quality_table(main_eval_tar_path: str):
             summarizer_id = columns[3]
             question = columns[4]
             score = int(columns[5])
-            judgments[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
-    return judgments
+            metrics[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
 
 
 def get_references(summaries, instance_id, summarizer_id, group=None):
@@ -253,24 +244,9 @@ def save_update_summaries_metrics(summaries, metrics, output_dir: str):
                                                 'references': references_C,
                                                 'metrics': metrics_C
                                             }
-                                            metric_instance_A = {
-                                                'instance_id': f'{instance_id}-A',
-                                                'summarizer_id': summarizer_id,
-                                                'summarizer_type': summary_A['summarizer_type'],
-                                                'metrics': metrics_A
-                                            }
-                                            metric_instance_B = {
-                                                'instance_id': f'{instance_id}-B',
-                                                'summarizer_id': summarizer_id,
-                                                'summarizer_type': summary_B['summarizer_type'],
-                                                'metrics': metrics_B
-                                            }
-                                            metric_instance_C = {
-                                                'instance_id': f'{instance_id}-C',
-                                                'summarizer_id': summarizer_id,
-                                                'summarizer_type': summary_C['summarizer_type'],
-                                                'metrics': metrics_C
-                                            }
+                                            metric_instance_A = Metrics(f'{instance_id}-A', summarizer_id, summary_A['summarizer_type'], metrics_A)
+                                            metric_instance_B = Metrics(f'{instance_id}-B', summarizer_id, summary_B['summarizer_type'], metrics_B)
+                                            metric_instance_C = Metrics(f'{instance_id}-C', summarizer_id, summary_C['summarizer_type'], metrics_C)
 
                                             out_summaries_A_B_C.write(summary_instance_A)
                                             out_summaries_A_B_C.write(summary_instance_B)
@@ -297,25 +273,19 @@ def main(main_eval_tar, update_eval_tar, output_dir):
     main_summaries = load_main_summaries(main_eval_tar)
     update_summaries = load_update_summaries(update_eval_tar)
 
-    main_rouge = load_main_rouge_jk_output(main_eval_tar, 'mainEval/ROUGE/rougejk.m.out')
-    update_rouge = load_update_rouge_jk_output(update_eval_tar, 'updateEval/ROUGE/rougejk.m.out')
+    main_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(MetricsDict)))
+    update_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(MetricsDict)))
 
-    main_content = load_main_content_table(main_eval_tar)
-    update_content = load_update_content_table(update_eval_tar)
+    load_main_rouge_jk_output(main_eval_tar, 'mainEval/ROUGE/rougejk.m.out', main_metrics)
+    load_update_rouge_jk_output(update_eval_tar, 'updateEval/ROUGE/rougejk.m.out', update_metrics)
 
-    main_linguistic_quality = load_main_linguistic_quality_table(main_eval_tar)
+    load_main_content_table(main_eval_tar, main_metrics)
+    load_update_content_table(update_eval_tar, update_metrics)
 
-    main_be = load_main_rouge_jk_output(main_eval_tar, 'mainEval/BE/simplejk.m.hm.out')
-    update_be = load_update_rouge_jk_output(update_eval_tar, 'updateEval/BE/simplejk.m.hm.out')
+    load_main_linguistic_quality_table(main_eval_tar, main_metrics)
 
-    main_metrics = main_rouge
-    merge_dict(main_metrics, main_content)
-    merge_dict(main_metrics, main_linguistic_quality)
-    merge_dict(main_metrics, main_be)
-
-    update_metrics = update_rouge
-    merge_dict(update_metrics, update_content)
-    merge_dict(update_metrics, update_be)
+    load_main_rouge_jk_output(main_eval_tar, 'mainEval/BE/simplejk.m.hm.out', main_metrics)
+    load_update_rouge_jk_output(update_eval_tar, 'updateEval/BE/simplejk.m.hm.out', update_metrics)
 
     save_main_summaries_metrics(main_summaries, main_metrics, output_dir)
     save_update_summaries_metrics(update_summaries, update_metrics, output_dir)
