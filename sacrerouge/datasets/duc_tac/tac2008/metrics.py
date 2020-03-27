@@ -2,7 +2,7 @@ import argparse
 import tarfile
 from collections import defaultdict
 
-from sacrerouge.common.util import merge_dict
+from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
 
 
@@ -40,8 +40,7 @@ def load_summaries(eval_tar: str):
     return summaries
 
 
-def load_manual_judgments(eval_tar: str):
-    judgments = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+def load_manual_judgments(eval_tar: str, metrics):
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile('UpdateSumm08_eval/manual/manual.model').read().decode().splitlines()
         for line in lines:
@@ -49,7 +48,7 @@ def load_manual_judgments(eval_tar: str):
             instance_id = columns[0].split('-')[0].lower()
             group = columns[0].split('-')[1]
             summarizer_id = columns[1]
-            judgments[instance_id][group][summarizer_id] = {
+            metrics[instance_id][group][summarizer_id] = {
                 'num_scus_jk': int(columns[2]),
                 'modified_pyramid_score_jk': float(columns[4]),
                 'linguistic_quality': int(columns[5]),
@@ -62,7 +61,7 @@ def load_manual_judgments(eval_tar: str):
             instance_id = columns[0].split('-')[0].lower()
             group = columns[0].split('-')[1]
             summarizer_id = columns[1]
-            judgments[instance_id][group][summarizer_id] = {
+            metrics[instance_id][group][summarizer_id] = {
                 'modified_pyramid_score': float(columns[2]),
                 'num_scus': int(columns[3]),
                 'num_repetitions': int(columns[4]),
@@ -70,11 +69,9 @@ def load_manual_judgments(eval_tar: str):
                 'linguistic_quality': int(columns[7]),
                 'overall_responsiveness': int(columns[8])
             }
-    return judgments
 
 
-def load_rouge_output(eval_tar: str, file_path: str):
-    metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+def load_rouge_output(eval_tar: str, file_path: str, metrics):
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile(file_path).read().decode().splitlines()
         for line in lines:
@@ -91,10 +88,9 @@ def load_rouge_output(eval_tar: str, file_path: str):
                     'precision': precision,
                     'f1': f1
                 }
-    return metrics
 
 
-def load_rouge_jk_output(eval_tar: str, file_path: str):
+def load_rouge_jk_output(eval_tar: str, file_path: str, metrics):
     jk_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))))
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile(file_path).read().decode().splitlines()
@@ -112,7 +108,6 @@ def load_rouge_jk_output(eval_tar: str, file_path: str):
                 jk_metrics[instance_id][group][summarizer_id][rouge_metric]['precision'].append(precision)
                 jk_metrics[instance_id][group][summarizer_id][rouge_metric]['f1'].append(f1)
 
-        metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         for instance_id in jk_metrics.keys():
             for group in ['A', 'B']:
                 for summarizer_id in jk_metrics[instance_id][group].keys():
@@ -125,7 +120,6 @@ def load_rouge_jk_output(eval_tar: str, file_path: str):
                             'precision': sum(precisions) / len(precisions),
                             'f1': sum(f1s) / len(f1s)
                         }
-    return metrics
 
 
 def get_references(summaries, instance_id, summarizer_id, group):
@@ -173,18 +167,8 @@ def save_summaries_and_metrics(summaries, metrics, output_dir: str):
                                         'references': references_B,
                                         'metrics': metrics_B
                                     }
-                                    metric_instance_A = {
-                                        'instance_id': f'{instance_id}-A',
-                                        'summarizer_id': summarizer_id,
-                                        'summarizer_type': summary_A['summarizer_type'],
-                                        'metrics': metrics_A
-                                    }
-                                    metric_instance_B = {
-                                        'instance_id': f'{instance_id}-B',
-                                        'summarizer_id': summarizer_id,
-                                        'summarizer_type': summary_B['summarizer_type'],
-                                        'metrics': metrics_B
-                                    }
+                                    metric_instance_A = Metrics(f'{instance_id}-A', summarizer_id, summary_A['summarizer_type'], metrics_A)
+                                    metric_instance_B = Metrics(f'{instance_id}-B', summarizer_id, summary_B['summarizer_type'], metrics_B)
 
                                     out_summaries_A_B.write(summary_instance_A)
                                     out_summaries_A_B.write(summary_instance_B)
@@ -205,17 +189,12 @@ def setup(data_dir: str, output_dir: str):
 def main(eval_tar, output_dir):
     summaries = load_summaries(eval_tar)
 
-    judgments = load_manual_judgments(eval_tar)
-    rouge = load_rouge_output(eval_tar, 'UpdateSumm08_eval/ROUGE/rouge.m.out')
-    rouge_jk = load_rouge_jk_output(eval_tar, 'UpdateSumm08_eval/ROUGE/rougejk.m.out')
-    be = load_rouge_output(eval_tar, 'UpdateSumm08_eval/BE/simple.m.hm.out')
-    be_jk = load_rouge_jk_output(eval_tar, 'UpdateSumm08_eval/BE/simplejk.m.hm.out')
-
-    metrics = judgments
-    merge_dict(metrics, rouge)
-    merge_dict(metrics, rouge_jk)
-    merge_dict(metrics, be)
-    merge_dict(metrics, be_jk)
+    metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(MetricsDict)))
+    load_manual_judgments(eval_tar, metrics)
+    load_rouge_output(eval_tar, 'UpdateSumm08_eval/ROUGE/rouge.m.out', metrics)
+    load_rouge_jk_output(eval_tar, 'UpdateSumm08_eval/ROUGE/rougejk.m.out', metrics)
+    load_rouge_output(eval_tar, 'UpdateSumm08_eval/BE/simple.m.hm.out', metrics)
+    load_rouge_jk_output(eval_tar, 'UpdateSumm08_eval/BE/simplejk.m.hm.out', metrics)
 
     save_summaries_and_metrics(summaries, metrics, output_dir)
 
