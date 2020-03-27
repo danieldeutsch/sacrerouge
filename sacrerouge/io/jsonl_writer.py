@@ -1,6 +1,6 @@
 import bz2
 import gzip
-import json
+import jsons
 import os
 from typing import Any
 
@@ -52,7 +52,7 @@ class JsonlWriter(object):
         object: ``Any``
             The object to write to the file.
         """
-        string = json.dumps(object)
+        string = jsons.dumps(object)
         if self.binary:
             self.file_handler.write(string.encode() + b'\n')
         else:
