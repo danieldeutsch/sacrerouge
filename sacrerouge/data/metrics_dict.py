@@ -78,25 +78,3 @@ class MetricsDict(dict):
         for key, value in self.items():
             result[key] = value / denominator
         return result
-
-
-def main():
-    import jsons
-
-    d = MetricsDict()
-    d['a']['b']['c'] = 5
-
-    e = MetricsDict()
-    e['a']['b']['c'] = 2
-
-    f = MetricsDict()
-    f['a']['b']['c'] = 1
-
-    f = MetricsDict()
-    f['a']['b']['c'] = [1, 5]
-
-    g = jsons.loads(jsons.dumps(f), MetricsDict)
-
-
-if __name__ == '__main__':
-    main()
