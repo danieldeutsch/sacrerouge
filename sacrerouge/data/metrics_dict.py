@@ -8,6 +8,7 @@ class MetricsDict(dict):
     def __init__(self, initial_dict: Optional[Union['MetricsDict', Dict]] = None) -> None:
         super().__init__()
         if initial_dict:
+            initial_dict = copy.deepcopy(initial_dict)
             for key, value in initial_dict.items():
                 self[key] = value
 

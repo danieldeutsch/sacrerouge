@@ -47,3 +47,11 @@ class TestMetricsDict(unittest.TestCase):
         metrics = MetricsDict({'k1': 1, 'k2': {'k3': 4}})
         assert metrics.flatten_keys() == {'k1': 1, 'k2_k3': 4}
         assert metrics == {'k1': 1, 'k2': {'k3': 4}}
+
+    def test_init_with_metrics_dict(self):
+        a = MetricsDict({'k1': 1, 'k2': {'k3': [1, 2, 3]}})
+        b = MetricsDict(a)
+
+        b['k2']['k3'].append(4)
+        assert a == {'k1': 1, 'k2': {'k3': [1, 2, 3]}}
+        assert b == {'k1': 1, 'k2': {'k3': [1, 2, 3, 4]}}
