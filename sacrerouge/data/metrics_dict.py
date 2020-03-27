@@ -52,6 +52,16 @@ class MetricsDict(dict):
                 result[key] = value
         return result
 
+    def update(self, other: 'MetricsDict') -> None:
+        for key, value in other.items():
+            if key in self:
+                if isinstance(self[key], MetricsDict) and isinstance(value, MetricsDict):
+                    self[key].update(value)
+                else:
+                    self[key] = value
+            else:
+                self[key] = value
+
     def _add_to(self, target: 'MetricsDict') -> 'MetricsDict':
         # We created this method so that both __add__ and __radd__ can create
         # an intermediate cumulative MetricsDict and use this method to add to it.

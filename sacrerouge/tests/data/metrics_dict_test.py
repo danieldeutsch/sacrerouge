@@ -55,3 +55,9 @@ class TestMetricsDict(unittest.TestCase):
         b['k2']['k3'].append(4)
         assert a == {'k1': 1, 'k2': {'k3': [1, 2, 3]}}
         assert b == {'k1': 1, 'k2': {'k3': [1, 2, 3, 4]}}
+
+    def test_update(self):
+        m1 = MetricsDict({'k1': 1, 'k2': {'k3': [1, 2, 3]}})
+        m2 = MetricsDict({'k4': 4, 'k2': {'k3': 5, 'k5': 8}})
+        m1.update(m2)
+        assert m1 == {'k1': 1, 'k2': {'k3': 5, 'k5': 8}, 'k4': 4}
