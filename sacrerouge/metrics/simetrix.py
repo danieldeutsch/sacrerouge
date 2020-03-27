@@ -4,7 +4,8 @@ from subprocess import Popen, PIPE
 from typing import List, Tuple
 
 from sacrerouge.common import TemporaryDirectory
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -31,7 +32,7 @@ class SIMetrix(Metric):
             else:
                 out.write(summary)
 
-    def _parse_macro_file(self, file_path: str) -> List[MetricsType]:
+    def _parse_macro_file(self, file_path: str) -> List[MetricsDict]:
         metrics_dict = {}
         with open(file_path, 'r') as f:
             for i, line in enumerate(f):
@@ -40,7 +41,7 @@ class SIMetrix(Metric):
                     header = columns
                 else:
                     index = int(columns[0])
-                    metrics = {}
+                    metrics = MetricsDict()
                     for j, name in enumerate(header[1:]):
                         # All the names begin with "Avg"
                         name = name[3:]
@@ -54,7 +55,7 @@ class SIMetrix(Metric):
             metrics_list.append(metrics_dict[index])
         return metrics_list
 
-    def _parse_micro_file(self, file_path: str) -> List[List[MetricsType]]:
+    def _parse_micro_file(self, file_path: str) -> List[List[MetricsDict]]:
         metrics_dicts = defaultdict(dict)
         with open(file_path, 'r') as f:
             for i, line in enumerate(f):
@@ -64,7 +65,7 @@ class SIMetrix(Metric):
                 else:
                     instance_index = int(columns[0])
                     system_index = int(columns[1])
-                    metrics = {}
+                    metrics = MetricsDict()
                     for j, name in enumerate(header[2:]):
                         metrics[name] = float(columns[j + 2])
                     metrics_dicts[instance_index][system_index] = metrics
@@ -80,7 +81,7 @@ class SIMetrix(Metric):
 
     def _run(self,
              summaries_list: List[List[SummaryType]],
-             documents_list: List[List[str]]) -> Tuple[List[MetricsType], List[List[MetricsType]]]:
+             documents_list: List[List[str]]) -> Tuple[List[MetricsDict], List[List[MetricsDict]]]:
         with TemporaryDirectory() as temp_dir:
             mappings_file_path = f'{temp_dir}/mappings.txt'
             with open(mappings_file_path, 'w') as out:
@@ -132,13 +133,13 @@ class SIMetrix(Metric):
 
     def score_multi_all(self,
                         summaries_list: List[List[SummaryType]],
-                        documents_list: List[List[str]]) -> List[List[MetricsType]]:
+                        documents_list: List[List[str]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, documents_list)
         return micro_metrics_lists
 
     def evaluate(self,
                  summaries: List[List[SummaryType]],
-                 documents_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
+                 documents_list: List[List[SummaryType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
         summaries_list = [[summary] for summary in summaries]
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, documents_list)
 
