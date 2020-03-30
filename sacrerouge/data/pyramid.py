@@ -2,7 +2,7 @@ import bisect
 import os
 import re
 from lxml import etree
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 
 
 class Part(object):
@@ -19,8 +19,21 @@ class Contributor(object):
         self.parts = parts
 
 
+class ContributorAnnotation(object):
+    def __init__(self, label: str, parts: List[Part]) -> None:
+        self.label = label
+        self.parts = parts
+
+
 class SCU(object):
     def __init__(self, scu_id: int, label: str, contributors: List[Contributor]) -> None:
+        self.scu_id = scu_id
+        self.label = label
+        self.contributors = contributors
+
+
+class SCUAnnotation(object):
+    def __init__(self, scu_id: int, label: str, contributors: List[ContributorAnnotation]) -> None:
         self.scu_id = scu_id
         self.label = label
         self.contributors = contributors
@@ -148,5 +161,101 @@ class PyramidAnnotation(object):
         self.scus = scus
 
     @staticmethod
+    def _load_summary(root) -> str:
+        lines = []
+        for node in root.xpath('./annotation/text/line'):
+            if node.text:
+                lines.append(node.text.strip())
+        summary = ' '.join(lines)
+        summary = re.sub(r'\s+', ' ', summary)
+        return summary
+
+    @staticmethod
+    def _find_exact_matches(summary: str, text: str) -> List[int]:
+        # Find all exact of the text in the summary. Return the list of offsets
+        regex = re.escape(text)
+        return [match.start() for match in re.finditer(regex, summary)]
+
+    @staticmethod
+    def _find_closest_match(matches: List[int], index: int) -> int:
+        differences = [abs(match - index) for match in matches]
+        min_diff = min(differences)
+        min_index = differences.index(min_diff)
+        start = matches[min_index]
+        return start, min_index
+
+    @staticmethod
+    def _find_soft_matches(summary: str, text: str, start: int) -> Tuple[str, int]:
+        # Many of the mismatches are due to weird whitespace issues, so we get rid
+        # of the whitespace, find matches, and then remap to the summary
+
+        # Maps from the character index in the summary without spaces to the
+        # character index in the summary with spaces
+        index_map = {}
+        offset = 0
+        for i, char in enumerate(summary):
+            if char != ' ':
+                index_map[offset] = i
+                offset += 1
+
+        edited_summary = summary.replace(' ', '')
+        edited_text = text.replace(' ', '')
+
+        regex = re.escape(edited_text)
+        edited_starts = [match.start() for match in re.finditer(regex, edited_summary)]
+        starts = [index_map[index] for index in edited_starts]
+
+        start, index = PyramidAnnotation._find_closest_match(starts, start)
+        end = index_map[edited_starts[index] + len(edited_text) - 1]
+        found_text = summary[start:end + 1]
+
+        return found_text, start
+
+    @staticmethod
+    def _load_scus(root, summary: str) -> List[SCUAnnotation]:
+        scus = []
+        # Iterate over all peerscu nodes with a contributor child, others
+        # are not matches
+        for node in root.xpath('./annotation/peerscu[contributor]'):
+            label = node.get('label')
+            scu_id = int(node.get('uid'))
+            # SCU 0 is a catchall for non-matches
+            if scu_id == 0:
+                continue
+            contributors = []
+            for contributor_node in node.xpath('./contributor'):
+                contrib_label = contributor_node.get('label')
+                parts = []
+                for part_node in contributor_node.xpath('./part'):
+                    text = part_node.get('label')
+                    text = re.sub(r'\s+', ' ', text)
+                    start = int(part_node.get('start'))
+
+                    matches = PyramidAnnotation._find_exact_matches(summary, text)
+                    if len(matches) > 0:
+                        # Find the match which is closest to "start"
+                        found_text = text
+                        start, _ = PyramidAnnotation._find_closest_match(matches, start)
+                    elif len(matches) == 0:
+                        found_text, start = PyramidAnnotation._find_soft_matches(summary, text, start)
+
+                    end = start + len(found_text)
+                    assert summary[start:end] == found_text
+                    parts.append(Part(found_text, start, end))
+
+                contributors.append(ContributorAnnotation(contrib_label, parts))
+            scus.append(SCUAnnotation(scu_id, label, contributors))
+
+        return scus
+
+    @staticmethod
     def from_xml(instance_id: str, summarizer_id: str, summarizer_type: str, file_path_or_xml: str) -> 'PyramidAnnotation':
-        pass
+        if os.path.exists(file_path_or_xml):
+            xml = open(file_path_or_xml, 'r').read()
+        else:
+            xml = file_path_or_xml
+
+        root = etree.fromstring(xml)
+        summary = PyramidAnnotation._load_summary(root)
+        scus = PyramidAnnotation._load_scus(root, summary)
+        return PyramidAnnotation(instance_id, summarizer_id, summarizer_type, summary, scus)
