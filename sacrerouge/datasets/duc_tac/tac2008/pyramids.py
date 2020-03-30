@@ -25,8 +25,8 @@ def load_pyramids(eval_tar: str) -> Dict[str, Dict[str, Pyramid]]:
     return pyramids
 
 
-def load_peer_pyramids(eval_tar: str) -> Dict[str, Dict[str, Dict[str, PyramidAnnotation]]]:
-    pyramids = defaultdict(lambda: defaultdict(dict))
+def load_peer_pyramids(eval_tar: str, pyramids: Dict[str, Dict[str, Pyramid]]) -> Dict[str, Dict[str, Dict[str, PyramidAnnotation]]]:
+    annotations = defaultdict(lambda: defaultdict(dict))
     with tarfile.open(eval_tar, 'r') as tar:
         for member in tar.getmembers():
             if member.isfile() and member.name.startswith('UpdateSumm08_eval/manual/peers/'):
@@ -40,11 +40,12 @@ def load_peer_pyramids(eval_tar: str) -> Dict[str, Dict[str, Dict[str, PyramidAn
                 assert not summarizer_id.isalpha()
                 summarizer_type = 'peer'
 
+                pyramid = pyramids[instance_id][group]
                 xml = tar.extractfile(member).read().decode()
-                pyramid = PyramidAnnotation.from_xml(f'{instance_id}-{group}', summarizer_id, summarizer_type, xml)
-                pyramids[instance_id][summarizer_id][group] = pyramid
+                annotation = PyramidAnnotation.from_xml(f'{instance_id}-{group}', summarizer_id, summarizer_type, xml, pyramid)
+                annotations[instance_id][summarizer_id][group] = annotation
 
-    return pyramids
+    return annotations
 
 
 def save_pyramids(pyramids: Dict[str, Dict[str, Pyramid]],
@@ -82,10 +83,10 @@ def setup(data_dir: str, output_dir: str):
 
 
 def main(eval_tar, output_dir):
-    # pyramids = load_pyramids(eval_tar)
-    # save_pyramids(pyramids, output_dir)
+    pyramids = load_pyramids(eval_tar)
+    save_pyramids(pyramids, output_dir)
 
-    peer_pyramids = load_peer_pyramids(eval_tar)
+    peer_pyramids = load_peer_pyramids(eval_tar, pyramids)
     save_peer_pyramids(peer_pyramids, output_dir)
 
 

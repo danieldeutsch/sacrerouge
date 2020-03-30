@@ -212,13 +212,23 @@ class PyramidAnnotation(object):
         return found_text, start
 
     @staticmethod
-    def _load_scus(root, summary: str) -> List[SCUAnnotation]:
+    def _load_scus(root, summary: str, pyramid: Pyramid) -> List[SCUAnnotation]:
+        # Because of parsing errors for the original pyramid, there may be some SCUs
+        # which are no longer valid (because they were dropped in the parsing). We
+        # will skip those
+        known_scu_ids = set([scu.scu_id for scu in pyramid.scus])
+
         scus = []
         # Iterate over all peerscu nodes with a contributor child, others
         # are not matches
         for node in root.xpath('./annotation/peerscu[contributor]'):
             label = node.get('label')
+            label = re.sub(f'^\(\d+\) ', '', label)
+
             scu_id = int(node.get('uid'))
+            if scu_id not in known_scu_ids:
+                continue
+
             # SCU 0 is a catchall for non-matches
             if scu_id == 0:
                 continue
@@ -249,7 +259,11 @@ class PyramidAnnotation(object):
         return scus
 
     @staticmethod
-    def from_xml(instance_id: str, summarizer_id: str, summarizer_type: str, file_path_or_xml: str) -> 'PyramidAnnotation':
+    def from_xml(instance_id: str,
+                 summarizer_id: str,
+                 summarizer_type: str,
+                 file_path_or_xml: str,
+                 pyramid: Pyramid) -> 'PyramidAnnotation':
         if os.path.exists(file_path_or_xml):
             xml = open(file_path_or_xml, 'r').read()
         else:
@@ -257,5 +271,5 @@ class PyramidAnnotation(object):
 
         root = etree.fromstring(xml)
         summary = PyramidAnnotation._load_summary(root)
-        scus = PyramidAnnotation._load_scus(root, summary)
+        scus = PyramidAnnotation._load_scus(root, summary, pyramid)
         return PyramidAnnotation(instance_id, summarizer_id, summarizer_type, summary, scus)
