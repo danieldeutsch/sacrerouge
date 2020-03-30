@@ -153,7 +153,7 @@ class PyramidAnnotation(object):
                  summarizer_id: str,
                  summarizer_type: str,
                  summary: str,
-                 scus: List[SCU]) -> None:
+                 scus: List[SCUAnnotation]) -> None:
         self.instance_id = instance_id
         self.summarizer_id = summarizer_id
         self.summarizer_type = summarizer_type
