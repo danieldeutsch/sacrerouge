@@ -29,8 +29,13 @@ class TestTAC2008Pyramids(unittest.TestCase):
 
         assert instance_id_to_pyramid.keys() == instance_id_to_annotations.keys()
         for instance_id, pyramid in instance_id_to_pyramid.items():
+            assert len(pyramid.summaries) == 4
+            for reference in pyramid.summaries:
+                assert len(reference) > 0
+
             scu_ids = set([scu.scu_id for scu in pyramid.scus])
             for annotation in instance_id_to_annotations[instance_id]:
+                assert len(annotation.summary) > 0, (instance_id, annotation.summarizer_id)
                 for scu in annotation.scus:
                     assert scu.scu_id in scu_ids, (scu.scu_id, scu_ids)
 

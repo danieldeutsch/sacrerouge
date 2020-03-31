@@ -43,7 +43,10 @@ def load_peer_pyramids(eval_tar: str, pyramids: Dict[str, Dict[str, Pyramid]]) -
                 pyramid = pyramids[instance_id][group]
                 xml = tar.extractfile(member).read().decode()
                 annotation = PyramidAnnotation.from_xml(f'{instance_id}-{group}', summarizer_id, summarizer_type, xml, pyramid)
-                annotations[instance_id][summarizer_id][group] = annotation
+                if annotation:
+                    annotations[instance_id][summarizer_id][group] = annotation
+                else:
+                    print(f'Annotation for {instance_id}-{group}, {summarizer_id} is `None`. Skipping')
 
     return annotations
 
@@ -69,12 +72,15 @@ def save_peer_pyramids(pyramids: Dict[str, Dict[str, Dict[str, PyramidAnnotation
             with JsonlWriter(f'{output_dir}/task1.A-B.pyramid-annotations.jsonl') as out_A_B:
                 for instance_id in sorted(pyramids.keys()):
                     for summarizer_id in sorted(pyramids[instance_id].keys()):
-                        pyramid_A = pyramids[instance_id][summarizer_id]['A']
-                        pyramid_B = pyramids[instance_id][summarizer_id]['B']
-                        out_A_B.write(pyramid_A)
-                        out_A_B.write(pyramid_B)
-                        out_A.write(pyramid_A)
-                        out_B.write(pyramid_B)
+                        if 'A' in pyramids[instance_id][summarizer_id]:
+                            pyramid_A = pyramids[instance_id][summarizer_id]['A']
+                            out_A_B.write(pyramid_A)
+                            out_A.write(pyramid_A)
+
+                        if 'B' in pyramids[instance_id][summarizer_id]:
+                            pyramid_B = pyramids[instance_id][summarizer_id]['B']
+                            out_A_B.write(pyramid_B)
+                            out_B.write(pyramid_B)
 
 
 def setup(data_dir: str, output_dir: str):

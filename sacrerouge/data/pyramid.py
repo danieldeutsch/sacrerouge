@@ -76,6 +76,8 @@ class Pyramid(object):
         ends.append(len(text))
 
         summaries = [text[start:end].strip().replace('\n', ' ') for start, end in zip(starts, ends)]
+        for summary in summaries:
+            assert len(summary.strip()) > 0
         return summaries, starts
 
     @staticmethod
@@ -167,7 +169,7 @@ class PyramidAnnotation(object):
             if node.text:
                 lines.append(node.text.strip())
         summary = ' '.join(lines)
-        summary = re.sub(r'\s+', ' ', summary)
+        summary = re.sub(r'\s+', ' ', summary).strip()
         return summary
 
     @staticmethod
@@ -271,5 +273,10 @@ class PyramidAnnotation(object):
 
         root = etree.fromstring(xml)
         summary = PyramidAnnotation._load_summary(root)
+        if len(summary) == 0:
+            # For some reason, there are blank summaries in some files
+            # (see TAC 2008, D0805-A.M.100.A.5)
+            print(f'Summary for instance {instance_id} and summarizer {summarizer_id} is `None`')
+            return None
         scus = PyramidAnnotation._load_scus(root, summary, pyramid)
         return PyramidAnnotation(instance_id, summarizer_id, summarizer_type, summary, scus)
