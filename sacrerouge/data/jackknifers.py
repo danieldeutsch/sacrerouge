@@ -12,11 +12,11 @@ class ReferencesJackknifer(Jackknifer):
     def get_jackknifing_fields_list(self, fields: Dict[str, Any]) -> List[Dict[str, Any]]:
         references = fields['references']
         if len(references) == 1:
-            # No jackknifing can be done, return the original fields
-            return [fields]
+            # No jackknifing can be done, return `None` to indicate it cannot be done
+            return None
 
         jk_fields_list = []
-        for i in range(references):
+        for i in range(len(references)):
             # Copy the original fields and replace the references
             jk_fields = dict(fields)
             jk_fields['references'] = references[:i] + references[i + 1:]

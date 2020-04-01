@@ -1,13 +1,14 @@
 import argparse
-import json
+import jsons
 from overrides import overrides
 from tqdm import tqdm
 from typing import Any, Dict, List
 
 from sacrerouge.commands import Subcommand
-from sacrerouge.data import MetricsDict
-from sacrerouge.io import JsonlReader, JsonlWriter
-from sacrerouge.metrics import Metric, SummaryType
+from sacrerouge.data import EvalInstance, Metrics
+from sacrerouge.data.dataset_readers import DatasetReader
+from sacrerouge.io import JsonlWriter
+from sacrerouge.metrics import Metric
 
 
 def load_metrics(config: Dict[str, Any]) -> List[Metric]:
@@ -18,76 +19,78 @@ def load_metrics(config: Dict[str, Any]) -> List[Metric]:
     return metrics
 
 
-def score(metrics: List[Metric],
-          summary: SummaryType,
-          references: List[SummaryType],
-          is_reference: bool) -> MetricsDict:
-    results = MetricsDict()
-    for metric in metrics:
-        for name, value in metric.score(summary, references).items():
-            if is_reference:
-                name = name + '_jk'
-            results[name] = value
-    return results
+def score(metric: Metric,
+          instance: EvalInstance,
+          is_jackknifing: bool,
+          metrics_dict: Metrics) -> None:
+    summary = instance.summary
+    args = [instance.fields[field] for field in metric.required_fields]
+    for name, value in metric.score(summary, *args).items():
+        if is_jackknifing:
+            name = name + '_jk'
+        metrics_dict.metrics[name] = value
 
 
-def get_jackknifing_references_list(references: List[Any]) -> List[List[Any]]:
-    jk_references_list = []
-    for i in range(len(references)):
-        jk_references_list.append(references[:i] + references[i + 1:])
-    return jk_references_list
+def maybe_run_jackknifing(metric: Metric,
+                          instance: EvalInstance,
+                          metrics_dict: Metrics) -> None:
+    # We only do jackknifing if this metric requires it and it's possible to do
+    if metric.requires_jackknifing():
+        jk_fields_list = metric.jackknifer.get_jackknifing_fields_list(instance.fields)
+        if jk_fields_list:
+            results_list = []
+            for jk_fields in jk_fields_list:
+                args = [instance.fields[field] for field in metric.required_fields]
+                results_list.append(metric.score(instance.summary, *args))
+            results = sum(results_list) / len(results_list)
+            for name, value in results.items():
+                metrics_dict.metrics[name + '_jk'] = value
 
 
-def run_jackknifing(metrics: List[Metric], summary: SummaryType, references: List[SummaryType]) -> MetricsDict:
-    jk_references_list = get_jackknifing_references_list(references)
-    results = MetricsDict()
-    for metric in metrics:
-        # Compute the metrics for each jackknifing instance, then average
-        # together for the final metrics
-        jk_metrics_list = []
-        for jk_references in jk_references_list:
-            jk_metrics_list.append(metric.score(summary, jk_references))
-
-        jk_metrics = sum(jk_metrics_list) / len(jk_metrics_list)
-        for name, value in jk_metrics.items():
-            results[name + '_jk'] = value
-    return results
+def get_initial_metrics_list(instances: List[EvalInstance]) -> List[Metrics]:
+    metrics_list = []
+    for instance in instances:
+        metrics_list.append(Metrics(instance.instance_id, instance.summarizer_id, instance.summarizer_type))
+    return metrics_list
 
 
 class ScoreSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         self.parser = parser.add_parser('score')
-        self.parser.add_argument('summaries_jsonl')
         self.parser.add_argument('config')
         self.parser.add_argument('output_jsonl')
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
-        config = json.load(open(args.config, 'r'))
+        config = jsons.loads(open(args.config, 'r').read())
+        dataset_reader = DatasetReader.from_params(config['dataset_reader'])
         metrics = load_metrics(config)
-        instances = JsonlReader(args.summaries_jsonl).read()
 
-        with JsonlWriter(args.output_jsonl) as out:
-            for instance in tqdm(instances):
-                summarizer_type = instance['summarizer_type']
-                summary = instance['summary']['text']
-                references = [reference['text'] for reference in instance['references']]
+        instances = dataset_reader.read()
+        metrics_list = get_initial_metrics_list(instances)
+
+        for metric in tqdm(metrics):
+            for i, instance in enumerate(tqdm(instances)):
+                summarizer_type = instance.summarizer_type
 
                 if summarizer_type == 'reference':
-                    # No additional jackknifing needs to be done because the input
-                    # for reference summaries is already "missing" a reference
-                    # (i.e., itself), but the metric should be nammed the jackknifing version
-                    results = score(metrics, summary, references, True)
+                    # There is no jackknifing to be done, but if this metric
+                    # requires jackknifing, we want to indicate that this calcuation
+                    # is comparable to jackknifed result
+                    is_jackknifing = metric.requires_jackknifing()
+                    score(metric, instance, is_jackknifing, metrics_list[i])
                 elif summarizer_type == 'peer':
                     # Score normally using all of the references
-                    results = score(metrics, summary, references, False)
+                    score(metric, instance, False, metrics_list[i])
 
-                    # Run jackknifing and combine results
-                    jk_results = run_jackknifing(metrics, summary, references)
-                    results.update(jk_results)
+                    # Run jackknifing
+                    maybe_run_jackknifing(metric, instance, metrics_list[i])
                 else:
                     raise Exception(f'Unknown summarizer type: {summarizer_type}')
 
-                out.write({'metrics': results})
+        # Save the results to the output file
+        with JsonlWriter(args.output_jsonl) as out:
+            for metrics in metrics_list:
+                out.write(metrics)
