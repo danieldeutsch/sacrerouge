@@ -16,7 +16,7 @@ class SIMetrix(Metric):
                  remove_stopwords: bool = True,
                  jar_path: str = 'external/SIMetrix/simetrix.jar',
                  data_dir: str = 'external/SIMetrix/data'):
-        super().__init__(['documents'], False)
+        super().__init__(['documents'])
         self.use_stemmer = use_stemmer
         self.remove_stopwords = remove_stopwords
         self.jar_path = jar_path

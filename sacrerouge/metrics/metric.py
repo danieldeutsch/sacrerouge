@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
-from sacrerouge.data import MetricsDict
+from sacrerouge.data import Jackknifer, MetricsDict
 from sacrerouge.data.types import SummaryType
 
 
@@ -9,9 +9,9 @@ class Metric(object):
 
     def __init__(self,
                  required_fields: List[str],
-                 requires_jackknifing: bool) -> None:
+                 jackknifer: Optional[Jackknifer] = None) -> None:
         self.required_fields = required_fields
-        self.requires_jackknifing = requires_jackknifing
+        self.jackknifer = jackknifer
 
     def score(self, summary: SummaryType, *args: List[Any]) -> MetricsDict:
         args = [[arg] for arg in args]
@@ -36,6 +36,9 @@ class Metric(object):
 
     def aggregate(self, metrics_list: List[MetricsDict]) -> MetricsDict:
         return sum(metrics_list) / len(metrics_list)
+
+    def requires_jackknifing(self):
+        return self.jackknifer is not None
 
     @classmethod
     def register(cls: Type, name: str):

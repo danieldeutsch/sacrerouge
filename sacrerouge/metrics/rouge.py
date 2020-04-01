@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.data import MetricsDict
+from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
@@ -22,7 +23,7 @@ class Rouge(Metric):
                  wlcs_weight: Optional[float] = None,
                  rouge_script_location: str = 'external/ROUGE-1.5.5/ROUGE-1.5.5.pl',
                  rouge_eval_home: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__(['references'], True)
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
         self.remove_stopwords = remove_stopwords

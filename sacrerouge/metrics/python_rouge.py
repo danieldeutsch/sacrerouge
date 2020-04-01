@@ -5,6 +5,7 @@ from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
 from sacrerouge.data import MetricsDict
+from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
@@ -59,7 +60,7 @@ class PythonRouge(Metric):
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
                  data_dir: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__(['references'], True)
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
         self.max_words = max_words
