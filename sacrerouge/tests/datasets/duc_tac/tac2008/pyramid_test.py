@@ -30,6 +30,7 @@ class TestTAC2008Pyramids(unittest.TestCase):
         assert instance_id_to_pyramid.keys() == instance_id_to_annotations.keys()
         for instance_id, pyramid in instance_id_to_pyramid.items():
             assert len(pyramid.summaries) == 4
+            assert len(pyramid.summarizer_ids) == 4
             for reference in pyramid.summaries:
                 assert len(reference) > 0
 
@@ -58,6 +59,7 @@ class TestTAC2008Pyramids(unittest.TestCase):
             instance_id_to_annotations[annotation.instance_id][annotation.summarizer_id] = annotation
 
         pyramid = instance_id_to_pyramid['d0801-A']
+        assert pyramid.summarizer_ids == ['A', 'C', 'E', 'G']
         annotation = instance_id_to_annotations['d0801-A']['18']
         label = 'The program, launched in December 2000, banks on a strategy of transporting huge numbers of passengers'
         assert len(annotation.scus) == 4
@@ -72,6 +74,7 @@ class TestTAC2008Pyramids(unittest.TestCase):
         self._test_example(pyramid, annotation)
 
         pyramid = instance_id_to_pyramid['d0802-A']
+        assert pyramid.summarizer_ids == ['A', 'C', 'E', 'H']
         annotation = instance_id_to_annotations['d0802-A']['36']
         label = 'Zhang Zhanhai , director of Polar Research Institute of China , said that the melting rate of Arctic ice is " alarming " , with the ice area shrinking by 10 percent and the thickness by 42 percent over the past 30 years'
         assert len(annotation.scus) == 6

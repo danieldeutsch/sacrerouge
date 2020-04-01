@@ -2,7 +2,7 @@ import bisect
 import os
 import re
 from lxml import etree
-from typing import Dict, List, Set, Tuple
+from typing import List, Tuple
 
 
 class Part(object):
@@ -43,10 +43,35 @@ class Pyramid(object):
     def __init__(self,
                  instance_id: str,
                  summaries: List[str],
+                 summarizer_ids: List[str],
                  scus: List[SCU]) -> None:
         self.instance_id = instance_id
         self.summaries = summaries
+        self.summarizer_ids = summarizer_ids
         self.scus = scus
+
+    def remove_summary(self, index: int) -> 'Pyramid':
+        new_summaries = self.summaries[:index] + self.summaries[index + 1:]
+        new_scus = []
+        for scu in self.scus:
+            contributors = list(filter(lambda c: c.summary_index != index, scu.contributors))
+            if len(contributors) > 0:
+                new_scus.append(SCU(scu.scu_id, scu.label, contributors))
+        return Pyramid(self.instance_id, new_summaries, new_scus)
+
+    @staticmethod
+    def _get_summarizer_id(title_regex_match: str) -> str:
+        # Remove any leading or trailing spaces or '-'
+        start = 0
+        while title_regex_match[start] in [' ', '-', '\n']:
+            start += 1
+        end = len(title_regex_match) - 1
+        while title_regex_match[end] in [' ', '-', '\n']:
+            end -= 1
+
+        filename = title_regex_match[start:end + 1]
+        columns = filename.split('.')
+        return columns[-1]
 
     @staticmethod
     def _load_summaries(root, default_document_regex: str = None):
@@ -65,7 +90,9 @@ class Pyramid(object):
 
         # The starts and ends of the summarys, not the header tags
         starts, ends = [], []
+        summarizer_ids = []
         for i, match in enumerate(document_start_regex.finditer(text)):
+            summarizer_ids.append(Pyramid._get_summarizer_id(match.group(0)))
             start, end = match.span()
             # Find the first character of the summary
             while text[end].isspace():
@@ -78,7 +105,7 @@ class Pyramid(object):
         summaries = [text[start:end].strip().replace('\n', ' ') for start, end in zip(starts, ends)]
         for summary in summaries:
             assert len(summary.strip()) > 0
-        return summaries, starts
+        return summaries, starts, summarizer_ids
 
     @staticmethod
     def _load_scus(root,
@@ -144,9 +171,9 @@ class Pyramid(object):
             xml = file_path_or_xml
 
         root = etree.fromstring(xml)
-        summaries, offsets = Pyramid._load_summaries(root)
+        summaries, offsets, summarizer_ids = Pyramid._load_summaries(root)
         scus = Pyramid._load_scus(root, summaries, offsets)
-        return Pyramid(instance_id, summaries, scus)
+        return Pyramid(instance_id, summaries, summarizer_ids, scus)
 
 
 class PyramidAnnotation(object):
