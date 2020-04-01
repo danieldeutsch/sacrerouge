@@ -7,6 +7,12 @@ from sacrerouge.data.types import SummaryType
 class Metric(object):
     _registry: Dict[str, Type] = {}
 
+    def __init__(self,
+                 required_fields: List[str],
+                 requires_jackknifing: bool) -> None:
+        self.required_fields = required_fields
+        self.requires_jackknifing = requires_jackknifing
+
     def score(self, summary: SummaryType, *args: List[Any]) -> MetricsDict:
         args = [[arg] for arg in args]
         return self.score_all([summary], *args)[0]

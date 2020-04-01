@@ -59,7 +59,7 @@ class PythonRouge(Metric):
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
                  data_dir: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__()
+        super().__init__(['references'], True)
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
         self.max_words = max_words

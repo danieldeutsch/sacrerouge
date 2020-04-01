@@ -5,30 +5,29 @@ import os
 from scipy.stats import pearsonr, spearmanr
 from typing import Any, Dict, List
 
-from sacrerouge.common.util import average_metrics, merge_dict
-from sacrerouge.data.types import MetricsType
+from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
 
 
-def load_metrics(metrics_files: List[str]) -> List[Dict[str, Any]]:
+def load_metrics(metrics_files: List[str]) -> List[Metrics]:
     metrics_lists = []
     for metrics_file in metrics_files:
-        metrics_lists.append(JsonlReader(metrics_file).read())
+        metrics_lists.append(JsonlReader(metrics_file, Metrics).read())
 
     # Merge >= 1 into 0
     for metrics_list in metrics_lists[1:]:
         for i, metrics in enumerate(metrics_list):
-            merge_dict(metrics_lists[0][i], metrics)
+            metrics_lists[0][i].merge(metrics)
 
     return metrics_lists[0]
 
 
-def filter_metrics(metrics_list: List[Dict[str, Any]], summarizer_type: str, metric1: str, metric2: str):
+def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str):
     filtered = []
     skipped = 0
     for metrics in metrics_list:
-        if summarizer_type == 'all' or summarizer_type == metrics['summarizer_type']:
-            if metric1 in metrics['metrics'] and metric2 in metrics['metrics']:
+        if summarizer_type == 'all' or summarizer_type == metrics.summarizer_type:
+            if metric1 in metrics.metrics and metric2 in metrics.metrics:
                 filtered.append(metrics)
             else:
                 skipped += 1
@@ -38,29 +37,13 @@ def filter_metrics(metrics_list: List[Dict[str, Any]], summarizer_type: str, met
     return filtered
 
 
-def flatten_metrics(metrics_list: List[Dict[str, Any]]) -> None:
-    def nested_iterate(d: Dict[str, Any], prefix: List[str]):
-        for key, value in d.items():
-            if isinstance(value, dict):
-                yield from nested_iterate(value, prefix + [key])
-            else:
-                yield (prefix + [key], value)
-
-    for metrics in metrics_list:
-        flat = {}
-        for path, value in nested_iterate(metrics['metrics'], []):
-            name = '_'.join(path)
-            flat[name] = value
-        metrics['metrics'] = flat
-
-
-def aggregate_metrics(metrics_list: List[Dict[str, Any]], group_key: str) -> Dict[str, MetricsType]:
+def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, MetricsDict]:
     # The instances must be sorted by the key in order to use itertools.groupby
-    metrics_list = sorted(metrics_list, key=lambda metrics: metrics[group_key])
+    metrics_list = sorted(metrics_list, key=lambda metrics: metrics.summarizer_id)
     key_to_metrics = {}
-    for key, group in itertools.groupby(metrics_list, lambda metrics: metrics[group_key]):
-        group_metrics = [member['metrics'] for member in group]
-        key_to_metrics[key] = average_metrics(group_metrics)
+    for key, group in itertools.groupby(metrics_list, lambda metrics: metrics.summarizer_id):
+        group_metrics = [member.metrics for member in group]
+        key_to_metrics[key] = sum(group_metrics) / len(group_metrics)
     return key_to_metrics
 
 
@@ -70,11 +53,11 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
     pearsons = []
     spearmans = []
 
-    metrics_list = sorted(metrics_list, key=lambda metrics: metrics['instance_id'])
-    for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics['instance_id']):
+    metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
+    for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
         group = list(group)
-        values1 = [member['metrics'][metric1] for member in group]
-        values2 = [member['metrics'][metric2] for member in group]
+        values1 = [member.metrics[metric1] for member in group]
+        values2 = [member.metrics[metric2] for member in group]
 
         r, _ = pearsonr(values1, values2)
         rho, _ = spearmanr(values1, values2)
@@ -97,7 +80,7 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
 def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
                                       metric1: str,
                                       metric2: str) -> Dict[str, float]:
-    metrics_list = list(aggregate_metrics(metrics_list, 'summarizer_id').values())
+    metrics_list = list(aggregate_metrics(metrics_list).values())
 
     values1 = [metrics[metric1] for metrics in metrics_list]
     values2 = [metrics[metric2] for metrics in metrics_list]
@@ -121,7 +104,9 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
 
 def main(args):
     metrics_list = load_metrics(args.metrics_jsonl_files)
-    flatten_metrics(metrics_list)
+    for metrics in metrics_list:
+        metrics.flatten_keys()
+        metrics.average_values()
 
     metric1, metric2 = args.metrics
     metrics_list = filter_metrics(metrics_list, args.summarizer_type, metric1, metric2)
