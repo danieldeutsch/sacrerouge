@@ -2,6 +2,7 @@ import argparse
 import itertools
 import json
 import os
+from collections import defaultdict
 from scipy.stats import pearsonr, spearmanr
 from typing import Any, Dict, List
 
@@ -10,16 +11,19 @@ from sacrerouge.io import JsonlReader
 
 
 def load_metrics(metrics_files: List[str]) -> List[Metrics]:
-    metrics_lists = []
+    metrics_dicts = defaultdict(dict)
     for metrics_file in metrics_files:
-        metrics_lists.append(JsonlReader(metrics_file, Metrics).read())
+        with JsonlReader(metrics_file, Metrics) as f:
+            for metrics in f:
+                if metrics.summarizer_id not in metrics_dicts[metrics.instance_id]:
+                    metrics_dicts[metrics.instance_id][metrics.summarizer_id] = metrics
+                else:
+                    metrics_dicts[metrics.instance_id][metrics.summarizer_id].merge(metrics)
 
-    # Merge >= 1 into 0
-    for metrics_list in metrics_lists[1:]:
-        for i, metrics in enumerate(metrics_list):
-            metrics_lists[0][i].merge(metrics)
-
-    return metrics_lists[0]
+    metrics_list = []
+    for metrics_dict in metrics_dicts.values():
+        metrics_list.extend(list(metrics_dict.values()))
+    return metrics_list
 
 
 def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str):
