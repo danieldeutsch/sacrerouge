@@ -16,7 +16,7 @@ _config_file_path = f'{FIXTURES_ROOT}/configs/score.json'
 class TestScore(unittest.TestCase):
     @pytest.mark.skipif(not os.path.exists(_summaries_file_path), reason='TAC 2008 summaries file does not exist')
     def test_score(self):
-        with TemporaryDirectory(root='.', persist=True) as temp_dir:
+        with TemporaryDirectory() as temp_dir:
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'score',
