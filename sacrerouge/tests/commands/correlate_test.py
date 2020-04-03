@@ -15,7 +15,7 @@ class TestCorrelate(unittest.TestCase):
     def test_dang_2008_table_6_example(self):
         with TemporaryDirectory() as temp_dir:
             command = [
-                'python', '-m', 'sacrerouge' 'correlate',
+                'python', '-m', 'sacrerouge', 'correlate',
                 '--metrics-jsonl-files', _metrics_file_path,
                 '--metrics', 'overall_responsiveness', 'linguistic_quality',
                 '--summarizer-type', 'reference',

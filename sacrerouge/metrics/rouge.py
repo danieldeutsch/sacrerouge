@@ -181,10 +181,13 @@ class Rouge(Metric):
                 command += ['-w', str(self.wlcs_weight)]
             command += [config_filename]
 
+            # We used to fail if anything was written to stderr, but ROUGE writes
+            # a warning if the number of peers per reference set is different, which
+            # is expected in some situations for us (if we just have more summaries
+            # to score for some reference sets than others). Therefore, we no longer fail
+            # if stderr is not empty.
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
-            if stderr:
-                raise Exception(f'Rouge failed with stderr: {stderr.decode()}')
 
             macro_metrics_list, micro_metrics_lists = self._parse_rouge_stdout(stdout.decode())
             return macro_metrics_list, micro_metrics_lists

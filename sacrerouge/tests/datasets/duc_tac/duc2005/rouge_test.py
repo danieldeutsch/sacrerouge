@@ -36,7 +36,6 @@ class TestDUC2005Rouge(unittest.TestCase):
         instances = ReferenceBasedDatasetReader(_summaries_file_path).read()
         metrics_list = JsonlReader(_metrics_file_path, Metrics).read()
         metric_names = ['rouge-1', 'rouge-2', 'rouge-3', 'rouge-4', 'rouge-l', 'rouge-su4', 'rouge-w-1.2']
-        submetrics = ['precision', 'recall', 'f1']
         rouge = Rouge(max_ngram=4,
                       use_porter_stemmer=True,
                       remove_stopwords=False,
@@ -55,8 +54,7 @@ class TestDUC2005Rouge(unittest.TestCase):
             actual_metrics = actual_metrics_dicts[instance_id][summarizer_id]
 
             for metric in metric_names:
-                for submetric in submetrics:
-                    assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']
+                assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']
 
         actual_metrics_dicts = score_instances(reference_instances[:num_to_check], [rouge])
         for expected_metrics in reference_metrics[:num_to_check]:
@@ -65,5 +63,4 @@ class TestDUC2005Rouge(unittest.TestCase):
             actual_metrics = actual_metrics_dicts[instance_id][summarizer_id]
 
             for metric in metric_names:
-                for submetric in submetrics:
-                    assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']
+                assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']

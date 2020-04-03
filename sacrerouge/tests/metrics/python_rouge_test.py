@@ -1,11 +1,10 @@
-import json
 import math
 import os
 import pytest
 import unittest
-from typing import List
 
-from sacrerouge.common.testing import FIXTURES_ROOT
+from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
+from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.metrics import PythonRouge, Rouge
 from sacrerouge.metrics.python_rouge import shorten_summary
 
@@ -117,12 +116,12 @@ class TestPythonRouge(unittest.TestCase):
 
     def test_python_rouge(self):
         python_rouge = PythonRouge()
-        summary = [
+        summary = SummaryField([
             "His tenacity holds despite the summary trials and harsh punishments for Xu, Wang Youcai and Qin Yongmin prominent party principals from the provinces who were sentenced to 11 and 12 years and despite threatening signs from the ruling Communist Party.",
             "The dissidents Xu Wenli, who was sentenced Monday to 13 years in prison, Wang Youcai, who received an 11-year sentence, and Qin Yongming, who was reported to have received 12 years were charged with subversion.",
             "As police moved against Xu's friends, labor rights campaigner Liu Nianchun was taken from a prison camp outside Beijing and, with his wife and daughter, was put on a plane to Canada and then New York, his first taste of freedom in more than 3 1/2 years."
-        ]
-        gold_summaries = [
+        ])
+        gold_summaries = ReferencesField([
             [
                 "While China plans to sign the International Covenant on Civil and Political Rights at the U.N., it is still harassing and arresting human rights campaigners.",
                 "Three prominent leaders of the China Democratic Party were put to trial and sentenced to 11-, 12- and 13-year prison terms.",
@@ -154,7 +153,7 @@ class TestPythonRouge(unittest.TestCase):
                 "The harsh sentences and speeches signal a crackdown on dissent, but Zha Jianguo, another Democracy Party leader, says he will continue to push for change.",
                 "Western nations condemned the sentences as violations of U.N. rights treaties signed by China."
             ]
-        ]
+        ])
 
         compute_rouge_l = True
         use_porter_stemmer = False
@@ -241,26 +240,10 @@ class TestPythonRouge(unittest.TestCase):
         self.assertAlmostEqual(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], places=2)
         self.assertAlmostEqual(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], places=2)
 
-    def _load_summaries(self, file_path: str) -> List[List[str]]:
-        summaries = []
-        with open(file_path, 'r') as f:
-            for line in f:
-                data = json.loads(line)
-                summaries.append(data['summary'])
-        return summaries
-
-    def _load_multiple_summaries(self, file_path: str) -> List[List[List[str]]]:
-        summaries = []
-        with open(file_path, 'r') as f:
-            for line in f:
-                data = json.loads(line)
-                summaries.append(data['summaries'])
-        return summaries
-
     @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
     def test_hong2014(self):
-        duc2004 = self._load_multiple_summaries(_duc2004_file_path)
-        centroid = self._load_summaries(_centroid_file_path)
+        duc2004 = load_references(_duc2004_file_path)
+        centroid = load_summaries(_centroid_file_path)
 
         use_porter_stemmer = True
         remove_stopwords = False
@@ -292,8 +275,8 @@ class TestPythonRouge(unittest.TestCase):
     def test_score_multi_all_order(self):
         """Tests to ensure the scoring returns the same results, no matter the order."""
         python_rouge = PythonRouge()
-        duc2004 = self._load_multiple_summaries(_duc2004_file_path)
-        centroid1 = self._load_summaries(_centroid_file_path)
+        duc2004 = load_references(_duc2004_file_path)
+        centroid1 = load_summaries(_centroid_file_path)
         centroid2 = list(reversed(centroid1))  # Just create a second fake dataset
 
         summaries_list = list(zip(*[centroid1, centroid2]))

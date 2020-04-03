@@ -1,10 +1,8 @@
-import json
 import os
 import pytest
 import unittest
-from typing import List
 
-from sacrerouge.common.testing import FIXTURES_ROOT
+from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
 from sacrerouge.metrics import Rouge
 
 _duc2004_file_path = 'datasets/duc-tac/duc2004/task2.jsonl'
@@ -23,22 +21,6 @@ _ts_sum_file_path = f'{FIXTURES_ROOT}/data/hong2014/ts-sum.jsonl'
 
 
 class TestRouge(unittest.TestCase):
-    def _load_summaries(self, file_path: str) -> List[List[str]]:
-        summaries = []
-        with open(file_path, 'r') as f:
-            for line in f:
-                data = json.loads(line)
-                summaries.append(data['summary'])
-        return summaries
-
-    def _load_multiple_summaries(self, file_path: str) -> List[List[List[str]]]:
-        summaries = []
-        with open(file_path, 'r') as f:
-            for line in f:
-                data = json.loads(line)
-                summaries.append(data['summaries'])
-        return summaries
-
     @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
     def test_hong2014(self):
         """
@@ -46,19 +28,19 @@ class TestRouge(unittest.TestCase):
         (http://www.lrec-conf.org/proceedings/lrec2014/pdf/1093_Paper.pdf) do not
         change. The hard-coded scores are very close to the scores reported in the paper.
         """
-        duc2004 = self._load_multiple_summaries(_duc2004_file_path)
-        centroid = self._load_summaries(_centroid_file_path)
-        classy04 = self._load_summaries(_classy04_file_path)
-        classy11 = self._load_summaries(_classy11_file_path)
-        dpp = self._load_summaries(_dpp_file_path)
-        freq_sum = self._load_summaries(_freq_sum_file_path)
-        greedy_kl = self._load_summaries(_greedy_kl_file_path)
-        icsi_summ = self._load_summaries(_icsi_summ_file_path)
-        lexrank = self._load_summaries(_lexrank_file_path)
-        occams_v = self._load_summaries(_occams_v_file_path)
-        reg_sum = self._load_summaries(_reg_sum_file_path)
-        submodular = self._load_summaries(_submodular_file_path)
-        ts_sum = self._load_summaries(_ts_sum_file_path)
+        duc2004 = load_references(_duc2004_file_path)
+        centroid = load_summaries(_centroid_file_path)
+        classy04 = load_summaries(_classy04_file_path)
+        classy11 = load_summaries(_classy11_file_path)
+        dpp = load_summaries(_dpp_file_path)
+        freq_sum = load_summaries(_freq_sum_file_path)
+        greedy_kl = load_summaries(_greedy_kl_file_path)
+        icsi_summ = load_summaries(_icsi_summ_file_path)
+        lexrank = load_summaries(_lexrank_file_path)
+        occams_v = load_summaries(_occams_v_file_path)
+        reg_sum = load_summaries(_reg_sum_file_path)
+        submodular = load_summaries(_submodular_file_path)
+        ts_sum = load_summaries(_ts_sum_file_path)
 
         rouge = Rouge(max_words=100)
 
@@ -135,10 +117,10 @@ class TestRouge(unittest.TestCase):
         self.assertAlmostEqual(metrics['rouge-4']['recall'], 1.03, places=2)
 
     def test_multi_all(self):
-        duc2004 = self._load_multiple_summaries(_duc2004_file_path)
-        centroid = self._load_summaries(_centroid_file_path)
-        classy04 = self._load_summaries(_classy04_file_path)
-        classy11 = self._load_summaries(_classy11_file_path)
+        duc2004 = load_references(_duc2004_file_path)
+        centroid = load_summaries(_centroid_file_path)
+        classy04 = load_summaries(_classy04_file_path)
+        classy11 = load_summaries(_classy11_file_path)
 
         rouge = Rouge(max_words=100)
 
