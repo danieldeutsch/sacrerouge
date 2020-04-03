@@ -12,7 +12,7 @@ from sacrerouge.io import JsonlWriter
 from sacrerouge.metrics import Metric
 
 
-def load_metrics(config: Dict[str, Any]) -> List[Metric]:
+def _load_metrics(config: Dict[str, Any]) -> List[Metric]:
     metrics = []
     for params in config['metrics']:
         metric = Metric.from_params(params)
@@ -20,7 +20,7 @@ def load_metrics(config: Dict[str, Any]) -> List[Metric]:
     return metrics
 
 
-def score_with_metric(metric: Metric,
+def _score_with_metric(metric: Metric,
                       instances: List[EvalInstance],
                       metrics_dicts: Dict[str, Dict[str, Metrics]]) -> None:
     fields_list = []
@@ -87,11 +87,18 @@ def score_with_metric(metric: Metric,
                 metrics_dicts[instance_id][summarizer_id].metrics[name + '_jk'] = value
 
 
-def get_initial_metrics_dicts(instances: List[EvalInstance]) -> Dict[str, Dict[str, Metrics]]:
+def _get_initial_metrics_dicts(instances: List[EvalInstance]) -> Dict[str, Dict[str, Metrics]]:
     metrics_dicts = defaultdict(dict)
     for instance in instances:
         metrics = Metrics(instance.instance_id, instance.summarizer_id, instance.summarizer_type)
         metrics_dicts[instance.instance_id][instance.summarizer_id] = metrics
+    return metrics_dicts
+
+
+def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dict[str, Dict[str, Metrics]]:
+    metrics_dicts = _get_initial_metrics_dicts(instances)
+    for metric in metrics:
+        _score_with_metric(metric, instances, metrics_dicts)
     return metrics_dicts
 
 
@@ -107,13 +114,10 @@ class ScoreSubcommand(Subcommand):
     def run(self, args):
         config = jsons.loads(open(args.config, 'r').read())
         dataset_reader = DatasetReader.from_params(config['dataset_reader'])
-        metrics = load_metrics(config)
+        metrics = _load_metrics(config)
 
         instances = dataset_reader.read()
-        metrics_dicts = get_initial_metrics_dicts(instances)
-
-        for metric in tqdm(metrics):
-            score_with_metric(metric, instances, metrics_dicts)
+        metrics_dicts = score_instances(instances, metrics)
 
         # Save the results to the output file
         with JsonlWriter(args.output_jsonl) as out:
