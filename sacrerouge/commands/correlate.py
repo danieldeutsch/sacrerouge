@@ -3,9 +3,11 @@ import itertools
 import json
 import os
 from collections import defaultdict
+from overrides import overrides
 from scipy.stats import pearsonr, spearmanr
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
 
@@ -106,14 +108,19 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
     }
 
 
-def main(args):
-    metrics_list = load_metrics(args.metrics_jsonl_files)
+def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
+                        metric1: str,
+                        metric2: str,
+                        summarizer_type: str):
+    if isinstance(metrics_jsonl_files, str):
+        metrics_jsonl_files = [metrics_jsonl_files]
+
+    metrics_list = load_metrics(metrics_jsonl_files)
     for metrics in metrics_list:
         metrics.flatten_keys()
         metrics.average_values()
 
-    metric1, metric2 = args.metrics
-    metrics_list = filter_metrics(metrics_list, args.summarizer_type, metric1, metric2)
+    metrics_list = filter_metrics(metrics_list, summarizer_type, metric1, metric2)
 
     summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
     system_level = compute_system_level_correlations(metrics_list, metric1, metric2)
@@ -121,24 +128,30 @@ def main(args):
         'summary_level': summary_level,
         'system_level': system_level
     }
-
-    if args.output_file:
-        dirname = os.path.dirname(args.output_file)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-        with open(args.output_file, 'w') as out:
-            out.write(json.dumps(results, indent=2))
-
-    if not args.silent:
-        print(json.dumps(results, indent=2))
+    return results
 
 
-if __name__ == '__main__':
-    argp = argparse.ArgumentParser()
-    argp.add_argument('--metrics-jsonl-files', nargs='+')
-    argp.add_argument('--metrics', nargs=2)
-    argp.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
-    argp.add_argument('--output-file')
-    argp.add_argument('--silent', action='store_true')
-    args = argp.parse_args()
-    main(args)
+class CorrelateSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('correlate')
+        self.parser.add_argument('--metrics-jsonl-files', nargs='+')
+        self.parser.add_argument('--metrics', nargs=2)
+        self.parser.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
+        self.parser.add_argument('--output-file')
+        self.parser.add_argument('--silent', action='store_true')
+        self.parser.set_defaults(func=self.run)
+
+    def run(self, args):
+        metric1, metric2 = args.metrics
+        results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type)
+
+        if args.output_file:
+            dirname = os.path.dirname(args.output_file)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
+            with open(args.output_file, 'w') as out:
+                out.write(json.dumps(results, indent=2))
+
+        if not args.silent:
+            print(json.dumps(results, indent=2))
