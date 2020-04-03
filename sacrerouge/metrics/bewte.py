@@ -1,5 +1,4 @@
 import os
-import shutil
 from collections import defaultdict
 from subprocess import Popen, PIPE
 from typing import List, Tuple
@@ -15,7 +14,8 @@ from sacrerouge.metrics import Metric
 @Metric.register('bewte')
 class BEwTE(Metric):
     def __init__(self,
-                 bewte_root: str = 'external/BEwTE'):
+                 bewte_root: str = 'external/BEwTE',
+                 verbose: bool = False):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.bewte_root = bewte_root
         self.pos_model = f'src/main/resources/models/posTaggingModel.gz'
@@ -26,6 +26,7 @@ class BEwTE(Metric):
         self.transforms_file = f'src/main/resources/conf/transformations/EN_transformsList.txt'
         self.transforms_coef_file = f'src/main/resources/conf/transformations/EN_transformCoeffs.txt'
         self.end_analysis_file = f'src/main/resources/conf/endanalysis/doNothingEndAnalysisConfig.txt'
+        self.verbose = verbose
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
@@ -78,7 +79,8 @@ class BEwTE(Metric):
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
 
-        process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+        redirect = None if self.verbose else PIPE
+        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step2(self, temp_dir: str) -> None:
@@ -111,7 +113,8 @@ class BEwTE(Metric):
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
 
-        process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+        redirect = None if self.verbose else PIPE
+        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step3(self, temp_dir: str) -> None:
@@ -131,7 +134,8 @@ class BEwTE(Metric):
             f'mvn exec:java@BEXpander -Dexec.args=\'{args}\''
         ]
 
-        process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+        redirect = None if self.verbose else PIPE
+        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step4(self, temp_dir: str) -> None:
