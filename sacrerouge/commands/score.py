@@ -40,7 +40,7 @@ def maybe_run_jackknifing(metric: Metric,
         if jk_fields_list:
             results_list = []
             for jk_fields in jk_fields_list:
-                args = [instance.fields[field] for field in metric.required_fields]
+                args = [jk_fields[field] for field in metric.required_fields]
                 results_list.append(metric.score(instance.summary, *args))
             results = sum(results_list) / len(results_list)
             for name, value in results.items():
