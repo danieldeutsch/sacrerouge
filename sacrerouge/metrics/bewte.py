@@ -47,11 +47,6 @@ class BEwTE(Metric):
                 symbol = chr(j + 65)
                 self._save_summary(reference, f'{temp_dir}/summaries/{i}.{symbol}')
 
-    def _copy_resources(self, temp_dir: str) -> None:
-        shutil.copytree(f'{self.bewte_root}/ROUGE-BEwTE/src/main/resources/models', f'{temp_dir}/models')
-        shutil.copytree(f'{self.bewte_root}/ROUGE-BEwTE/src/main/resources/data', f'{temp_dir}/data')
-        shutil.copytree(f'{self.bewte_root}/ROUGE-BEwTE/src/main/resources/conf', f'{temp_dir}/conf')
-
     def _run_step1(self, temp_dir: str) -> None:
         args = ' '.join([
             '-corpusreader',
@@ -226,7 +221,6 @@ class BEwTE(Metric):
 
         with TemporaryDirectory() as temp_dir:
             self._save_summaries(temp_dir, summaries_list, references_list)
-            # self._copy_resources(temp_dir)
 
             self._run_step1(temp_dir)
             self._run_step2(temp_dir)
