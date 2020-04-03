@@ -1,3 +1,5 @@
+import jsons
+
 from sacrerouge.data.fields import Fields, SummaryField
 
 
@@ -13,3 +15,6 @@ class EvalInstance(object):
         self.summarizer_type = summarizer_type
         self.summary = summary
         self.fields = fields
+
+    def __repr__(self) -> str:
+        return jsons.dumps(self)

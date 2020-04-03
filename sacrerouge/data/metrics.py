@@ -1,3 +1,4 @@
+import jsons
 from collections import OrderedDict
 from jsons import JsonSerializable
 from typing import Dict, Optional, Union
@@ -37,6 +38,9 @@ class Metrics(object):
                 self.summarizer_type != other.summarizer_type:
             return False
         return self.metrics == other.metrics
+
+    def __repr__(self) -> str:
+        return jsons.dumps(Metrics.serialize(self))
 
     @staticmethod
     def serialize(metrics: 'Metrics', **kwargs) -> OrderedDict:
