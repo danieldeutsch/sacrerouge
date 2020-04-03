@@ -1,7 +1,7 @@
 import os
 import pytest
 import unittest
-from typing import Any, Dict, List
+from typing import List
 
 from sacrerouge.data import EvalInstance, Metrics
 from sacrerouge.data.dataset_readers import ReferenceBasedDatasetReader
