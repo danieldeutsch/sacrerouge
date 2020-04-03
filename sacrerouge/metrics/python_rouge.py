@@ -5,6 +5,7 @@ from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
 from sacrerouge.data import MetricsDict
+from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
@@ -226,8 +227,12 @@ class PythonRouge(Metric):
         return precision, recall, f1
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
+                        summaries_list: List[List[SummaryField]],
+                        references_list: List[ReferencesField]) -> List[List[MetricsDict]]:
+        # Just take the summaries themselves, not the fields
+        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+        references_list = [field.references for field in references_list]
+
         summaries_list = [[self.preprocess_summary(summary) for summary in summaries] for summaries in summaries_list]
         references_list = [[self.preprocess_summary(reference) for reference in references] for references in references_list]
 

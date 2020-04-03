@@ -2,6 +2,7 @@ from typing import List
 
 from sacrerouge.data import EvalInstance
 from sacrerouge.data.dataset_readers import DatasetReader
+from sacrerouge.data.fields import Fields, SummaryField
 from sacrerouge.io import JsonlReader
 
 
@@ -15,8 +16,8 @@ class SummaryOnlyDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(self.input_jsonl) as f:
             for data in f:
-                summary = data['summary']['text']
-                fields = {}
+                summary = SummaryField(data['summary']['text'])
+                fields = Fields({})
 
                 instance = EvalInstance(
                     data['instance_id'],

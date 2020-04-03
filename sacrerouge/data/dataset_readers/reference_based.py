@@ -2,6 +2,7 @@ from typing import List
 
 from sacrerouge.data import EvalInstance
 from sacrerouge.data.dataset_readers import DatasetReader
+from sacrerouge.data.fields import ReferencesField, Fields, SummaryField
 from sacrerouge.io import JsonlReader
 
 
@@ -15,13 +16,13 @@ class ReferenceBasedDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(self.input_jsonl) as f:
             for data in f:
-                summary = data['summary']['text']
+                summary = SummaryField(data['summary']['text'])
 
                 if 'reference' in data:
-                    references = [data['reference']['text']]
+                    references = ReferencesField([data['reference']['text']])
                 else:
-                    references = [reference['text'] for reference in data['references']]
-                fields = {'references': references}
+                    references = ReferencesField([reference['text'] for reference in data['references']])
+                fields = Fields({'references': references})
 
                 instance = EvalInstance(
                     data['instance_id'],

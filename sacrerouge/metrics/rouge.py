@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.data import MetricsDict
+from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
@@ -189,15 +190,21 @@ class Rouge(Metric):
             return macro_metrics_list, micro_metrics_lists
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
+                        summaries_list: List[List[SummaryField]],
+                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
+        # Just take the summaries themselves, not the fields
+        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+        references_list = [field.references for field in references_list]
+
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryType]],
-                 references_list: List[List[SummaryType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
-        summaries_list = [[summary] for summary in summaries]
+                 summaries: List[List[SummaryField]],
+                 references_list: List[List[ReferencesField]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[field.summary] for field in summaries]
+        references_list = [field.references for field in references_list]
+
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, references_list)
 
         macro_metrics = macro_metrics_list[0]

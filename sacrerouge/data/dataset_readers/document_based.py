@@ -2,6 +2,7 @@ from typing import List
 
 from sacrerouge.data import EvalInstance
 from sacrerouge.data.dataset_readers import DatasetReader
+from sacrerouge.data.fields import DocumentsField, Fields, SummaryField
 from sacrerouge.io import JsonlReader
 
 
@@ -15,13 +16,13 @@ class DocumentBasedDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(self.input_jsonl) as f:
             for data in f:
-                summary = data['summary']['text']
+                summary = SummaryField(data['summary']['text'])
 
                 if 'document' in data:
-                    documents = [data['document']['text']]
+                    documents = DocumentsField([data['document']['text']])
                 else:
-                    documents = [document['text'] for document in data['documents']]
-                fields = {'documents': documents}
+                    documents = DocumentsField([document['text'] for document in data['documents']])
+                fields = Fields({'documents': documents})
 
                 instance = EvalInstance(
                     data['instance_id'],

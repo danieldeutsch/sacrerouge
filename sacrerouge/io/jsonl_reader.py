@@ -1,8 +1,6 @@
 import bz2
 import gzip
-import json
 import jsons
-from allennlp.common.file_utils import cached_path
 from typing import Any, List, Optional, Type
 
 from sacrerouge.io.util import is_gz_file
@@ -35,7 +33,7 @@ class JsonlReader(object):
         The type that the object should be loaded as.
     """
     def __init__(self, file_path: str, cls: Optional[Type] = None) -> None:
-        self.file_path = cached_path(file_path)
+        self.file_path = file_path
         self.cls = cls
 
     def __enter__(self):

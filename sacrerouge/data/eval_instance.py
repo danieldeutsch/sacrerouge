@@ -1,6 +1,4 @@
-from typing import Any, Dict
-
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.fields import Fields, SummaryField
 
 
 class EvalInstance(object):
@@ -8,8 +6,8 @@ class EvalInstance(object):
                  instance_id: str,
                  summarizer_id: str,
                  summarizer_type: str,
-                 summary: SummaryType,
-                 fields: Dict[str, Any]) -> None:
+                 summary: SummaryField,
+                 fields: Fields) -> None:
         self.instance_id = instance_id
         self.summarizer_id = summarizer_id
         self.summarizer_type = summarizer_type
