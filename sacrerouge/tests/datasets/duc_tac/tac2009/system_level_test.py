@@ -2,7 +2,7 @@ import os
 import pytest
 import unittest
 
-from sacrerouge.compute_correlation import aggregate_metrics
+from sacrerouge.commands.correlate import aggregate_metrics
 from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
