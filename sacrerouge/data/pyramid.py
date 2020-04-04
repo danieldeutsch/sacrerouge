@@ -5,6 +5,41 @@ from lxml import etree
 from typing import List, Tuple
 
 
+def _find_closest_match(matches: List[int], index: int) -> int:
+    differences = [abs(match - index) for match in matches]
+    min_diff = min(differences)
+    min_index = differences.index(min_diff)
+    start = matches[min_index]
+    return start, min_index
+
+
+def _find_soft_matches(summary: str, text: str, start: int) -> Tuple[str, int]:
+    # Many of the mismatches are due to weird whitespace issues, so we get rid
+    # of the whitespace, find matches, and then remap to the summary
+
+    # Maps from the character index in the summary without spaces to the
+    # character index in the summary with spaces
+    index_map = {}
+    offset = 0
+    for i, char in enumerate(summary):
+        if char != ' ':
+            index_map[offset] = i
+            offset += 1
+
+    edited_summary = summary.replace(' ', '')
+    edited_text = text.replace(' ', '')
+
+    regex = re.escape(edited_text)
+    edited_starts = [match.start() for match in re.finditer(regex, edited_summary)]
+    starts = [index_map[index] for index in edited_starts]
+
+    start, index = _find_closest_match(starts, start)
+    end = index_map[edited_starts[index] + len(edited_text) - 1]
+    found_text = summary[start:end + 1]
+
+    return found_text, start
+
+
 class Part(object):
     def __init__(self, text: str, start: int, end: int) -> None:
         self.text = text
@@ -92,14 +127,15 @@ class Pyramid(object):
         starts, ends = [], []
         summarizer_ids = []
         for i, match in enumerate(document_start_regex.finditer(text)):
-            summarizer_ids.append(Pyramid._get_summarizer_id(match.group(0)))
-            start, end = match.span()
-            # Find the first character of the summary
-            while text[end].isspace():
-                end += 1
-            starts.append(end)
-            if i != 0:
-                ends.append(start)
+            if match.group(0).strip():
+                summarizer_ids.append(Pyramid._get_summarizer_id(match.group(0)))
+                start, end = match.span()
+                # Find the first character of the summary
+                while text[end].isspace():
+                    end += 1
+                starts.append(end)
+                if i != 0:
+                    ends.append(start)
         ends.append(len(text))
 
         summaries = [text[start:end].strip().replace('\n', ' ') for start, end in zip(starts, ends)]
@@ -136,7 +172,10 @@ class Pyramid(object):
                     # Make sure the label of the part is identical to the text from the summary
                     start -= offsets[summary_index]
                     end -= offsets[summary_index]
-                    assert text == summaries[summary_index][start:end], (text, summaries[summary_index][start:end])
+                    if text != summaries[summary_index][start:end]:
+                        found_text, start = _find_soft_matches(summaries[summary_index], text, start)
+                        end = start + len(found_text)
+                        text = found_text
 
                     parts.append(Part(text, start, end))
 
@@ -206,41 +245,6 @@ class PyramidAnnotation(object):
         return [match.start() for match in re.finditer(regex, summary)]
 
     @staticmethod
-    def _find_closest_match(matches: List[int], index: int) -> int:
-        differences = [abs(match - index) for match in matches]
-        min_diff = min(differences)
-        min_index = differences.index(min_diff)
-        start = matches[min_index]
-        return start, min_index
-
-    @staticmethod
-    def _find_soft_matches(summary: str, text: str, start: int) -> Tuple[str, int]:
-        # Many of the mismatches are due to weird whitespace issues, so we get rid
-        # of the whitespace, find matches, and then remap to the summary
-
-        # Maps from the character index in the summary without spaces to the
-        # character index in the summary with spaces
-        index_map = {}
-        offset = 0
-        for i, char in enumerate(summary):
-            if char != ' ':
-                index_map[offset] = i
-                offset += 1
-
-        edited_summary = summary.replace(' ', '')
-        edited_text = text.replace(' ', '')
-
-        regex = re.escape(edited_text)
-        edited_starts = [match.start() for match in re.finditer(regex, edited_summary)]
-        starts = [index_map[index] for index in edited_starts]
-
-        start, index = PyramidAnnotation._find_closest_match(starts, start)
-        end = index_map[edited_starts[index] + len(edited_text) - 1]
-        found_text = summary[start:end + 1]
-
-        return found_text, start
-
-    @staticmethod
     def _load_scus(root, summary: str, pyramid: Pyramid) -> List[SCUAnnotation]:
         # Because of parsing errors for the original pyramid, there may be some SCUs
         # which are no longer valid (because they were dropped in the parsing). We
@@ -274,9 +278,9 @@ class PyramidAnnotation(object):
                     if len(matches) > 0:
                         # Find the match which is closest to "start"
                         found_text = text
-                        start, _ = PyramidAnnotation._find_closest_match(matches, start)
+                        start, _ = _find_closest_match(matches, start)
                     elif len(matches) == 0:
-                        found_text, start = PyramidAnnotation._find_soft_matches(summary, text, start)
+                        found_text, start = _find_soft_matches(summary, text, start)
 
                     end = start + len(found_text)
                     assert summary[start:end] == found_text
