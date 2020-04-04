@@ -2,7 +2,7 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.commands import Subcommand
-from sacrerouge.metrics import bewte, simetrix
+from sacrerouge.metrics import autosummeng, bewte, simetrix
 
 
 class SetupMetricSubcommand(Subcommand):
@@ -12,6 +12,7 @@ class SetupMetricSubcommand(Subcommand):
         subparsers = self.parser.add_subparsers()
 
         subcommands = [
+            autosummeng.AutoSummENGSetupSubcommand(),
             bewte.BEwTESetupSubcommand(),
             simetrix.SIMetrixSetupSubcommand(),
         ]
