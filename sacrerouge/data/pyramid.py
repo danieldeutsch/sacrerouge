@@ -31,6 +31,8 @@ def _find_soft_matches(summary: str, text: str, start: int) -> Tuple[str, int]:
 
     regex = re.escape(edited_text)
     edited_starts = [match.start() for match in re.finditer(regex, edited_summary)]
+    if len(edited_starts) == 0:
+        return None, None
     starts = [index_map[index] for index in edited_starts]
 
     start, index = _find_closest_match(starts, start)
@@ -203,14 +205,16 @@ class Pyramid(object):
         return scus
 
     @staticmethod
-    def from_xml(instance_id: str, file_path_or_xml: str) -> 'Pyramid':
+    def from_xml(instance_id: str,
+                 file_path_or_xml: str,
+                 default_document_regex: str = None) -> 'Pyramid':
         if os.path.exists(file_path_or_xml):
             xml = open(file_path_or_xml, 'r').read()
         else:
             xml = file_path_or_xml
 
         root = etree.fromstring(xml)
-        summaries, offsets, summarizer_ids = Pyramid._load_summaries(root)
+        summaries, offsets, summarizer_ids = Pyramid._load_summaries(root, default_document_regex=default_document_regex)
         scus = Pyramid._load_scus(root, summaries, offsets)
         return Pyramid(instance_id, summaries, summarizer_ids, scus)
 
@@ -281,13 +285,23 @@ class PyramidAnnotation(object):
                         start, _ = _find_closest_match(matches, start)
                     elif len(matches) == 0:
                         found_text, start = _find_soft_matches(summary, text, start)
+                        if found_text is None:
+                            print(f'Could not find part "{text}" for SCU {scu_id}. Skipping')
+                            continue
 
                     end = start + len(found_text)
                     assert summary[start:end] == found_text
                     parts.append(Part(found_text, start, end))
 
-                contributors.append(ContributorAnnotation(contrib_label, parts))
-            scus.append(SCUAnnotation(scu_id, label, contributors))
+                if len(parts) == 0:
+                    print(f'No parts for contributor of SCU {scu_id}. Skipping')
+                else:
+                    contributors.append(ContributorAnnotation(contrib_label, parts))
+
+            if len(contributors) == 0:
+                print(f'No contributors for SCU {scu_id}. Skipping')
+            else:
+                scus.append(SCUAnnotation(scu_id, label, contributors))
 
         return scus
 
