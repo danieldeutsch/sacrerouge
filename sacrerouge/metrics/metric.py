@@ -1,12 +1,11 @@
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, List, Optional, Tuple
 
+from sacrerouge.common import Registrable
 from sacrerouge.data import Jackknifer, MetricsDict
 from sacrerouge.data.fields import Field, SummaryField
 
 
-class Metric(object):
-    _registry: Dict[str, Type] = {}
-
+class Metric(Registrable):
     def __init__(self,
                  required_fields: List[str],
                  jackknifer: Optional[Jackknifer] = None) -> None:
@@ -39,16 +38,3 @@ class Metric(object):
 
     def requires_jackknifing(self):
         return self.jackknifer is not None
-
-    @classmethod
-    def register(cls: Type, name: str):
-        def _register(subclass: Type):
-            cls._registry[name] = subclass
-            return subclass
-        return _register
-
-    @classmethod
-    def from_params(cls: Type, params: Dict[str, Any]) -> 'Metric':
-        metric_type = params.pop('type')
-        metric_cls = cls._registry[metric_type]
-        return metric_cls(**params)
