@@ -15,6 +15,6 @@ class TAC2010Subcommand(Subcommand):
 
     @overrides
     def run(self, args):
-        # task1.setup(args.data_root, args.output_dir)
-        # metrics.setup(args.data_root, args.output_dir)
+        task1.setup(args.data_root, args.output_dir)
+        metrics.setup(args.data_root, args.output_dir)
         pyramids.setup(args.data_root, args.output_dir)
