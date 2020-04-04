@@ -5,10 +5,10 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.datasets.duc_tac import duc2005, duc2006, duc2007, tac2008, tac2009, tac2010
 
 
-class SetupSubcommand(Subcommand):
+class SetupDatasetSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('setup')
+        self.parser = parser.add_parser('setup-dataset')
         subparsers = self.parser.add_subparsers()
 
         subcommands = [
