@@ -1,11 +1,13 @@
 import os
 import pytest
 import unittest
-from typing import Any, Dict, List
+from typing import List
 
+from sacrerouge.data import EvalInstance, Metrics
+from sacrerouge.data.dataset_readers import ReferenceBasedDatasetReader
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Rouge
-from sacrerouge.score import run_jackknifing
+from sacrerouge.commands.score import score_instances
 
 _summaries_file_path = 'datasets/duc-tac/tac2008/v1.0/task1.A-B.summaries.jsonl'
 _metrics_file_path = 'datasets/duc-tac/tac2008/v1.0/task1.A-B.metrics.jsonl'
@@ -13,13 +15,13 @@ _metrics_file_path = 'datasets/duc-tac/tac2008/v1.0/task1.A-B.metrics.jsonl'
 
 class TestTAC2008Rouge(unittest.TestCase):
     def _filter_by_type(self,
-                        instances: List[Dict[str, Any]],
-                        metrics_list: List[Dict[str, Any]],
+                        instances: List[EvalInstance],
+                        metrics_list: List[Metrics],
                         summarizer_type: str):
         filtered_instances = []
         filtered_metrics = []
         for instance, metrics in zip(instances, metrics_list):
-            if instance['summarizer_type'] == summarizer_type:
+            if instance.summarizer_type == summarizer_type:
                 filtered_instances.append(instance)
                 filtered_metrics.append(metrics)
         return filtered_instances, filtered_metrics
@@ -29,10 +31,9 @@ class TestTAC2008Rouge(unittest.TestCase):
     def test_rouge(self):
         # Test the first several instances in the TAC 2008 data to ensure that
         # our computation of ROUGE matches the values released by NIST
-        instances = JsonlReader(_summaries_file_path).read()
-        metrics_list = JsonlReader(_metrics_file_path).read()
+        instances = ReferenceBasedDatasetReader(_summaries_file_path).read()
+        metrics_list = JsonlReader(_metrics_file_path, Metrics).read()
         metric_names = ['rouge-1', 'rouge-2', 'rouge-3', 'rouge-4', 'rouge-l', 'rouge-su4', 'rouge-w-1.2']
-        submetrics = ['precision', 'recall', 'f1']
         rouge = Rouge(max_ngram=4,
                       use_porter_stemmer=True,
                       remove_stopwords=False,
@@ -44,25 +45,21 @@ class TestTAC2008Rouge(unittest.TestCase):
         reference_instances, reference_metrics = self._filter_by_type(instances, metrics_list, 'reference')
 
         num_to_check = 25
-        for instance, metrics in zip(peer_instances[:num_to_check], peer_metrics[:num_to_check]):
-            summary = instance['summary']['text']
-            references = [reference['text'] for reference in instance['references']]
-            actual_metrics = rouge.score(summary, references)
+        actual_metrics_dicts = score_instances(peer_instances[:num_to_check], [rouge])
+        for expected_metrics in peer_metrics[:num_to_check]:
+            instance_id = expected_metrics.instance_id
+            summarizer_id = expected_metrics.summarizer_id
+            actual_metrics = actual_metrics_dicts[instance_id][summarizer_id]
 
             for metric in metric_names:
-                for submetric in submetrics:
-                    assert actual_metrics[metric][submetric] == metrics['metrics'][metric][submetric]
+                assert actual_metrics.metrics[metric] == expected_metrics.metrics[metric]
+                assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']
 
-            actual_metrics = run_jackknifing([rouge], summary, references)
-            for metric in metric_names:
-                for submetric in submetrics:
-                    assert actual_metrics[metric + '_jk'][submetric] == metrics['metrics'][metric + '_jk'][submetric]
-
-        for instance, metrics in zip(reference_instances[:num_to_check], reference_metrics[:num_to_check]):
-            summary = instance['summary']['text']
-            references = [reference['text'] for reference in instance['references']]
-            actual_metrics = rouge.score(summary, references)
+        actual_metrics_dicts = score_instances(reference_instances[:num_to_check], [rouge])
+        for expected_metrics in reference_metrics[:num_to_check]:
+            instance_id = expected_metrics.instance_id
+            summarizer_id = expected_metrics.summarizer_id
+            actual_metrics = actual_metrics_dicts[instance_id][summarizer_id]
 
             for metric in metric_names:
-                for submetric in submetrics:
-                    assert actual_metrics[metric][submetric] == metrics['metrics'][metric + '_jk'][submetric]
+                assert actual_metrics.metrics[metric + '_jk'] == expected_metrics.metrics[metric + '_jk']

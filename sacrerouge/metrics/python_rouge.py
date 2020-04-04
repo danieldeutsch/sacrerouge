@@ -4,7 +4,11 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.common import DATA_ROOT
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.fields import ReferencesField, SummaryField
+from sacrerouge.data.jackknifers import ReferencesJackknifer
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -57,8 +61,8 @@ class PythonRouge(Metric):
                  use_porter_stemmer: bool = True,
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
-                 data_dir: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__()
+                 rouge_data_dir: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5/data'):
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
         self.max_words = max_words
@@ -68,8 +72,8 @@ class PythonRouge(Metric):
         self.compute_rouge_l = compute_rouge_l
 
         self.stemmer = PorterStemmer(PorterStemmer.ORIGINAL_ALGORITHM)
-        self.stemmer_exceptions = self._load_stemmer_exceptions(data_dir)
-        self.stopwords = self._load_stopwords(data_dir)
+        self.stemmer_exceptions = self._load_stemmer_exceptions(rouge_data_dir)
+        self.stopwords = self._load_stopwords(rouge_data_dir)
 
     def _load_stemmer_exceptions(self, root: str) -> Dict[str, str]:
         exceptions = {}
@@ -223,39 +227,51 @@ class PythonRouge(Metric):
             f1 = 0.0
         return precision, recall, f1
 
-    def score(self,
-              summary: SummaryType,
-              references: List[SummaryType]) -> MetricsType:
-        summary = self.preprocess_summary(summary)
-        references = [self.preprocess_summary(reference) for reference in references]
+    def score_multi_all(self,
+                        summaries_list: List[List[SummaryField]],
+                        references_list: List[ReferencesField]) -> List[List[MetricsDict]]:
+        # Just take the summaries themselves, not the fields
+        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+        references_list = [field.references for field in references_list]
 
-        metrics = {}
-        for n in self.ngram_orders:
-            total_reference_count = 0
-            total_summary_count = 0
-            total_intersection = 0
+        summaries_list = [[self.preprocess_summary(summary) for summary in summaries] for summaries in summaries_list]
+        references_list = [[self.preprocess_summary(reference) for reference in references] for references in references_list]
 
-            summary_ngrams = self._count_ngrams(summary, n)
-            for reference in references:
-                reference_ngrams = self._count_ngrams(reference, n)
-                reference_total, summary_total, intersection = self._calculate_intersection(reference_ngrams, summary_ngrams)
+        metrics_lists = []
+        for summaries, references in zip(summaries_list, references_list):
+            metrics_list = [MetricsDict() for _ in summaries]
 
-                total_reference_count += reference_total
-                total_summary_count += summary_total
-                total_intersection += intersection
+            for n in self.ngram_orders:
+                reference_ngrams_list = [self._count_ngrams(reference, n) for reference in references]
 
-            precision, recall, f1 = self._calculate_pr_f1(total_reference_count, total_summary_count, total_intersection)
-            metrics[f'python-rouge-{n}'] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-            }
+                for i, summary in enumerate(summaries):
+                    total_reference_count = 0
+                    total_summary_count = 0
+                    total_intersection = 0
 
-        if self.compute_rouge_l:
-            precision, recall, f1 = self._calculate_rouge_l(references, summary)
-            metrics['python-rouge-l'] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1
-            }
-        return metrics
+                    summary_ngrams = self._count_ngrams(summary, n)
+                    for reference_ngrams in reference_ngrams_list:
+                        reference_total, summary_total, intersection = self._calculate_intersection(reference_ngrams, summary_ngrams)
+
+                        total_reference_count += reference_total
+                        total_summary_count += summary_total
+                        total_intersection += intersection
+
+                    precision, recall, f1 = self._calculate_pr_f1(total_reference_count, total_summary_count, total_intersection)
+                    metrics_list[i][f'python-rouge-{n}'] = {
+                        'precision': precision,
+                        'recall': recall,
+                        'f1': f1,
+                    }
+
+            if self.compute_rouge_l:
+                for i, summary in enumerate(summaries):
+                    precision, recall, f1 = self._calculate_rouge_l(references, summary)
+                    metrics_list[i]['python-rouge-l'] = {
+                        'precision': precision,
+                        'recall': recall,
+                        'f1': f1
+                    }
+
+            metrics_lists.append(metrics_list)
+        return metrics_lists
