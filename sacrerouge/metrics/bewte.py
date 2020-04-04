@@ -1,9 +1,12 @@
+import argparse
 import os
 from collections import defaultdict
+from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Tuple
 
-from sacrerouge.common import TemporaryDirectory
+from sacrerouge.commands import Subcommand
+from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -14,10 +17,12 @@ from sacrerouge.metrics import Metric
 @Metric.register('bewte')
 class BEwTE(Metric):
     def __init__(self,
-                 bewte_root: str = 'external/BEwTE',
+                 bewte_root: str = f'{DATA_ROOT}/metrics/ROUGE-BEwTE',
                  verbose: bool = False):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.bewte_root = bewte_root
+        if not os.path.exists(bewte_root):
+            raise Exception('BEwTE directory does not exist. Please run the setup code')
         self.pos_model = f'src/main/resources/models/posTaggingModel.gz'
         self.parsing_model = f'src/main/resources/models/parseModel.gz'
         self.wordnet_dir = f'src/main/resources/data/wordnet3_0'
@@ -75,7 +80,7 @@ class BEwTE(Metric):
         ])
 
         commands = [
-            f'cd {self.bewte_root}/ROUGE-BEwTE',
+            f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
 
@@ -109,7 +114,7 @@ class BEwTE(Metric):
         ])
 
         commands = [
-            f'cd {self.bewte_root}/ROUGE-BEwTE',
+            f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
 
@@ -130,7 +135,7 @@ class BEwTE(Metric):
         ])
 
         commands = [
-            f'cd {self.bewte_root}/ROUGE-BEwTE',
+            f'cd {self.bewte_root}',
             f'mvn exec:java@BEXpander -Dexec.args=\'{args}\''
         ]
 
@@ -155,7 +160,7 @@ class BEwTE(Metric):
         ])
 
         commands = [
-            f'cd {self.bewte_root}/ROUGE-BEwTE',
+            f'cd {self.bewte_root}',
             f'mvn exec:java@BEwT_E -Dexec.args=\'{args}\''
         ]
 
@@ -240,3 +245,75 @@ class BEwTE(Metric):
             # summaries are processed. We instead compute the average over the references.
             metrics_lists = self._parse_stdout(stdout)
             return metrics_lists
+
+
+class BEwTESetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('bewte')
+        self.parser.set_defaults(subfunc=self.run)
+
+    def _edit_pom(self, file_path: str) -> None:
+        # We need to edit the pom.xml file to add options to run the main classes
+        lines = open(file_path, 'r').read().splitlines()
+        with open(file_path, 'w') as out:
+            for line in lines[:80]:
+                out.write(line + '\n')
+            out.write('''
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.6.0</version>
+                    <executions>
+                      <execution>
+                        <id>RunPipe</id>
+                        <configuration>
+                          <mainClass>tratz.runpipe.util.RunPipe</mainClass>
+                        </configuration>
+                      </execution>
+                      <execution>
+                        <id>BEXpander</id>
+                        <configuration>
+                          <mainClass>bewte.BEXpander</mainClass>
+                        </configuration>
+                      </execution>
+                      <execution>
+                        <id>BEwT_E</id>
+                        <configuration>
+                          <mainClass>bewte.BEwT_E</mainClass>
+                        </configuration>
+                      </execution>
+                    </executions>
+                </plugin>
+            ''')
+            for line in lines[80:]:
+                out.write(line + '\n')
+
+    @overrides
+    def run(self, args):
+        commands = [
+            f'mkdir -p {DATA_ROOT}/metrics',
+            f'cd {DATA_ROOT}/metrics',
+            f'git clone https://github.com/igorbrigadir/ROUGE-BEwTE'
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode != 0:
+            print('BEwT-E setup failure')
+
+        self._edit_pom(f'{DATA_ROOT}/metrics/ROUGE-BEwTE/pom.xml')
+
+        commands = [
+            f'cd {DATA_ROOT}/metrics/ROUGE-BEwTE',
+            f'mvn package'
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode == 0:
+            print('BEwT-E setup success')
+        else:
+            print('BEwT-E setup failure')

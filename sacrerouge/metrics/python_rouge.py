@@ -4,6 +4,7 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
+from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -60,7 +61,7 @@ class PythonRouge(Metric):
                  use_porter_stemmer: bool = True,
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
-                 data_dir: str = 'external/ROUGE-1.5.5/data'):
+                 rouge_data_dir: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5/data'):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
@@ -71,8 +72,8 @@ class PythonRouge(Metric):
         self.compute_rouge_l = compute_rouge_l
 
         self.stemmer = PorterStemmer(PorterStemmer.ORIGINAL_ALGORITHM)
-        self.stemmer_exceptions = self._load_stemmer_exceptions(data_dir)
-        self.stopwords = self._load_stopwords(data_dir)
+        self.stemmer_exceptions = self._load_stemmer_exceptions(rouge_data_dir)
+        self.stopwords = self._load_stopwords(rouge_data_dir)
 
     def _load_stemmer_exceptions(self, root: str) -> Dict[str, str]:
         exceptions = {}

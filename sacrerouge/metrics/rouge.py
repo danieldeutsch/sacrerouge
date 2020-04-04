@@ -3,7 +3,7 @@ from collections import defaultdict
 from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
-from sacrerouge.common import TemporaryDirectory
+from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -22,8 +22,7 @@ class Rouge(Metric):
                  compute_rouge_l: bool = False,
                  skip_bigram_gap_length: Optional[int] = None,
                  wlcs_weight: Optional[float] = None,
-                 rouge_script_location: str = 'external/ROUGE-1.5.5/ROUGE-1.5.5.pl',
-                 rouge_eval_home: str = 'external/ROUGE-1.5.5/data'):
+                 rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5'):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
@@ -33,8 +32,8 @@ class Rouge(Metric):
         self.compute_rouge_l = compute_rouge_l
         self.skip_bigram_gap_length = skip_bigram_gap_length
         self.wlcs_weight = wlcs_weight
-        self.rouge_script_location = rouge_script_location
-        self.rouge_eval_home = rouge_eval_home
+        self.rouge_script_location = f'{rouge_root}/ROUGE-1.5.5.pl'
+        self.rouge_eval_home = f'{rouge_root}/data'
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)

@@ -1,9 +1,12 @@
+import argparse
 import os
 from collections import defaultdict
+from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Tuple
 
-from sacrerouge.common import TemporaryDirectory
+from sacrerouge.commands import Subcommand
+from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import DocumentsField, SummaryField
 from sacrerouge.data.types import SummaryType
@@ -15,13 +18,14 @@ class SIMetrix(Metric):
     def __init__(self,
                  use_stemmer: bool = True,
                  remove_stopwords: bool = True,
-                 jar_path: str = 'external/SIMetrix/simetrix.jar',
-                 data_dir: str = 'external/SIMetrix/data'):
+                 simetrix_root: str = f'{DATA_ROOT}/metrics/simetrix'):
         super().__init__(['documents'])
         self.use_stemmer = use_stemmer
         self.remove_stopwords = remove_stopwords
-        self.jar_path = jar_path
-        self.data_dir = data_dir
+        if not os.path.exists(simetrix_root):
+            raise Exception('SIMetrix directory does not exist. Please run the setup code')
+        self.jar_path = f'{simetrix_root}/simetrix.jar'
+        self.data_dir = f'{simetrix_root}/data'
 
     def _save_summary_like(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
@@ -152,3 +156,31 @@ class SIMetrix(Metric):
         macro_metrics = macro_metrics_list[0]
         micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
         return macro_metrics, micro_metrics_list
+
+
+class SIMetrixSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('simetrix')
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        commands = [
+            f'mkdir -p {DATA_ROOT}/metrics',
+            f'cd {DATA_ROOT}/metrics',
+            f'git clone https://github.com/igorbrigadir/simetrix',
+            f'cd simetrix',
+            f'mvn package',
+            f'cp target/simetrix-1.0-SNAPSHOT.jar simetrix.jar',
+            f'cp -r src/main/resources/data .',
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+
+        if process.returncode == 0:
+            print('SIMetrix setup success')
+        else:
+            print('SIMetrix setup failure')

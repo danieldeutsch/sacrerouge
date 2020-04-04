@@ -3,12 +3,13 @@ import os
 import pytest
 import unittest
 
+from sacrerouge.common import DATA_ROOT
 from sacrerouge.common.testing import FIXTURES_ROOT
 from sacrerouge.data.fields import DocumentsField, SummaryField
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import SIMetrix
 
-_simetrix_jar = 'external/SIMetrix/simetrix.jar'
+_simetrix_jar = f'{DATA_ROOT}/metrics/simetrix/simetrix.jar'
 _instances_file_path = f'{FIXTURES_ROOT}/data/simetrix/instances.jsonl'
 _summary_metrics_file_path = f'{FIXTURES_ROOT}/data/simetrix/metrics.summary-level.jsonl'
 _system_metrics_file_path = f'{FIXTURES_ROOT}/data/simetrix/metrics.system-level.jsonl'
