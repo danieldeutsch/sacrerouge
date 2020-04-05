@@ -2,7 +2,7 @@ import bisect
 import os
 import re
 from lxml import etree
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 
 def _find_closest_match(matches: List[int], index: int) -> int:
@@ -89,12 +89,41 @@ class Pyramid(object):
 
     def remove_summary(self, index: int) -> 'Pyramid':
         new_summaries = self.summaries[:index] + self.summaries[index + 1:]
+        new_summarizer_ids = self.summarizer_ids[:index] + self.summarizer_ids[index + 1:]
         new_scus = []
         for scu in self.scus:
-            contributors = list(filter(lambda c: c.summary_index != index, scu.contributors))
+            contributors = []
+            for contributor in scu.contributors:
+                if contributor.summary_index != index:
+                    # Potentially fix the summary index
+                    summary_index = contributor.summary_index
+                    if summary_index > index:
+                        summary_index -= 1
+
+                    contributors.append(Contributor(summary_index, contributor.label, contributor.parts))
             if len(contributors) > 0:
                 new_scus.append(SCU(scu.scu_id, scu.label, contributors))
-        return Pyramid(self.instance_id, new_summaries, new_scus)
+        return Pyramid(self.instance_id, new_summaries, new_summarizer_ids, new_scus)
+
+    def get_annotation(self, index: int) -> 'PyramidAnnotation':
+        scus = []
+        for scu in self.scus:
+            new_contributors = []
+            for contributor in scu.contributors:
+                if contributor.summary_index == index:
+                    new_contributors.append(ContributorAnnotation(contributor.label, contributor.parts))
+            if len(new_contributors) > 0:
+                scus.append(SCUAnnotation(scu.scu_id, scu.label, new_contributors))
+        return PyramidAnnotation(self.instance_id, self.summarizer_ids[index], 'reference', self.summaries[index], scus)
+
+    def get_scu_id_set(self, index: int) -> Set[int]:
+        scus = set()
+        for i in range(len(self.summaries)):
+            for scu in self.scus:
+                for contributor in scu.contributors:
+                    if contributor.summary_index == index:
+                        scus.add(scu.scu_id)
+        return scus
 
     @staticmethod
     def _get_summarizer_id(title_regex_match: str) -> str:
@@ -231,6 +260,9 @@ class PyramidAnnotation(object):
         self.summarizer_type = summarizer_type
         self.summary = summary
         self.scus = scus
+
+    def get_scu_id_set(self) -> Set[int]:
+        return set([scu.scu_id for scu in self.scus])
 
     @staticmethod
     def _load_summary(root) -> str:
