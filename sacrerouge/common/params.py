@@ -29,9 +29,6 @@ except ImportError:
         return expr
 
 
-from allennlp.common.checks import ConfigurationError
-from allennlp.common.file_utils import cached_path
-
 logger = logging.getLogger(__name__)
 
 
@@ -113,9 +110,9 @@ def unflatten(flat_dict: Dict[str, Any]) -> Dict[str, Any]:
             elif isinstance(curr_value, dict):
                 curr_dict = curr_value
             else:
-                raise ConfigurationError("flattened dictionary is invalid")
+                raise Exception("flattened dictionary is invalid")
         if not isinstance(curr_dict, dict) or parts[-1] in curr_dict:
-            raise ConfigurationError("flattened dictionary is invalid")
+            raise Exception("flattened dictionary is invalid")
         curr_dict[parts[-1]] = value
 
     return unflat
@@ -137,12 +134,12 @@ def with_fallback(preferred: Dict[str, Any], fallback: Dict[str, Any]) -> Dict[s
                     index = int(elem_key)
                     merged_list[index] = merge(preferred_element, fallback_value[index])
                 except ValueError:
-                    raise ConfigurationError(
+                    raise Exception(
                         "could not merge dicts - the preferred dict contains "
                         f"invalid keys (key {elem_key} is not a valid list index)"
                     )
                 except IndexError:
-                    raise ConfigurationError(
+                    raise Exception(
                         "could not merge dicts - the preferred dict contains "
                         f"invalid keys (key {index} is out of bounds)"
                     )
@@ -231,13 +228,13 @@ class Params(MutableMapping):
         (unless keep_as_dict is True, in which case we leave them as dictionaries).
 
         If `key` is not present in the dictionary, and no default was specified, we raise a
-        `ConfigurationError`, instead of the typical `KeyError`.
+        `Exception`, instead of the typical `KeyError`.
         """
         if default is self.DEFAULT:
             try:
                 value = self.params.pop(key)
             except KeyError:
-                raise ConfigurationError(f'key "{key}" is required at location "{self.history}"')
+                raise Exception(f'key "{key}" is required at location "{self.history}"')
         else:
             value = self.params.pop(key, default)
 
@@ -316,7 +313,7 @@ class Params(MutableMapping):
             A list of valid options for values corresponding to `key`.  For example, if you're
             specifying the type of encoder to use for some part of your model, the choices might be
             the list of encoder classes we know about and can instantiate.  If the value we find in
-            the param dictionary is not in `choices`, we raise a `ConfigurationError`, because
+            the param dictionary is not in `choices`, we raise a `Exception`, because
             the user specified an invalid value in their parameter file.
 
         default_to_first_choice: `bool`, optional (default=False)
@@ -324,7 +321,7 @@ class Params(MutableMapping):
             If this is `True`, we allow the `key` to not be present in the parameter
             dictionary.  If the key is not present, we will use the return as the value the first
             choice in the `choices` list.  If this is `False`, we raise a
-            `ConfigurationError`, because specifying the `key` is required (e.g., you `have` to
+            `Exception`, because specifying the `key` is required (e.g., you `have` to
             specify your model class when running an experiment, but you can feel free to use
             default settings for encoders if you want).
 
@@ -346,7 +343,7 @@ class Params(MutableMapping):
                 "is loaded, or use a fully qualified class name in your config file like "
                 """{"model": "my_module.models.MyModel"} to have it imported automatically."""
             )
-            raise ConfigurationError(message)
+            raise Exception(message)
         return value
 
     def as_dict(self, quiet: bool = False, infer_type_and_cast: bool = False):
@@ -416,13 +413,13 @@ class Params(MutableMapping):
 
     def assert_empty(self, class_name: str):
         """
-        Raises a `ConfigurationError` if `self.params` is not empty.  We take `class_name` as
+        Raises a `Exception` if `self.params` is not empty.  We take `class_name` as
         an argument so that the error message gives some idea of where an error happened, if there
         was one.  `class_name` should be the name of the `calling` class, the one that got extra
         parameters (if there are any).
         """
         if self.params:
-            raise ConfigurationError(
+            raise Exception(
                 "Extra parameters passed to {}: {}".format(class_name, self.params)
             )
 
@@ -482,7 +479,6 @@ class Params(MutableMapping):
             ext_vars = {}
 
         # redirect to cache, if necessary
-        params_file = cached_path(params_file)
         ext_vars = {**_environment_variables(), **ext_vars}
 
         file_dict = json.loads(evaluate_file(params_file, ext_vars=ext_vars))
