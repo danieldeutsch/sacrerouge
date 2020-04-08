@@ -1,9 +1,11 @@
-from typing import Any, Dict, Type
+from typing import Type
+
+from sacrerouge.common import Params
 
 
 class FromParams(object):
     @classmethod
-    def from_params(cls: Type, params: Dict[str, Any]) -> 'FromParams':
-        metric_type = params.pop('type')
-        metric_cls = cls._registry[metric_type]
-        return metric_cls(**params)
+    def from_params(cls: Type, params: Params) -> 'FromParams':
+        type_ = params.pop('type')
+        cls_ = cls._registry[type_]
+        return cls_(**params)

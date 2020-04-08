@@ -1,28 +1,27 @@
 import argparse
-import jsons
 from collections import defaultdict
 from overrides import overrides
-from tqdm import tqdm
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from sacrerouge.commands import Subcommand
+from sacrerouge.common import Params
 from sacrerouge.data import EvalInstance, Metrics
 from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.io import JsonlWriter
 from sacrerouge.metrics import Metric
 
 
-def _load_metrics(config: Dict[str, Any]) -> List[Metric]:
+def _load_metrics(params: Params) -> List[Metric]:
     metrics = []
-    for params in config['metrics']:
-        metric = Metric.from_params(params)
+    for metric_params in params.pop('metrics'):
+        metric = Metric.from_params(metric_params)
         metrics.append(metric)
     return metrics
 
 
 def _score_with_metric(metric: Metric,
-                      instances: List[EvalInstance],
-                      metrics_dicts: Dict[str, Dict[str, Metrics]]) -> None:
+                       instances: List[EvalInstance],
+                       metrics_dicts: Dict[str, Dict[str, Metrics]]) -> None:
     fields_list = []
     field_to_index = {}
     instances_list = []
@@ -108,13 +107,14 @@ class ScoreSubcommand(Subcommand):
         self.parser = parser.add_parser('score')
         self.parser.add_argument('config')
         self.parser.add_argument('output_jsonl')
+        self.parser.add_argument('--overrides')
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
-        config = jsons.loads(open(args.config, 'r').read())
-        dataset_reader = DatasetReader.from_params(config['dataset_reader'])
-        metrics = _load_metrics(config)
+        params = Params.from_file(args.config, args.overrides)
+        dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
+        metrics = _load_metrics(params)
 
         instances = dataset_reader.read()
         metrics_dicts = score_instances(instances, metrics)

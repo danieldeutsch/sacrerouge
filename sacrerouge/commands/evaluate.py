@@ -2,19 +2,20 @@ import argparse
 import jsons
 import os
 from overrides import overrides
-from typing import Any, Dict, List
+from typing import List
 
 from sacrerouge.commands import Subcommand
+from sacrerouge.common import Params
 from sacrerouge.data import EvalInstance, Metrics, MetricsDict
 from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.io import JsonlWriter
 from sacrerouge.metrics import Metric
 
 
-def load_metrics(config: Dict[str, Any]) -> List[Metric]:
+def load_metrics(params: Params) -> List[Metric]:
     metrics = []
-    for params in config['metrics']:
-        metric = Metric.from_params(params)
+    for metric_params in params.pop('metrics'):
+        metric = Metric.from_params(metric_params)
         metrics.append(metric)
     return metrics
 
@@ -34,13 +35,14 @@ class EvaluateSubcommand(Subcommand):
         self.parser.add_argument('macro_output_json')
         self.parser.add_argument('micro_output_jsonl')
         self.parser.add_argument('--silent', action='store_true')
+        self.parser.add_argument('--overrides')
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
-        config = jsons.loads(open(args.config, 'r').read())
-        dataset_reader = DatasetReader.from_params(config['dataset_reader'])
-        metrics = load_metrics(config)
+        params = Params.from_file(args.config, args.overrides)
+        dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
+        metrics = load_metrics(params)
 
         instances = dataset_reader.read()
         summaries = [instance.summary for instance in instances]
