@@ -17,7 +17,7 @@ try:
 
     @Metric.register('moverscore')
     class MoverScore(Metric):
-        def __init__(self, moverscore_root: f'{DATA_ROOT}/metrics/MoverScore'):
+        def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
             self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())
 
