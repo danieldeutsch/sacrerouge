@@ -22,13 +22,11 @@ class TestMoverScore(unittest.TestCase):
 
         moverscore = MoverScore()
         _, metrics_list = moverscore.evaluate(centroid, duc2004)
-        assert metrics_list[:5] == [
-            {'MoverScore': 0.24826391722135857},
-            {'MoverScore': 0.19464766520457838},
-            {'MoverScore': 0.26644948499030685},
-            {'MoverScore': 0.21231040174382498},
-            {'MoverScore': 0.15387569485290115}
-        ]
+        assert metrics_list[0]['MoverScore'] == pytest.approx(0.24826391722135857, abs=1e-4)
+        assert metrics_list[1]['MoverScore'] == pytest.approx(0.19464766520457838, abs=1e-4)
+        assert metrics_list[2]['MoverScore'] == pytest.approx(0.26644948499030685, abs=1e-4)
+        assert metrics_list[3]['MoverScore'] == pytest.approx(0.21231040174382498, abs=1e-4)
+        assert metrics_list[4]['MoverScore'] == pytest.approx(0.15387569485290115, abs=1e-4)
 
     def test_score_multi_all_order(self):
         """Tests to ensure the scoring returns the same results, no matter the order."""
