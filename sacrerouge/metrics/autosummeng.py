@@ -7,6 +7,7 @@ from typing import List
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
+from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -131,6 +132,8 @@ class AutoSummENGSetupSubcommand(Subcommand):
 
     @overrides
     def run(self, args):
+        assert command_exists('mvn'), 'AutoSummENG requires Maven to be installed'
+
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
