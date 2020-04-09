@@ -1,4 +1,6 @@
 import argparse
+import os
+from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
@@ -20,7 +22,8 @@ class AutoSummENG(Metric):
                  d_window: int = 3,
                  min_score: float = 0.0,
                  max_score: float = 1.0,
-                 autosummeng_root: str = f'{DATA_ROOT}/metrics/AutoSummENG'):
+                 autosummeng_root: str = f'{DATA_ROOT}/metrics/AutoSummENG',
+                 verbose: bool = False):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.min_n = min_n
         self.max_n = max_n
@@ -28,56 +31,87 @@ class AutoSummENG(Metric):
         self.min_score = min_score
         self.max_score = max_score
         self.autosummeng_root = autosummeng_root
+        self.verbose = verbose
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
+        dirname = os.path.dirname(file_path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+
         with open(file_path, 'w') as out:
             if isinstance(summary, list):
                 out.write('\n'.join(summary))
             else:
                 out.write(summary)
 
-    def _run(self,
-             summary: SummaryType,
-             references: List[SummaryType]) -> MetricsDict:
-        with TemporaryDirectory() as temp_dir:
-            summary_file_path = f'{temp_dir}/peer.txt'
-            self._save_summary(summary, summary_file_path)
+    def _parse_output_file(self, file_path: str) -> List[List[MetricsDict]]:
+        metrics_dicts = defaultdict(dict)
+        with open(file_path, 'r') as f:
+            for i, line in enumerate(f):
+                # Header
+                if i == 0:
+                    continue
+                columns = line.split('\t')
+                if len(columns) != 5:
+                    raise Exception(f'Expected 5 columns: {line}')
 
-            reference_file_paths = []
-            for i, reference in enumerate(references):
-                reference_file_path = f'{temp_dir}/model.{i}.txt'
-                reference_file_paths.append(reference_file_path)
-                self._save_summary(reference, reference_file_path)
+                instance_index = int(columns[0])
+                summarizer_index = int(columns[1])
+                metrics_dicts[instance_index][summarizer_index] = {
+                    'AutoSummENG': float(columns[2]),
+                    'MeMoG': float(columns[3]),
+                    'NPowER': float(columns[4])
+                }
+
+        metrics_lists = []
+        for i in range(len(metrics_dicts)):
+            metrics_lists.append([])
+            for j in range(len(metrics_dicts[i])):
+                metrics_lists[-1].append(metrics_dicts[i][j])
+        return metrics_lists
+
+    def _run(self,
+             summaries_list: List[List[SummaryType]],
+             references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
+        with TemporaryDirectory() as temp_dir:
+            files_tsv_path = f'{temp_dir}/files.tsv'
+            with open(files_tsv_path, 'w') as out:
+                for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
+                    reference_filenames = []
+                    for j, reference in enumerate(references):
+                        filename = f'{temp_dir}/references/{i}/{j}.txt'
+                        self._save_summary(reference, filename)
+                        reference_filenames.append(filename)
+
+                    peer_filenames = []
+                    for j, summary in enumerate(summaries):
+                        filename = f'{temp_dir}/peers/{i}/{j}.txt'
+                        self._save_summary(reference, filename)
+                        peer_filenames.append(filename)
+
+                    out.write(f'{",".join(reference_filenames)}\t{",".join(peer_filenames)}\n')
+
+            output_file = f'{temp_dir}/output.tsv'
+            args = ' '.join([
+                f'-files={files_tsv_path}',
+                f'-output={output_file}',
+                f'-minN={self.min_n}',
+                f'-maxN={self.max_n}',
+                f'-dwin={self.d_window}',
+                f'-minScore={self.min_score}',
+                f'-maxScore={self.max_score}'
+            ])
 
             commands = [
-                f'cd {self.autosummeng_root}/Releases/V1',
-                ' '.join([
-                    f'java',
-                    f'-cp NPowER.jar:lib/JInsect.jar:lib/OpenJGraph.jar',
-                    f'gr.demokritos.iit.npower.NPowER',
-                    f'-peer={summary_file_path}',
-                    f'-models={":".join(reference_file_paths)}',
-                    f'-allScores',
-                    f'-minN={self.min_n}',
-                    f'-maxN={self.max_n}',
-                    f'-dwin={self.d_window}',
-                    f'-minScore={self.min_score}',
-                    f'-maxScore={self.max_score}'
-                ])
+                f'cd {self.autosummeng_root}',
+                f'mvn exec:java@NPowERBatch -Dexec.args=\'{args}\''
             ]
-            process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+
+            redirect = None if self.verbose else PIPE
+            process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
             stdout, stderr = process.communicate()
 
-            columns = stdout.decode().strip().split()
-            if len(columns) != 3:
-                raise Exception(f'Expected 3 columns. Found {len(columns)}')
-
-            autosummeng, memog, npower = list(map(float, columns))
-            return MetricsDict({
-                'AutoSummENG': autosummeng,
-                'MeMoG': memog,
-                'NPowER': npower
-            })
+            return self._parse_output_file(output_file)
 
     def score_multi_all(self,
                         summaries_list: List[List[SummaryField]],
@@ -86,13 +120,7 @@ class AutoSummENG(Metric):
         summaries_list = [[field.summary for field in fields] for fields in summaries_list]
         references_list = [field.references for field in references_list]
 
-        metrics_lists = []
-        for summaries, references in zip(summaries_list, references_list):
-            metrics_list = []
-            for summary in summaries:
-                metrics_list.append(self._run(summary, references))
-            metrics_lists.append(metrics_list)
-        return metrics_lists
+        return self._run(summaries_list, references_list)
 
 
 class AutoSummENGSetupSubcommand(Subcommand):
@@ -106,7 +134,9 @@ class AutoSummENGSetupSubcommand(Subcommand):
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
-            f'git clone https://github.com/ggianna/SummaryEvaluation AutoSummENG'
+            f'git clone https://github.com/danieldeutsch/AutoSummENG',
+            f'cd AutoSummENG',
+            f'mvn package'
         ]
         command = ' && '.join(commands)
 
