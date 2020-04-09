@@ -1,7 +1,11 @@
+import argparse
 import numpy as np
 from overrides import overrides
+from subprocess import Popen, PIPE
 from typing import List
 
+from sacrerouge.commands import Subcommand
+from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -13,10 +17,9 @@ try:
 
     @Metric.register('moverscore')
     class MoverScore(Metric):
-        _stopwords = set('i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very s t can will just don should now d ll m o re ve y ain aren couldn didn doesn hadn hasn haven isn ma mightn mustn needn shan shouldn wasn weren won wouldn'.split())
-
-        def __init__(self):
+        def __init__(self, moverscore_root: f'{DATA_ROOT}/metrics/MoverScore'):
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
+            self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())
 
         def _flatten_summary(self, summary: SummaryType) -> str:
             if isinstance(summary, list):
@@ -53,7 +56,7 @@ try:
                 for summary in summaries:
                     scores = word_mover_score(references, [summary] * len(references),
                                               idf_dict_references, idf_dict_summaries,
-                                              MoverScore._stopwords, n_gram=1, remove_subwords=True,
+                                              self.stopwords, n_gram=1, remove_subwords=True,
                                               batch_size=48)
                     score = np.mean(scores)
                     metrics_dict_lists[-1].append(MetricsDict({'MoverScore': score}))
@@ -76,3 +79,26 @@ except ImportError:
                             summaries_list: List[List[SummaryField]],
                             references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
             raise NotImplementedError('Error: "moverscore" python package is not installed')
+
+
+class MoverScoreSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('moverscore')
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        commands = [
+            f'mkdir -p {DATA_ROOT}/metrics/MoverScore',
+            f'cd {DATA_ROOT}/metrics/MoverScore',
+            f'wget https://raw.githubusercontent.com/AIPHES/emnlp19-moverscore/0c9380437706e59ba6510fb755d8836d633a9ea1/examples/stopwords.txt'
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode == 0:
+            print('MoverScore setup success')
+        else:
+            print('MoverScore setup failure')
