@@ -1,7 +1,8 @@
 import argparse
 import numpy as np
+from collections import defaultdict
 from overrides import overrides
-from subprocess import Popen, PIPE
+from subprocess import Popen
 from typing import List
 
 from sacrerouge.commands import Subcommand
@@ -50,16 +51,41 @@ try:
             idf_dict_summaries = get_idf_dict(unique_summaries)
             idf_dict_references = get_idf_dict(unique_references)
 
+            # Prepare the inputs into flat lists for faster processing. The
+            # indices will keep track of which item the score belongs to
+            indices = []
+            input_summaries = []
+            input_references = []
+            for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
+                for j, summary in enumerate(summaries):
+                    for reference in references:
+                        indices.append((i, j))
+                        input_summaries.append(summary)
+                        input_references.append(references)
+
+            # Score all of the data
+            scores = word_mover_score(input_references, input_summaries,
+                                      idf_dict_references, idf_dict_summaries,
+                                      self.stopwords, n_gram=1, remove_subwords=True,
+                                      batch_size=48)
+
+            # Compute the mean over the references
+            indices_to_scores = defaultdict(list)
+            for pair, score in zip(indices, scores):
+                indices_to_scores[pair].append(score)
+
+            indices_to_score = {}
+            for pair, scores in indices_to_scores.items():
+                indices_to_score[pair] = np.mean(scores)
+
+            # Put back into lists
             metrics_dict_lists = []
-            for summaries, references in zip(summaries_list, references_list):
+            for i in range(len(summaries_list)):
                 metrics_dict_lists.append([])
-                for summary in summaries:
-                    scores = word_mover_score(references, [summary] * len(references),
-                                              idf_dict_references, idf_dict_summaries,
-                                              self.stopwords, n_gram=1, remove_subwords=True,
-                                              batch_size=48)
-                    score = np.mean(scores)
-                    metrics_dict_lists[-1].append(MetricsDict({'MoverScore': score}))
+                for j in range(len(summaries_list[i])):
+                    metrics_dict_lists[-1].append(MetricsDict({
+                        'MoverScore': indices_to_score[(i, j)]
+                    }))
             return metrics_dict_lists
 
         @overrides
