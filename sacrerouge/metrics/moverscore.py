@@ -61,7 +61,7 @@ try:
                     for reference in references:
                         indices.append((i, j))
                         input_summaries.append(summary)
-                        input_references.append(references)
+                        input_references.append(reference)
 
             # Score all of the data
             scores = word_mover_score(input_references, input_summaries,
