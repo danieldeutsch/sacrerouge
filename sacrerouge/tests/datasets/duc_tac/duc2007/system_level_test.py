@@ -2,7 +2,8 @@ import os
 import pytest
 import unittest
 
-from sacrerouge.compute_correlation import aggregate_metrics
+from sacrerouge.commands.correlate import aggregate_metrics
+from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
 _task1_metrics_file_path = 'datasets/duc-tac/duc2007/v1.0/task1.metrics.jsonl'
@@ -12,8 +13,8 @@ _task2_metrics_file_path = 'datasets/duc-tac/duc2007/v1.0/task2.A-B-C.metrics.js
 class TestDUC2007SystemLevel(unittest.TestCase):
     @pytest.mark.skipif(not os.path.exists(_task1_metrics_file_path), reason='DUC 2007 task 1 metrics file does not exist')
     def test_task1_system_level(self):
-        summary_level_metrics = JsonlReader(_task1_metrics_file_path).read()
-        system_level_metrics = aggregate_metrics(summary_level_metrics, 'summarizer_id')
+        summary_level_metrics = JsonlReader(_task1_metrics_file_path, Metrics).read()
+        system_level_metrics = aggregate_metrics(summary_level_metrics)
 
         # Check a few metrics to make sure they are equal to what's in the NIST files
         # mainEval/ROUGE/rouge2.jk.m.avg
@@ -46,8 +47,8 @@ class TestDUC2007SystemLevel(unittest.TestCase):
 
     @pytest.mark.skipif(not os.path.exists(_task2_metrics_file_path), reason='DUC 2007 task 2 metrics file does not exist')
     def test_task2_system_level(self):
-        summary_level_metrics = JsonlReader(_task2_metrics_file_path).read()
-        system_level_metrics = aggregate_metrics(summary_level_metrics, 'summarizer_id')
+        summary_level_metrics = JsonlReader(_task2_metrics_file_path, Metrics).read()
+        system_level_metrics = aggregate_metrics(summary_level_metrics)
 
         # Check a few metrics to make sure they are equal to what's in the NIST files
         # updateEval/ROUGE/rouge2.jk.m.avg

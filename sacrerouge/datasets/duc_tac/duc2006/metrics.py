@@ -3,7 +3,7 @@ import tarfile
 from collections import defaultdict
 from typing import Dict, List
 
-from sacrerouge.common.util import merge_dict
+from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
 
 
@@ -33,7 +33,7 @@ def load_summaries(eval_tar_2: str):
     return summaries
 
 
-def load_rouge_jk_output(eval_tar: str, file_path: str):
+def load_rouge_jk_output(eval_tar: str, file_path: str, metrics: Dict[str, Dict[str, MetricsDict]]):
     jk_metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile(file_path).read().decode().splitlines()
@@ -53,7 +53,6 @@ def load_rouge_jk_output(eval_tar: str, file_path: str):
                 jk_metrics[instance_id][summarizer_id][rouge_metric]['precision'].append(precision)
                 jk_metrics[instance_id][summarizer_id][rouge_metric]['f1'].append(f1)
 
-        metrics = defaultdict(lambda: defaultdict(dict))
         for instance_id in jk_metrics.keys():
             for summarizer_id in jk_metrics[instance_id].keys():
                 for rouge_metric in jk_metrics[instance_id][summarizer_id].keys():
@@ -65,11 +64,9 @@ def load_rouge_jk_output(eval_tar: str, file_path: str):
                         'precision': sum(precisions) / len(precisions),
                         'f1': sum(f1s) / len(f1s)
                     }
-    return metrics
 
 
-def load_responsiveness_tables(eval_tar: str):
-    judgments = defaultdict(lambda: defaultdict(dict))
+def load_responsiveness_tables(eval_tar: str, metrics: Dict[str, Dict[str, MetricsDict]]):
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile('NISTeval/responsiveness/overall.table').read().decode().splitlines()
         for line in lines[6:]:
@@ -77,7 +74,7 @@ def load_responsiveness_tables(eval_tar: str):
             instance_id = columns[0].lower()
             summarizer_id = columns[3]
             score = int(columns[4])
-            judgments[instance_id][summarizer_id]['overall_responsiveness'] = score
+            metrics[instance_id][summarizer_id]['overall_responsiveness'] = score
 
         lines = tar.extractfile('NISTeval/responsiveness/content.table').read().decode().splitlines()
         for line in lines[6:]:
@@ -85,13 +82,10 @@ def load_responsiveness_tables(eval_tar: str):
             instance_id = columns[0].lower()
             summarizer_id = columns[3]
             score = int(columns[4])
-            judgments[instance_id][summarizer_id]['content_responsiveness'] = score
-
-    return judgments
+            metrics[instance_id][summarizer_id]['content_responsiveness'] = score
 
 
-def load_linguistic_quality_table(eval_tar: str):
-    judgments = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+def load_linguistic_quality_table(eval_tar: str, metrics: Dict[str, Dict[str, MetricsDict]]):
     with tarfile.open(eval_tar, 'r') as tar:
         lines = tar.extractfile('NISTeval/linguistic_quality/linguistic_quality.table').read().decode().splitlines()
         for line in lines[7:]:
@@ -100,8 +94,7 @@ def load_linguistic_quality_table(eval_tar: str):
             summarizer_id = columns[3]
             question = columns[4]
             score = int(columns[5])
-            judgments[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
-    return judgments
+            metrics[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
 
 
 def get_references(summaries, instance_id, summarizer_id):
@@ -134,12 +127,7 @@ def save_metrics(summaries: Dict[str, Dict[str, List[str]]],
                         'summary': summary,
                         'references': references
                     })
-                    out_metrics.write({
-                        'instance_id': instance_id,
-                        'summarizer_id': summarizer_id,
-                        'summarizer_type': summary['summarizer_type'],
-                        'metrics': instance_metrics
-                    })
+                    out_metrics.write(Metrics(instance_id, summarizer_id, summary['summarizer_type'], instance_metrics))
 
 
 def setup(data_root: str, output_dir: str):
@@ -150,15 +138,12 @@ def setup(data_root: str, output_dir: str):
 
 def main(eval_tar, eval_tar_2, output_dir):
     summaries = load_summaries(eval_tar_2)
-    rouge = load_rouge_jk_output(eval_tar_2, 'NISTeval2/ROUGE/rougejk.m.out')
-    be = load_rouge_jk_output(eval_tar_2, 'NISTeval2/BE/simplejk.m.hm.out')
-    responsiveness = load_responsiveness_tables(eval_tar)
-    linguistic_quality = load_linguistic_quality_table(eval_tar)
 
-    metrics = rouge
-    merge_dict(metrics, be)
-    merge_dict(metrics, responsiveness)
-    merge_dict(metrics, linguistic_quality)
+    metrics = defaultdict(lambda: defaultdict(MetricsDict))
+    load_rouge_jk_output(eval_tar_2, 'NISTeval2/ROUGE/rougejk.m.out', metrics)
+    load_rouge_jk_output(eval_tar_2, 'NISTeval2/BE/simplejk.m.hm.out', metrics)
+    load_responsiveness_tables(eval_tar, metrics)
+    load_linguistic_quality_table(eval_tar, metrics)
 
     save_metrics(summaries, metrics, output_dir)
 

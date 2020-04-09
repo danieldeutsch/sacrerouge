@@ -3,8 +3,11 @@ from collections import defaultdict
 from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
-from sacrerouge.common import TemporaryDirectory
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.common import DATA_ROOT, TemporaryDirectory
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.fields import ReferencesField, SummaryField
+from sacrerouge.data.jackknifers import ReferencesJackknifer
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -19,9 +22,8 @@ class Rouge(Metric):
                  compute_rouge_l: bool = False,
                  skip_bigram_gap_length: Optional[int] = None,
                  wlcs_weight: Optional[float] = None,
-                 rouge_script_location: str = 'external/ROUGE-1.5.5/ROUGE-1.5.5.pl',
-                 rouge_eval_home: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__()
+                 rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5'):
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
         self.remove_stopwords = remove_stopwords
@@ -30,8 +32,8 @@ class Rouge(Metric):
         self.compute_rouge_l = compute_rouge_l
         self.skip_bigram_gap_length = skip_bigram_gap_length
         self.wlcs_weight = wlcs_weight
-        self.rouge_script_location = rouge_script_location
-        self.rouge_eval_home = rouge_eval_home
+        self.rouge_script_location = f'{rouge_root}/ROUGE-1.5.5.pl'
+        self.rouge_eval_home = f'{rouge_root}/data'
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
@@ -96,8 +98,8 @@ class Rouge(Metric):
 
     def _parse_rouge_stdout(self, stdout: str):
         lines = stdout.splitlines()
-        macro_metrics_dict = defaultdict(lambda: defaultdict(dict))
-        micro_metrics_dicts = defaultdict(lambda: defaultdict(dict))
+        macro_metrics_dict = defaultdict(lambda: defaultdict(MetricsDict))
+        micro_metrics_dicts = defaultdict(lambda: defaultdict(MetricsDict))
         for line in lines:
             if line in ['---------------------------------------------', '.............................................']:
                 continue
@@ -128,7 +130,7 @@ class Rouge(Metric):
 
     def _run(self,
              summaries_list: List[List[SummaryType]],
-             references_list: List[List[SummaryType]]) -> Tuple[List[MetricsType], List[List[MetricsType]]]:
+             references_list: List[List[SummaryType]]) -> Tuple[List[MetricsDict], List[List[MetricsDict]]]:
         with TemporaryDirectory() as temp_dir:
             summary_filenames_list = []
             reference_filenames_list = []
@@ -178,24 +180,33 @@ class Rouge(Metric):
                 command += ['-w', str(self.wlcs_weight)]
             command += [config_filename]
 
+            # We used to fail if anything was written to stderr, but ROUGE writes
+            # a warning if the number of peers per reference set is different, which
+            # is expected in some situations for us (if we just have more summaries
+            # to score for some reference sets than others). Therefore, we no longer fail
+            # if stderr is not empty.
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
-            if stderr:
-                raise Exception(f'Rouge failed with stderr: {stderr.decode()}')
 
             macro_metrics_list, micro_metrics_lists = self._parse_rouge_stdout(stdout.decode())
             return macro_metrics_list, micro_metrics_lists
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+                        summaries_list: List[List[SummaryField]],
+                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
+        # Just take the summaries themselves, not the fields
+        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+        references_list = [field.references for field in references_list]
+
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryType]],
-                 references_list: List[List[SummaryType]]) -> Tuple[MetricsType, List[MetricsType]]:
-        summaries_list = [[summary] for summary in summaries]
+                 summaries: List[List[SummaryField]],
+                 references_list: List[List[ReferencesField]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[field.summary] for field in summaries]
+        references_list = [field.references for field in references_list]
+
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, references_list)
 
         macro_metrics = macro_metrics_list[0]

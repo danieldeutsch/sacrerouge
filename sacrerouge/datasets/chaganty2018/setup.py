@@ -16,7 +16,7 @@ def download_raw_data(output_dir: str) -> None:
     paths = [
         f'{output_dir}/raw/articles.jsonl',
         f'{output_dir}/raw/data.tar.gz',
-        f'{output_dir}/raw/lqual.jsonl'
+        f'{output_dir}/raw/lqual.jsonl'  # The output from running their "process.py lqual" script, not the file in the "data" folder
     ]
 
     os.makedirs(f'{output_dir}/raw', exist_ok=True)

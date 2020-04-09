@@ -4,7 +4,11 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 from typing import Dict, List, Optional, Set, Tuple
 
-from sacrerouge.data.types import MetricsType, SummaryType
+from sacrerouge.common import DATA_ROOT
+from sacrerouge.data import MetricsDict
+from sacrerouge.data.fields import ReferencesField, SummaryField
+from sacrerouge.data.jackknifers import ReferencesJackknifer
+from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 
@@ -57,8 +61,8 @@ class PythonRouge(Metric):
                  use_porter_stemmer: bool = True,
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
-                 data_dir: str = 'external/ROUGE-1.5.5/data'):
-        super().__init__()
+                 rouge_data_dir: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5/data'):
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
         self.max_words = max_words
@@ -68,8 +72,8 @@ class PythonRouge(Metric):
         self.compute_rouge_l = compute_rouge_l
 
         self.stemmer = PorterStemmer(PorterStemmer.ORIGINAL_ALGORITHM)
-        self.stemmer_exceptions = self._load_stemmer_exceptions(data_dir)
-        self.stopwords = self._load_stopwords(data_dir)
+        self.stemmer_exceptions = self._load_stemmer_exceptions(rouge_data_dir)
+        self.stopwords = self._load_stopwords(rouge_data_dir)
 
     def _load_stemmer_exceptions(self, root: str) -> Dict[str, str]:
         exceptions = {}
@@ -224,14 +228,18 @@ class PythonRouge(Metric):
         return precision, recall, f1
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryType]],
-                        references_list: List[List[SummaryType]]) -> List[List[MetricsType]]:
+                        summaries_list: List[List[SummaryField]],
+                        references_list: List[ReferencesField]) -> List[List[MetricsDict]]:
+        # Just take the summaries themselves, not the fields
+        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+        references_list = [field.references for field in references_list]
+
         summaries_list = [[self.preprocess_summary(summary) for summary in summaries] for summaries in summaries_list]
         references_list = [[self.preprocess_summary(reference) for reference in references] for references in references_list]
 
         metrics_lists = []
         for summaries, references in zip(summaries_list, references_list):
-            metrics_list = [{} for _ in summaries]
+            metrics_list = [MetricsDict() for _ in summaries]
 
             for n in self.ngram_orders:
                 reference_ngrams_list = [self._count_ngrams(reference, n) for reference in references]
