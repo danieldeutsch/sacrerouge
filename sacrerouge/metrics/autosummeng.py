@@ -57,11 +57,11 @@ class AutoSummENG(Metric):
 
                 instance_index = int(columns[0])
                 summarizer_index = int(columns[1])
-                metrics_dicts[instance_index][summarizer_index] = {
+                metrics_dicts[instance_index][summarizer_index] = MetricsDict({
                     'AutoSummENG': float(columns[2]),
                     'MeMoG': float(columns[3]),
                     'NPowER': float(columns[4])
-                }
+                })
 
         metrics_lists = []
         for i in range(len(metrics_dicts)):
