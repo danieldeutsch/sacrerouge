@@ -27,3 +27,21 @@ class TestMoverScore(unittest.TestCase):
             {'MoverScore': 0.21231040174382498},
             {'MoverScore': 0.15387569485290115}
         ]
+
+    def test_score_multi_all_order(self):
+        """Tests to ensure the scoring returns the same results, no matter the order."""
+        moverscore = MoverScore()
+        duc2004 = load_references(_duc2004_file_path)
+        centroid1 = load_summaries(_centroid_file_path)
+        centroid2 = list(reversed(centroid1))  # Just create a second fake dataset
+
+        summaries_list = list(zip(*[centroid1, centroid2]))
+        metrics_lists1 = moverscore.score_multi_all(summaries_list, duc2004)
+        metrics_lists1 = list(zip(*metrics_lists1))
+
+        summaries_list = list(zip(*[centroid2, centroid1]))
+        metrics_lists2 = moverscore.score_multi_all(summaries_list, duc2004)
+        metrics_lists2 = list(zip(*metrics_lists2))
+
+        metrics_lists2 = list(reversed(metrics_lists2))
+        assert metrics_lists1 == metrics_lists2
