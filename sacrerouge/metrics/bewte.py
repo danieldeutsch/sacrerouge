@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
+from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -291,6 +292,9 @@ class BEwTESetupSubcommand(Subcommand):
 
     @overrides
     def run(self, args):
+        assert command_exists('mvn'), 'BEwTE requires Maven to be installed'
+        assert command_exists('git-lfs'), 'BEwTE requires git-lfs to be installed'
+
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
