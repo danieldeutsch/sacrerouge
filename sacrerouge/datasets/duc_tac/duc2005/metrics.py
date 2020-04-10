@@ -87,6 +87,30 @@ def load_linguistic_quality_table(eval_tar: str, metrics: Dict[str, Dict[str, Me
             metrics[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
 
 
+def load_pyramid_table(pyramid_tar: str, metrics: Dict[str, Dict[str, MetricsDict]]):
+    with tarfile.open(pyramid_tar, 'r') as tar:
+        # The "processed_pans.txt" file has obvious corrected errors, whereas "unprocessed_pans.txt" does not
+        lines = tar.extractfile('processed_pans.txt').read().decode().splitlines()
+        for line in lines:
+            columns = line.split()
+            instance_id = 'd' + columns[0].lower()
+            summarizer_id = columns[1]
+
+            # This file contains scores for both references and peers. However, the
+            # annotation files show that only a portion of the references were used
+            # to create the pyramid, and the remaining references were evaluated against
+            # those pyramids. The pyramid references do not appear in this file.
+            # Therefore, the pyramid scores between references and peers here can
+            # be directly compared, and they don't need to be marked as jackknifed
+            #
+            # Also, for some clusters there are two sets of annotations. We just pick
+            # whichever one comes last. I don't think it matters significantly
+            metrics[instance_id][summarizer_id]['pyramid_score'] = float(columns[2])
+            metrics[instance_id][summarizer_id]['modified_pyramid_score'] = float(columns[3])
+            metrics[instance_id][summarizer_id]['num_scus'] = int(columns[4])
+            metrics[instance_id][summarizer_id]['num_repetitions'] = int(columns[5])
+
+
 def get_references(summaries, instance_id, summarizer_id):
     summarizer_ids = list(summaries[instance_id].keys())
     reference_ids = list(filter(lambda sid: sid.isalpha(), summarizer_ids))
@@ -122,16 +146,18 @@ def save_metrics(summaries: Dict[str, Dict[str, List[str]]],
 
 def setup(data_root: str, output_dir: str) -> None:
     results_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc/duc2005/results/NIST/results.tar'
-    main(results_tar, output_dir)
+    pyramid_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc/duc2005/results/Pyramid/DUC2005.tar.gz'
+    main(results_tar, pyramid_tar, output_dir)
 
 
-def main(results_tar, output_dir):
+def main(results_tar, pyramid_tar, output_dir):
     summaries = load_summaries(results_tar)
 
     metrics = defaultdict(lambda: defaultdict(MetricsDict))
     load_rouge_jk_output(results_tar, 'results/ROUGE/rougejk.m.out', metrics)
     load_responsiveness_table(results_tar, metrics)
     load_linguistic_quality_table(results_tar, metrics)
+    load_pyramid_table(pyramid_tar, metrics)
 
     save_metrics(summaries, metrics, output_dir)
 
@@ -139,7 +165,8 @@ def main(results_tar, output_dir):
 if __name__ == '__main__':
     argp = argparse.ArgumentParser()
     argp.add_argument('results_tar')
+    argp.add_argument('pyramid_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
 
-    main(args.results_tar, args.output_dir)
+    main(args.results_tar, args.pyramid_tar, args.output_dir)
