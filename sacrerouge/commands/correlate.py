@@ -120,6 +120,34 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
     }
 
 
+def compute_global_correlations(metrics_list: List[Dict[str, Any]],
+                                metric1: str,
+                                metric2: str) -> Dict[str, float]:
+    values1 = [metrics.metrics[metric1] for metrics in metrics_list]
+    values2 = [metrics.metrics[metric2] for metrics in metrics_list]
+
+    r, r_pvalue = pearsonr(values1, values2)
+    rho, rho_pvalue = spearmanr(values1, values2)
+    tau, tau_pvalue = kendalltau(values1, values2)
+    num_summaries = len(metrics_list)
+
+    return {
+        'pearson': {
+            'r': r,
+            'p_value': r_pvalue
+        },
+        'spearman': {
+            'rho': rho,
+            'p_value': rho_pvalue
+        },
+        'kendall': {
+            'tau': tau,
+            'p_value': tau_pvalue
+        },
+        'num_summaries': num_summaries
+    }
+
+
 def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
                         metric1: str,
                         metric2: str,
@@ -136,9 +164,11 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
 
     summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
     system_level = compute_system_level_correlations(metrics_list, metric1, metric2)
+    global_level = compute_global_correlations(metrics_list, metric1, metric2)
     results = {
         'summary_level': summary_level,
-        'system_level': system_level
+        'system_level': system_level,
+        'global': global_level
     }
     return results
 
