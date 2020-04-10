@@ -159,6 +159,33 @@ def load_main_linguistic_quality_table(main_eval_tar_path: str, metrics: Dict[st
             metrics[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
 
 
+def load_main_pyramid_output(main_pyramid_tar: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
+    # This file also has the content and linguistic quality scores, so we probably could
+    # have just read in this one file. The other code is already written, so it's not worth changing
+    with tarfile.open(main_pyramid_tar, 'r') as tar:
+        lines = tar.extractfile('mainPyramidEval/scoring/2007_modified_scores.txt').read().decode().splitlines()
+        for line in lines:
+            columns = line.split()
+            instance_id = columns[0].lower()
+            summarizer_id = columns[1]
+            metrics[instance_id][summarizer_id]['modified_pyramid_score'] = float(columns[2])
+            metrics[instance_id][summarizer_id]['num_scus'] = int(columns[3])
+            metrics[instance_id][summarizer_id]['num_repetitions'] = int(columns[4])
+
+
+def load_update_pyramid_output(update_eval_tar_path: str, metrics: Dict[str, Dict[str, Dict[str, MetricsDict]]]):
+    with tarfile.open(update_eval_tar_path, 'r') as tar:
+        lines = tar.extractfile('updateEval/Pyramid/scoring/2007_modified_scores.txt').read().decode().splitlines()
+        for line in lines:
+            columns = line.split()
+            instance_id = columns[0].split('-')[0].lower()
+            group = columns[0].split('-')[1]
+            summarizer_id = columns[1]
+            metrics[instance_id][group][summarizer_id]['modified_pyramid_score'] = float(columns[2])
+            metrics[instance_id][group][summarizer_id]['num_scus'] = int(columns[3])
+            metrics[instance_id][group][summarizer_id]['num_repetitions'] = int(columns[4])
+
+
 def get_references(summaries, instance_id, summarizer_id, group=None):
     summarizer_ids = list(summaries[instance_id].keys())
     reference_ids = list(filter(lambda sid: sid.isalpha(), summarizer_ids))
@@ -266,10 +293,11 @@ def save_update_summaries_metrics(summaries, metrics, output_dir: str):
 def setup(data_root: str, output_dir: str):
     main_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/mainEval.tar.gz'
     update_eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/updateEval.tar.gz'
-    main(main_eval_tar, update_eval_tar, output_dir)
+    main_pyramid_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2007/results/mainPyramidEval.tar.gz'
+    main(main_eval_tar, update_eval_tar, main_pyramid_tar, output_dir)
 
 
-def main(main_eval_tar, update_eval_tar, output_dir):
+def main(main_eval_tar, update_eval_tar, main_pyramid_tar, output_dir):
     main_summaries = load_main_summaries(main_eval_tar)
     update_summaries = load_update_summaries(update_eval_tar)
 
@@ -286,6 +314,9 @@ def main(main_eval_tar, update_eval_tar, output_dir):
 
     load_main_rouge_jk_output(main_eval_tar, 'mainEval/BE/simplejk.m.hm.out', main_metrics)
     load_update_rouge_jk_output(update_eval_tar, 'updateEval/BE/simplejk.m.hm.out', update_metrics)
+
+    load_main_pyramid_output(main_pyramid_tar, main_metrics)
+    load_update_pyramid_output(update_eval_tar, update_metrics)
 
     save_main_summaries_metrics(main_summaries, main_metrics, output_dir)
     save_update_summaries_metrics(update_summaries, update_metrics, output_dir)
