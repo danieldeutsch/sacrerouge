@@ -171,7 +171,8 @@ if __name__ == '__main__':
     argp = argparse.ArgumentParser()
     argp.add_argument('eval_tar')
     argp.add_argument('eval_tar_2')
+    argp.add_argument('pyramid_tar')
     argp.add_argument('output_dir')
     args = argp.parse_args()
 
-    main(args.eval_tar, args.eval_tar_2, args.output_dir)
+    main(args.eval_tar, args.eval_tar_2, args.pyramid_tar, args.output_dir)
