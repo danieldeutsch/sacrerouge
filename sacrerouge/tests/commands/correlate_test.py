@@ -27,3 +27,7 @@ class TestCorrelate(unittest.TestCase):
             assert correlations['system_level']['spearman']['rho'] == pytest.approx(0.910, 1e-2)
             assert correlations['system_level']['pearson']['r'] == pytest.approx(0.778, 1e-2)
             assert correlations['system_level']['num_summarizers'] == 8
+
+            # Kendall's tau is not reported in the paper, but this should break if
+            # anything changes in the code
+            assert correlations['system_level']['kendall']['tau'] == pytest.approx(0.836, 1e-2)

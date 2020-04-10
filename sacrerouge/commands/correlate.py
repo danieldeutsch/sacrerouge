@@ -4,7 +4,7 @@ import json
 import os
 from collections import defaultdict
 from overrides import overrides
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import kendalltau, pearsonr, spearmanr
 from typing import Any, Dict, List, Union
 
 from sacrerouge.commands import Subcommand
@@ -58,6 +58,7 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
                                        metric2: str) -> Dict[str, float]:
     pearsons = []
     spearmans = []
+    kendalls = []
 
     metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
     for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
@@ -67,18 +68,24 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
 
         r, _ = pearsonr(values1, values2)
         rho, _ = spearmanr(values1, values2)
+        tau, _ = kendalltau(values1, values2)
 
         pearsons.append(r)
         spearmans.append(rho)
+        kendalls.append(tau)
 
     pearson = sum(pearsons) / len(pearsons)
     spearman = sum(spearmans) / len(spearmans)
+    kendall = sum(kendalls) / len(kendalls)
     return {
         'pearson': {
             'r': pearson
         },
         'spearman': {
             'rho': spearman
+        },
+        'kendall': {
+            'tau': kendall
         }
     }
 
@@ -93,6 +100,7 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
 
     r, r_pvalue = pearsonr(values1, values2)
     rho, rho_pvalue = spearmanr(values1, values2)
+    tau, tau_pvalue = kendalltau(values1, values2)
     num_summarizers = len(metrics_list)
 
     return {
@@ -103,6 +111,10 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
         'spearman': {
             'rho': rho,
             'p_value': rho_pvalue
+        },
+        'kendall': {
+            'tau': tau,
+            'p_value': tau_pvalue
         },
         'num_summarizers': num_summarizers
     }
