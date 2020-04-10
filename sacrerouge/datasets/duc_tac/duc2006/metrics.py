@@ -97,6 +97,23 @@ def load_linguistic_quality_table(eval_tar: str, metrics: Dict[str, Dict[str, Me
             metrics[instance_id][summarizer_id]['linguistic_quality'][f'Q{question}'] = score
 
 
+def load_pyramid_scores(pyramid_tar: str, metrics: Dict[str, Dict[str, MetricsDict]]):
+    with tarfile.open(pyramid_tar, 'r') as tar:
+        lines = tar.extractfile('scoring/2006_modified_scores.txt').read().decode().splitlines()
+        for line in lines:
+            columns = line.split()
+            instance_id = columns[0].lower()
+            summarizer_id = columns[1]
+            # There are some typos which cause the summarizer_id to be "01".
+            # Since the file only has peers, its ok to cast the id to a integer and back
+            summarizer_id = str(int(summarizer_id))
+
+            # Only peers are included, so no jackknifing
+            metrics[instance_id][summarizer_id]['modified_pyramid_score'] = float(columns[2])
+            metrics[instance_id][summarizer_id]['num_scus'] = int(columns[3])
+            metrics[instance_id][summarizer_id]['num_repetitions'] = int(columns[4])
+
+
 def get_references(summaries, instance_id, summarizer_id):
     summarizer_ids = list(summaries[instance_id].keys())
     reference_ids = list(filter(lambda sid: sid.isalpha(), summarizer_ids))
@@ -133,10 +150,11 @@ def save_metrics(summaries: Dict[str, Dict[str, List[str]]],
 def setup(data_root: str, output_dir: str):
     eval_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST/NISTeval.tar.gz'
     eval_tar_2 = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/NIST-secondary-automatic/NISTeval2.tar.gz'
-    main(eval_tar, eval_tar_2, output_dir)
+    pyramid_tar = f'{data_root}/scrapes/duc.nist.gov/past_duc_aquaint/duc2006/results/Pyramid/DUC2006pyramiddata.tar.gz'
+    main(eval_tar, eval_tar_2, pyramid_tar, output_dir)
 
 
-def main(eval_tar, eval_tar_2, output_dir):
+def main(eval_tar, eval_tar_2, pyramid_tar, output_dir):
     summaries = load_summaries(eval_tar_2)
 
     metrics = defaultdict(lambda: defaultdict(MetricsDict))
@@ -144,6 +162,7 @@ def main(eval_tar, eval_tar_2, output_dir):
     load_rouge_jk_output(eval_tar_2, 'NISTeval2/BE/simplejk.m.hm.out', metrics)
     load_responsiveness_tables(eval_tar, metrics)
     load_linguistic_quality_table(eval_tar, metrics)
+    load_pyramid_scores(pyramid_tar, metrics)
 
     save_metrics(summaries, metrics, output_dir)
 
