@@ -4,3 +4,4 @@ from sacrerouge.metrics.bewte import BEwTE
 from sacrerouge.metrics.python_rouge import PythonRouge
 from sacrerouge.metrics.rouge import Rouge
 from sacrerouge.metrics.simetrix import SIMetrix
+from sacrerouge.metrics.sumqe import SumQE
