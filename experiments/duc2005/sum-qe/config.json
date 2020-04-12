@@ -1,0 +1,13 @@
+{
+  "dataset_reader": {
+    "type": "summary-only",
+    "input_jsonl": "datasets/duc-tac/duc2005/v1.0/task1.summaries.jsonl"
+  },
+  "metrics": [
+    {
+      "type": "sum-qe",
+      "environment_name": "SumQE",
+      "verbose": true
+    }
+  ]
+}
