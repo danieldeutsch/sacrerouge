@@ -158,6 +158,7 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
     metrics_list = load_metrics(metrics_jsonl_files)
     for metrics in metrics_list:
         metrics.flatten_keys()
+        metrics.select_metrics([metric1, metric2])
         metrics.average_values()
 
     metrics_list = filter_metrics(metrics_list, summarizer_type, metric1, metric2)

@@ -52,6 +52,12 @@ class MetricsDict(dict):
                 result[key] = value
         return result
 
+    def select_metrics(self, metrics: List[str]) -> 'MetricsDict':
+        selected = MetricsDict()
+        for metric in metrics:
+            selected[metric] = self[metric]
+        return selected
+
     def update(self, other: 'MetricsDict') -> None:
         for key, value in other.items():
             if key in self:

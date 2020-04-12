@@ -1,7 +1,7 @@
 import jsons
 from collections import OrderedDict
 from jsons import JsonSerializable
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from sacrerouge.data.metrics_dict import MetricsDict
 
@@ -22,6 +22,9 @@ class Metrics(object):
 
     def average_values(self) -> None:
         self.metrics = self.metrics.average_values()
+
+    def select_metrics(self, metrics: List[str]) -> None:
+        self.metrics = self.metrics.select_metrics(metrics)
 
     def merge(self, other: 'Metrics') -> None:
         if self.instance_id != other.instance_id or \
