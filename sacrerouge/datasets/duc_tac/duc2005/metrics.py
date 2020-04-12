@@ -20,6 +20,10 @@ def load_summaries(results_tar: str):
                 else:
                     summarizer_type = 'peer'
                 sentences = tar.extractfile(member).read().decode(errors='replace').splitlines()
+                if len(sentences) == 0:
+                    print(f'Instance {instance_id} and summarizer {summarizer_id} summary is empty. Skipping')
+                    continue
+
                 summary = {
                     'summarizer_id': summarizer_id,
                     'summarizer_type': summarizer_type,
