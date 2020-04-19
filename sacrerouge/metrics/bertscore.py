@@ -47,34 +47,45 @@ class BertScore(Metric):
         # Create the candidate and reference lists for passing to the scoring function
         input_candidates = []
         input_references = []
-        for summaries, references in zip(summaries_list, references_list):
-            for summary in summaries:
-                input_candidates.append(summary)
-                input_references.append(references)
+        empty_inputs = set()
+        for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
+            for j, summary in enumerate(summaries):
+                if len(summary) == 0:
+                    empty_inputs.add((i, j))
+                else:
+                    input_candidates.append(summary)
+                    input_references.append(references)
 
         # Score the summaries
-        precisions, recalls, fs1s = score(input_candidates, input_references,
-                                          model_type=self.model_type,
-                                          num_layers=self.num_layers,
-                                          nthreads=self.nthreads,
-                                          batch_size=self.batch_size,
-                                          lang=self.lang,
-                                          verbose=self.verbose)
+        precisions, recalls, f1s = score(input_candidates, input_references,
+                                         model_type=self.model_type,
+                                         num_layers=self.num_layers,
+                                         nthreads=self.nthreads,
+                                         batch_size=self.batch_size,
+                                         lang=self.lang,
+                                         verbose=self.verbose)
 
         # Remap the scores to the summaries
         index = 0
         metrics_lists = []
-        for summaries in summaries_list:
+        for i, summaries in enumerate(summaries_list):
             metrics_lists.append([])
-            for summary in summaries:
+            for j, summary in enumerate(summaries):
+                if (i, j) in empty_inputs:
+                    precision, recall, f1 = 0.0, 0.0, 0.0
+                else:
+                    precision = precisions[index].item()
+                    recall = recalls[index].item()
+                    f1 = f1s[index].item()
+                    index += 1
+
                 metrics_lists[-1].append(MetricsDict({
                     'bertscore': {
-                        'precision': precisions[index].item(),
-                        'recall': recalls[index].item(),
-                        'f1': fs1s[index].item(),
+                        'precision': precision,
+                        'recall': recall,
+                        'f1': f1,
                     }
                 }))
-                index += 1
 
         return metrics_lists
 
