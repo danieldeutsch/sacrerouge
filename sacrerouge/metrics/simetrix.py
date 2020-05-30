@@ -11,6 +11,7 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import DocumentsField, SummaryField
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
 
 
 @Metric.register('simetrix')
@@ -158,11 +159,10 @@ class SIMetrix(Metric):
         return macro_metrics, micro_metrics_list
 
 
-class SIMetrixSetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('simetrix')
-        self.parser.set_defaults(subfunc=self.run)
+class SIMetrixSetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        super().__init__(cr, command_prefix, "simetrix", args, self.run)
 
     @overrides
     def run(self, args):

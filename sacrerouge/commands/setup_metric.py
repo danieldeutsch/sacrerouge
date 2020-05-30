@@ -6,27 +6,15 @@ from sacrerouge.metrics import autosummeng, bewte, meteor, moverscore, simetrix,
 
 
 class SetupMetricSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('setup-metric')
-        subparsers = self.parser.add_subparsers()
+    def __init__(self, cr, command_prefix):
+        super().__init__()
+        sub_prefix = command_prefix + ["setup-metric"]
 
-        subcommands = [
-            autosummeng.AutoSummENGSetupSubcommand(),
-            bewte.BEwTESetupSubcommand(),
-            meteor.MeteorSetupSubcommand(),
-            moverscore.MoverScoreSetupSubcommand(),
-            simetrix.SIMetrixSetupSubcommand(),
-            sumqe.SumQESetupSubcommand(),
+        self.subcommands = [
+            autosummeng.AutoSummENGSetupSubcommand(cr, sub_prefix),
+            bewte.BEwTESetupSubcommand(cr, sub_prefix),
+            meteor.MeteorSetupSubcommand(cr, sub_prefix),
+            moverscore.MoverScoreSetupSubcommand(cr, sub_prefix),
+            simetrix.SIMetrixSetupSubcommand(cr, sub_prefix),
+            sumqe.SumQESetupSubcommand(cr, sub_prefix),
         ]
-        for subcommand in subcommands:
-            subcommand.add_subparser(subparsers)
-
-        self.parser.set_defaults(func=self.run)
-
-    @overrides
-    def run(self, args):
-        if 'subfunc' in dir(args):
-            args.subfunc(args)
-        else:
-            self.parser.print_help()

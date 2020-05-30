@@ -12,6 +12,7 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
 
 MOVERSCORE_EXISTS = False
 
@@ -111,11 +112,10 @@ except ImportError:
             raise NotImplementedError('Error: "moverscore" python package is not installed')
 
 
-class MoverScoreSetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('moverscore')
-        self.parser.set_defaults(subfunc=self.run)
+class MoverScoreSetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        super().__init__(cr, command_prefix, "moverscore", args, self.run)
 
     @overrides
     def run(self, args):

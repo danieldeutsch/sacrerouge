@@ -3,15 +3,15 @@ from overrides import overrides
 
 from sacrerouge.datasets.duc_tac.duc2005 import metrics, task1
 from sacrerouge.commands import Subcommand
+from sacrerouge.datasets.dataset_subcommand import DatasetSubcommand
 
 
-class DUC2005Subcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('duc2005')
-        self.parser.add_argument('data_root')
-        self.parser.add_argument('output_dir')
-        self.parser.set_defaults(subfunc=self.run)
+class DUC2005Subcommand(DatasetSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        args.append({"name": "data_root"})
+        args.append({"name": "output_dir"})
+        super().__init__(cr, command_prefix, "duc2005", args, self.run)
 
     @overrides
     def run(self, args):

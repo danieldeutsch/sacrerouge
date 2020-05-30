@@ -11,6 +11,7 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
 
 
 @Metric.register('meteor')
@@ -125,11 +126,10 @@ class Meteor(Metric):
         return macro_metrics, micro_metrics_list
 
 
-class MeteorSetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('meteor')
-        self.parser.set_defaults(subfunc=self.run)
+class MeteorSetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        super().__init__(cr, command_prefix, "meteor", args, self.run)
 
     @overrides
     def run(self, args):

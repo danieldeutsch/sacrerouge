@@ -12,6 +12,7 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import SummaryField
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
 
 
 @Metric.register('sum-qe')
@@ -86,14 +87,13 @@ class SumQE(Metric):
         return self._run(summaries_list)
 
 
-class SumQESetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('sum-qe')
-        self.parser.add_argument('--download-2005-2006-model', action='store_true')
-        self.parser.add_argument('--download-2005-2007-model', action='store_true')
-        self.parser.add_argument('--download-2006-2007-model', action='store_true')
-        self.parser.set_defaults(subfunc=self.run)
+class SumQESetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        args.append({"name": "--download-2005-2006-model", "action": "store_true"})
+        args.append({"name": "--download-2005-2007-model", "action": "store_true"})
+        args.append({"name": "--download-2006-2007-model", "action": "store_true"})
+        super().__init__(cr, command_prefix, "sum-qe", args, self.run)
 
     @overrides
     def run(self, args):

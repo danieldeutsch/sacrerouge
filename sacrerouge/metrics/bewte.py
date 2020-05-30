@@ -13,6 +13,7 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
 
 
 @Metric.register('bewte')
@@ -248,11 +249,10 @@ class BEwTE(Metric):
             return metrics_lists
 
 
-class BEwTESetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('bewte')
-        self.parser.set_defaults(subfunc=self.run)
+class BEwTESetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        super().__init__(cr, command_prefix, "bewte", args, self.run)
 
     def _edit_pom(self, file_path: str) -> None:
         # We need to edit the pom.xml file to add options to run the main classes

@@ -4,15 +4,15 @@ from overrides import overrides
 from sacrerouge.datasets.multiling.multiling2011 import metrics, task
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import download_url_to_file
+from sacrerouge.datasets.dataset_subcommand import DatasetSubcommand
 
 
-class MultiLing2011Subcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('multiling2011')
-        self.parser.add_argument('output_dir')
-        self.parser.set_defaults(subfunc=self.run)
-
+class MultiLing2011Subcommand(DatasetSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        args.append({"name": "output_dir"})
+        super().__init__(cr, command_prefix, "multiling2011", args, self.run)
+    
     def _notify_about_license(self):
         print('The MultiLing2011 dataset is distributed by the MultiLing Pilot '
               'of Text Analysis Conference 2011 under the Create Commons Attribution 3.0 '

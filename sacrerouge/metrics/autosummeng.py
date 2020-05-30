@@ -13,6 +13,8 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+from sacrerouge.metrics.metric_subcommand import MetricSubcommand
+
 
 
 @Metric.register('autosummeng')
@@ -124,11 +126,10 @@ class AutoSummENG(Metric):
         return self._run(summaries_list, references_list)
 
 
-class AutoSummENGSetupSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('autosummeng')
-        self.parser.set_defaults(subfunc=self.run)
+class AutoSummENGSetupSubcommand(MetricSubcommand):
+    def __init__(self, cr, command_prefix):
+        args = []
+        super().__init__(cr, command_prefix, "autosummeng", args, self.run)
 
     @overrides
     def run(self, args):

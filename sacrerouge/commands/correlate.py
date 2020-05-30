@@ -6,10 +6,14 @@ from collections import defaultdict
 from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
 from typing import Any, Dict, List, Union
+import inspect
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
+from sacrerouge.common import command_registry
+from sacrerouge.metrics import Metric
+from sacrerouge.metrics import *
 
 
 def load_metrics(metrics_files: List[str]) -> List[Metrics]:
@@ -176,15 +180,15 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
 
 
 class CorrelateSubcommand(Subcommand):
-    @overrides
-    def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('correlate')
-        self.parser.add_argument('--metrics-jsonl-files', nargs='+')
-        self.parser.add_argument('--metrics', nargs=2)
-        self.parser.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
-        self.parser.add_argument('--output-file')
-        self.parser.add_argument('--silent', action='store_true')
-        self.parser.set_defaults(func=self.run)
+    def __init__(self, cr, command_prefix):
+        super().__init__()
+        args = []
+        args.append({"name": "--metrics-jsonl-files", "nargs": "+"})
+        args.append({"name": "--metrics", "nargs": 2})
+        args.append({"name": "--summarizer-type", "choices": ["all", "reference", "peer"]})
+        args.append({"name": "--output-file"})
+        args.append({"name": "--silent", "action": "store_true"})
+        cr.register_command(command_prefix + ["correlate"], args, self.run)
 
     def run(self, args):
         metric1, metric2 = args.metrics
