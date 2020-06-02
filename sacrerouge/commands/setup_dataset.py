@@ -7,6 +7,7 @@ from sacrerouge.datasets.duc_tac import duc2005, duc2006, duc2007, tac2008, tac2
 from sacrerouge.datasets.multiling import multiling2011
 
 
+@Subcommand.register('setup-dataset')
 class SetupDatasetSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):

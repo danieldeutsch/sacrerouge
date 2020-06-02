@@ -5,6 +5,7 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.metrics import autosummeng, bewte, meteor, moverscore, simetrix, sumqe
 
 
+@Subcommand.register('setup-metric')
 class SetupMetricSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):

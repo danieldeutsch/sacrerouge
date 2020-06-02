@@ -174,7 +174,7 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
     }
     return results
 
-
+@Subcommand.register('correlate')
 class CorrelateSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):

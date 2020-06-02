@@ -27,6 +27,7 @@ def get_initial_micro_list(instances: List[EvalInstance]) -> List[Metrics]:
     return micro_list
 
 
+@Subcommand.register('evaluate')
 class EvaluateSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):

@@ -101,6 +101,7 @@ def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dic
     return metrics_dicts
 
 
+@Subcommand.register('score')
 class ScoreSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):

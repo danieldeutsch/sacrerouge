@@ -1,7 +1,8 @@
 import argparse
 
+from sacrerouge.common import Registrable
 
-class Subcommand(object):
+class Subcommand(Registrable):
     def add_subparser(self, parser: argparse._SubParsersAction) -> None:
         raise NotImplementedError
 
