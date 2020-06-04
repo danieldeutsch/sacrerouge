@@ -1,5 +1,8 @@
+import argparse
+from overrides import overrides
 from typing import List
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -98,3 +101,18 @@ else:
             references_list = [field.references for field in references_list]
 
             return self._run(summaries_list, references_list)
+
+
+class BertScoreSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('bertscore')
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        try:
+            import bert_score
+            print('BertScore setup success')
+        except ImportError:
+            print('Please pip install "bert_score" to complete setup')
