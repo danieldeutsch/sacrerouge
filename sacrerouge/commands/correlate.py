@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import json
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -8,8 +9,11 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 from typing import Any, Dict, List, Union
 
 from sacrerouge.commands import Subcommand
+from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
+
+logger = logging.getLogger(__name__)
 
 
 def load_metrics(metrics_files: List[str]) -> List[Metrics]:
@@ -39,7 +43,7 @@ def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: s
                 skipped += 1
 
     if skipped > 0:
-        print(f'Warning: Skipped {skipped} inputs because at least one metric was missing')
+        logger.warning(f'Skipped {skipped} inputs because at least one metric was missing')
     return filtered
 
 
@@ -183,10 +187,13 @@ class CorrelateSubcommand(Subcommand):
         self.parser.add_argument('--metrics', nargs=2)
         self.parser.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
         self.parser.add_argument('--output-file')
+        self.parser.add_argument('--log-file')
         self.parser.add_argument('--silent', action='store_true')
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
+        prepare_global_logging(file_path=args.log_file, silent=args.silent)
+
         metric1, metric2 = args.metrics
         results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type)
 
@@ -198,4 +205,4 @@ class CorrelateSubcommand(Subcommand):
                 out.write(json.dumps(results, indent=2))
 
         if not args.silent:
-            print(json.dumps(results, indent=2))
+            logger.info(json.dumps(results, indent=2))

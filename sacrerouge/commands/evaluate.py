@@ -1,15 +1,19 @@
 import argparse
 import jsons
+import logging
 import os
 from overrides import overrides
 from typing import List
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import Params
+from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.data import EvalInstance, Metrics, MetricsDict
 from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.io import JsonlWriter
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 def load_metrics(params: Params) -> List[Metric]:
@@ -34,12 +38,15 @@ class EvaluateSubcommand(Subcommand):
         self.parser.add_argument('config')
         self.parser.add_argument('macro_output_json')
         self.parser.add_argument('micro_output_jsonl')
+        self.parser.add_argument('--log-file')
         self.parser.add_argument('--silent', action='store_true')
         self.parser.add_argument('--overrides')
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
+        prepare_global_logging(file_path=args.log_file, silent=args.silent)
+
         params = Params.from_file(args.config, args.overrides)
         dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
         metrics = load_metrics(params)
@@ -72,7 +79,7 @@ class EvaluateSubcommand(Subcommand):
         with open(args.macro_output_json, 'w') as out:
             out.write(serialized_macro)
         if not args.silent:
-            print(serialized_macro)
+            logger.info(serialized_macro)
 
         with JsonlWriter(args.micro_output_jsonl) as out:
             for metrics_dict in micro_list:
