@@ -4,10 +4,18 @@ import unittest
 from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
 from sacrerouge.metrics import BertScore
 
+try:
+    import bert_score
+except ImportError:
+    bertscore_installed = False
+else:
+    bertscore_installed = True
+
 _duc2004_file_path = 'datasets/duc-tac/duc2004/task2.jsonl'
 _centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 
 
+@unittest.skipIf(not bertscore_installed, '"bert_score" not installed')
 class TestBertScore(unittest.TestCase):
     def test_bertscore(self):
         """Verify BertScore runs"""
