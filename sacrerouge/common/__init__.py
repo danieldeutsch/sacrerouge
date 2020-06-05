@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from sacrerouge.common.checks import ConfigurationError
 from sacrerouge.common.params import Params
 from sacrerouge.common.from_params import FromParams
 from sacrerouge.common.registrable import Registrable
