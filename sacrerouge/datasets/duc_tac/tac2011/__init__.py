@@ -1,0 +1,1 @@
+from sacrerouge.datasets.duc_tac.tac2011.subcommand import TAC2011Subcommand
