@@ -25,6 +25,7 @@ else:
         def __init__(self,
                      model_type: str = None,
                      num_layers: int = None,
+                     idf: bool = False,
                      nthreads: int = 4,
                      batch_size: int = 64,
                      lang: str = 'en',
@@ -32,6 +33,7 @@ else:
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
             self.model_type = model_type
             self.num_layers = num_layers
+            self.idf = idf
             self.nthreads = nthreads
             self.batch_size = batch_size
             self.lang = lang
@@ -42,11 +44,19 @@ else:
                 return ' '.join(summary)
             return summary
 
+        def _get_unique_references(self, references_list: List[List[str]]) -> List[str]:
+            unique_references = set()
+            for references in references_list:
+                for reference in references:
+                    unique_references.add(reference)
+            return list(unique_references)
+
         def _run(self,
                  summaries_list: List[List[SummaryType]],
                  references_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
             summaries_list = [[self._flatten_summary(summary) for summary in summaries] for summaries in summaries_list]
-            references_list = [[self._flatten_summary(reference) for reference in references] for references in references_list]
+            references_list = [[self._flatten_summary(reference) for reference in references] for references in
+                               references_list]
 
             # Create the candidate and reference lists for passing to the scoring function
             input_candidates = []
@@ -60,10 +70,22 @@ else:
                         input_candidates.append(summary)
                         input_references.append(references)
 
+            # If we are using IDF weighting, then the default script will create
+            # the IDF score based on all of the references, but we could potentially
+            # have duplicate references, which would make "incorrect" counts. Instead,
+            # create the idf dict based on unique references
+            if self.idf:
+                unique_references = self._get_unique_references(references_list)
+                idf = create_idf_dict(unique_references, model_type=self.model_type, nthreads=self.nthreads,
+                                      lang=self.lang)
+            else:
+                idf = False
+
             # Score the summaries
             precisions, recalls, f1s = score(input_candidates, input_references,
                                              model_type=self.model_type,
                                              num_layers=self.num_layers,
+                                             idf=idf,
                                              nthreads=self.nthreads,
                                              batch_size=self.batch_size,
                                              lang=self.lang,
