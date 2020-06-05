@@ -2,7 +2,9 @@ import argparse
 import itertools
 import json
 import logging
+import numpy as np
 import os
+import warnings
 from collections import defaultdict
 from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_metrics(metrics_files: List[str]) -> List[Metrics]:
+    logger.info(f'Loading metrics from {metrics_files}')
     metrics_dicts = defaultdict(dict)
     for metrics_file in metrics_files:
         with JsonlReader(metrics_file, Metrics) as f:
@@ -29,21 +32,36 @@ def load_metrics(metrics_files: List[str]) -> List[Metrics]:
     metrics_list = []
     for metrics_dict in metrics_dicts.values():
         metrics_list.extend(list(metrics_dict.values()))
+    logger.info(f'Loaded {len(metrics_list)} instances')
     return metrics_list
 
 
 def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str):
+    logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric1}" and "{metric2}"')
+
     filtered = []
-    skipped = 0
+    incorrect_type = 0
+    missing_metric1 = 0
+    missing_metric2 = 0
     for metrics in metrics_list:
         if summarizer_type == 'all' or summarizer_type == metrics.summarizer_type:
-            if metric1 in metrics.metrics and metric2 in metrics.metrics:
-                filtered.append(metrics)
+            if metric1 not in metrics.metrics:
+                missing_metric1 += 1
+            elif metric2 not in metrics.metrics:
+                missing_metric2 += 1
             else:
-                skipped += 1
+                filtered.append(metrics)
+        else:
+            incorrect_type += 1
 
-    if skipped > 0:
-        logger.warning(f'Skipped {skipped} inputs because at least one metric was missing')
+    if incorrect_type > 0:
+        logger.info(f'Filtered {incorrect_type} instances that were not summarizer type "{summarizer_type}"')
+    if missing_metric1 > 0:
+        logger.info(f'Filtered {missing_metric1} instances that did not have metric "{metric1}"')
+    if missing_metric2 > 0:
+        logger.info(f'Filtered {missing_metric2} instances that did not have metric "{metric2}"')
+    logger.info(f'{len(filtered)} instances remain after filtering')
+
     return filtered
 
 
@@ -63,24 +81,37 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
     pearsons = []
     spearmans = []
     kendalls = []
-
+    num_nan = 0
     metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
     for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
         group = list(group)
         values1 = [member.metrics[metric1] for member in group]
         values2 = [member.metrics[metric2] for member in group]
 
-        r, _ = pearsonr(values1, values2)
-        rho, _ = spearmanr(values1, values2)
-        tau, _ = kendalltau(values1, values2)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore')
+            r, _ = pearsonr(values1, values2)
+            rho, _ = spearmanr(values1, values2)
+            tau, _ = kendalltau(values1, values2)
 
-        pearsons.append(r)
-        spearmans.append(rho)
-        kendalls.append(tau)
+            if any(np.isnan([r, rho, tau])):
+                num_nan += 1
+            else:
+                pearsons.append(r)
+                spearmans.append(rho)
+                kendalls.append(tau)
 
-    pearson = sum(pearsons) / len(pearsons)
-    spearman = sum(spearmans) / len(spearmans)
-    kendall = sum(kendalls) / len(kendalls)
+    if num_nan > 0:
+        logger.warning(f'Skipped {num_nan} summary-level correlations because they were NaN')
+
+    num_valid = len(pearsons)
+    if num_valid > 0:
+        pearson = sum(pearsons) / len(pearsons)
+        spearman = sum(spearmans) / len(spearmans)
+        kendall = sum(kendalls) / len(kendalls)
+    else:
+        pearson, spearman, kendall = 0, 0, 0
+
     return {
         'pearson': {
             'r': pearson
@@ -90,7 +121,8 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
         },
         'kendall': {
             'tau': kendall
-        }
+        },
+        'num_summary_groups': num_valid
     }
 
 
