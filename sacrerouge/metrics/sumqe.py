@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -12,6 +13,8 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import SummaryField
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('sum-qe')
@@ -54,9 +57,11 @@ class SumQE(Metric):
                     predictions_file
                 ])
             ]
+            command = ' && '.join(commands)
 
+            logger.info(f'Running SumQE command: "{command}"')
             redirect = None if self.verbose else PIPE
-            process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+            process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
             stdout, stderr = process.communicate()
 
             predictions = json.loads(open(predictions_file, 'r').read())

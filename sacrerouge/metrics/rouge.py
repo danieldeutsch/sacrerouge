@@ -1,3 +1,4 @@
+import logging
 import os
 from collections import defaultdict
 from subprocess import Popen, PIPE
@@ -9,6 +10,8 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('rouge')
@@ -185,6 +188,7 @@ class Rouge(Metric):
             # is expected in some situations for us (if we just have more summaries
             # to score for some reference sets than others). Therefore, we no longer fail
             # if stderr is not empty.
+            logger.info(f'Running ROUGE command: "{" ".join(command)}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
 

@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -13,6 +14,8 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('autosummeng')
@@ -107,9 +110,11 @@ class AutoSummENG(Metric):
                 f'cd {self.autosummeng_root}',
                 f'mvn exec:java@NPowERBatch -Dexec.args=\'{args}\''
             ]
+            command = ' && '.join(commands)
 
+            logger.info(f'Running AutoSummENG command: "{command}"')
             redirect = None if self.verbose else PIPE
-            process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+            process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
             stdout, stderr = process.communicate()
 
             return self._parse_output_file(output_file)

@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -11,6 +12,8 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import DocumentsField, SummaryField
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('simetrix')
@@ -127,6 +130,7 @@ class SIMetrix(Metric):
                 config_file_path
             ]
 
+            logger.info(f'Running SIMetrix command: "{command}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
             if stderr:

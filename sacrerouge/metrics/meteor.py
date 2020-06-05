@@ -1,4 +1,5 @@
 import argparse
+import logging
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -11,6 +12,8 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('meteor')
@@ -93,6 +96,7 @@ class Meteor(Metric):
                 '-norm'
             ]
 
+            logger.info(f'Running METEOR command: "{command}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
             if stderr:

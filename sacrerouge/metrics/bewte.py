@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -13,6 +14,8 @@ from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('bewte')
@@ -84,9 +87,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 1 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step2(self, temp_dir: str) -> None:
@@ -118,9 +123,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 2 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step3(self, temp_dir: str) -> None:
@@ -139,9 +146,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@BEXpander -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 3 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step4(self, temp_dir: str) -> None:
@@ -164,8 +173,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@BEwT_E -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
-        process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+        logger.info(f'Running BEwTE step 4 command: "{command}"')
+
+        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         stdout, _ = process.communicate()
         return stdout.decode()
 
