@@ -154,7 +154,7 @@ class Pyramid(object):
         else:
             document_start_regex = re.compile(nodes[0].text)
 
-        # The starts and ends of the summarys, not the header tags
+        # The starts and ends of the summaries, not the header tags
         starts, ends = [], []
         summarizer_ids = []
         for i, match in enumerate(document_start_regex.finditer(text)):
@@ -181,8 +181,12 @@ class Pyramid(object):
         scus = []
         for node in root.xpath('scu'):
             label = node.get('label')
+            # Some labels have endings like "(2.1)"
+            label = re.sub(r' \(\d+\.\d+\)$', '', label)
+
             scu_id = int(node.get('uid'))
             contributors = []
+
             for contrib_node in node.xpath('./contributor'):
                 contrib_label = contrib_node.get('label')
                 summary_indices = []
@@ -191,10 +195,6 @@ class Pyramid(object):
                     text = part_node.get('label')
                     start = int(part_node.get('start'))
                     end = int(part_node.get('end'))
-
-                    # if text in part_offset_errors:
-                    #     start = part_offset_errors[text]['start']
-                    #     end = part_offset_errors[text]['end']
 
                     summary_index = bisect.bisect_right(offsets, start) - 1
                     assert summary_index >= 0
@@ -292,7 +292,8 @@ class PyramidAnnotation(object):
         # are not matches
         for node in root.xpath('./annotation/peerscu[contributor]'):
             label = node.get('label')
-            label = re.sub(f'^\(\d+\) ', '', label)
+            label = re.sub(r'^\(\d+\) ', '', label)
+            label = re.sub(r' \(\d+\.\d+\)$', '', label)
 
             scu_id = int(node.get('uid'))
             if scu_id not in known_scu_ids:
