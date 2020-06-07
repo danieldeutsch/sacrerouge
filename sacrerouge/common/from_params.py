@@ -130,7 +130,7 @@ def is_base_registrable(cls) -> bool:
     Checks whether this is a class that directly inherits from Registrable, or is a subclass of such
     a class.
     """
-    from allennlp.common.registrable import Registrable  # import here to avoid circular imports
+    from sacrerouge.common.registrable import Registrable  # import here to avoid circular imports
 
     if not issubclass(cls, Registrable):
         return False
@@ -156,8 +156,6 @@ def pop_and_construct_arg(
     `inspect.Parameter` object directly, so that we can handle `Union` types using recursion on
     this method, trying the different annotation types in the union in turn.
     """
-    from allennlp.models.archival import load_archive  # import here to avoid circular imports
-
     # We used `argument_name` as the method argument to avoid conflicts with 'name' being a key in
     # `extras`, which isn't _that_ unlikely.  Now that we are inside the method, we can switch back
     # to using `name`.
