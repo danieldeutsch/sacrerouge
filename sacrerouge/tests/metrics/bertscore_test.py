@@ -37,11 +37,11 @@ class TestBertScore(unittest.TestCase):
         centroid = load_summaries(_centroid_file_path)
 
         scores = metric.score_all(centroid, duc2004)
-        assert scores[0]['bertscore'] == {"precision": 0.8483390808105469, "recall": 0.8572883605957031, "f1": 0.8497514128684998}
-        assert scores[1]['bertscore'] == {"precision": 0.8177914023399353, "recall": 0.8404658436775208, "f1": 0.8284647464752197}
-        assert scores[2]['bertscore'] == {"precision": 0.8707811236381531, "recall": 0.8795353770256042, "f1": 0.8751363158226013}
-        assert scores[3]['bertscore'] == {"precision": 0.832008421421051, "recall": 0.8596619963645935, "f1": 0.8450315594673157}
-        assert scores[4]['bertscore'] == {"precision": 0.8320634961128235, "recall": 0.8453822731971741, "f1": 0.838670015335083}
+        assert scores[0]['bertscore'] == pytest.approx({"precision": 0.8483390808105469, "recall": 0.8572883605957031, "f1": 0.8497514128684998}, abs=1e-4)
+        assert scores[1]['bertscore'] == pytest.approx({"precision": 0.8177914023399353, "recall": 0.8404658436775208, "f1": 0.8284647464752197}, abs=1e-4)
+        assert scores[2]['bertscore'] == pytest.approx({"precision": 0.8707811236381531, "recall": 0.8795353770256042, "f1": 0.8751363158226013}, abs=1e-4)
+        assert scores[3]['bertscore'] == pytest.approx({"precision": 0.832008421421051, "recall": 0.8596619963645935, "f1": 0.8450315594673157}, abs=1e-4)
+        assert scores[4]['bertscore'] == pytest.approx({"precision": 0.8320634961128235, "recall": 0.8453822731971741, "f1": 0.838670015335083}, abs=1e-4)
 
     def test_score_multi_all_order(self):
         """Tests to ensure the scoring returns the same results, no matter the order."""
