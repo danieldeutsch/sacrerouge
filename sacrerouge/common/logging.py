@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 
@@ -9,6 +10,9 @@ def prepare_global_logging(file_path: str = None, silent: bool = False) -> None:
     """
     handlers = []
     if file_path is not None:
+        dirname = os.path.dirname(file_path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         handlers.append(logging.FileHandler(file_path))
     if not silent:
         handlers.append(logging.StreamHandler(sys.stdout))
