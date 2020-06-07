@@ -71,6 +71,10 @@ class PythonRouge(Metric):
         self.remove_stopwords = remove_stopwords
         self.compute_rouge_l = compute_rouge_l
 
+        if not os.path.exists(rouge_data_dir):
+            raise Exception(f'Path "{rouge_data_dir}" does not exist. PythonRouge requires data files from ROUGE. '
+                            f'Have you setup ROUGE?')
+
         self.stemmer = PorterStemmer(PorterStemmer.ORIGINAL_ALGORITHM)
         self.stemmer_exceptions = self._load_stemmer_exceptions(rouge_data_dir)
         self.stopwords = self._load_stopwords(rouge_data_dir)

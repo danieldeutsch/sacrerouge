@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import os
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen
@@ -24,6 +25,8 @@ try:
     class MoverScore(Metric):
         def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
+            if not os.path.exists(moverscore_root):
+                raise Exception(f'Path "{moverscore_root}" does not exist. Have you setup MoverScore?')
             self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())
 
         def _flatten_summary(self, summary: SummaryType) -> str:

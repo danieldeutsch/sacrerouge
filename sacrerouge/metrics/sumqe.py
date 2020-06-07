@@ -30,6 +30,11 @@ class SumQE(Metric):
         self.environment_name = environment_name
         self.verbose = verbose
 
+        if not os.path.exists(model_file):
+            raise Exception(f'Path "{model_file}" does not exist. Have you setup SumQE?')
+        if not os.path.exists(sum_qe_root):
+            raise Exception(f'Path "{sum_qe_root}" does not exist. Have you setup SumQE?')
+
     def _flatten_summary(self, summary: SummaryType) -> str:
         if isinstance(summary, list):
             return ' '.join(summary)

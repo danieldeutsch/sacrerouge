@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -21,6 +22,8 @@ class Meteor(Metric):
     def __init__(self, meteor_root: str = f'{DATA_ROOT}/metrics/METEOR'):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.meteor_root = meteor_root
+        if not os.path.exists(meteor_root):
+            raise Exception(f'Path "{meteor_root}" does not exist. Have you setup METEOR?')
 
     def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
         flattened_list = []

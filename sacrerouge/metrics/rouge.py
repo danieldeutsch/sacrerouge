@@ -38,6 +38,9 @@ class Rouge(Metric):
         self.rouge_script_location = f'{rouge_root}/ROUGE-1.5.5.pl'
         self.rouge_eval_home = f'{rouge_root}/data'
 
+        if not os.path.exists(rouge_root):
+            raise Exception(f'Path "{rouge_root}" does not exist. Have you setup ROUGE?')
+
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
         os.makedirs(dirname, exist_ok=True)
