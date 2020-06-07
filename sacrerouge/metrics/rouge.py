@@ -1,9 +1,13 @@
+import argparse
 import logging
 import os
+import shutil
 from collections import defaultdict
+from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
@@ -219,3 +223,17 @@ class Rouge(Metric):
         macro_metrics = macro_metrics_list[0]
         micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
         return macro_metrics, micro_metrics_list
+
+
+class RougeSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('rouge')
+        self.parser.add_argument('rouge_root')
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        print(f'Copying {args.rouge_root} to {DATA_ROOT}/metrics/ROUGE-1.5.5')
+        shutil.copy(args.rouge_root, f'{DATA_ROOT}/metrics/ROUGE-1.5.5')
+        print('ROUGE setup success')

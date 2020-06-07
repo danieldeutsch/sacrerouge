@@ -1,9 +1,12 @@
+import argparse
 import os
 import re
 from collections import Counter
 from nltk.stem import PorterStemmer
+from overrides import overrides
 from typing import Dict, List, Optional, Set, Tuple
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.fields import ReferencesField, SummaryField
@@ -279,3 +282,14 @@ class PythonRouge(Metric):
 
             metrics_lists.append(metrics_list)
         return metrics_lists
+
+
+class PythonRougeSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        self.parser = parser.add_parser('python-rouge')
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        print('Please run the ROUGE setup code instead.')
