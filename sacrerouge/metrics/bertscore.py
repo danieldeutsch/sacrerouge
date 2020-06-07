@@ -10,7 +10,7 @@ from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
 try:
-    from bert_score import score
+    from bert_score import score, create_idf_dict
 except ImportError:
     @Metric.register('bertscore')
     class BertScore(Metric):
