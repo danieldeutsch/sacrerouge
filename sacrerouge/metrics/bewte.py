@@ -313,6 +313,7 @@ class BEwTESetupSubcommand(Subcommand):
         process.communicate()
         if process.returncode != 0:
             print('BEwT-E setup failure')
+            return
 
         self._edit_pom(f'{DATA_ROOT}/metrics/ROUGE-BEwTE/pom.xml')
 
