@@ -10,7 +10,6 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.io import JsonlWriter
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import SummaryField
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
 
@@ -90,9 +89,7 @@ class SumQE(Metric):
 
             return metrics_lists
 
-    def score_multi_all(self, summaries_list: List[List[SummaryField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
+    def score_multi_all(self, summaries_list: List[List[SummaryType]]) -> List[List[MetricsDict]]:
         return self._run(summaries_list)
 
 

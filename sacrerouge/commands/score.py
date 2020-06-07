@@ -66,8 +66,8 @@ def _score_with_metric(metric: Metric,
                     jackknifing_flags[index].append(True)
 
     # Score the summaries
-    summaries_lists = [[instance.summary for instance in instances] for instances in instances_list]
-    args = [[fields[name] for fields in fields_list] for name in metric.required_fields]
+    summaries_lists = [[instance.summary.to_input() for instance in instances] for instances in instances_list]
+    args = [[fields[name].to_input() for fields in fields_list] for name in metric.required_fields]
     results_lists = metric.score_multi_all(summaries_lists, *args)
 
     # Used to aggregate the jk results

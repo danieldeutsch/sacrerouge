@@ -52,7 +52,7 @@ class EvaluateSubcommand(Subcommand):
         metrics = load_metrics(params)
 
         instances = dataset_reader.read()
-        summaries = [instance.summary for instance in instances]
+        summaries = [instance.summary.to_input() for instance in instances]
 
         macro = MetricsDict()
         micro_list = get_initial_micro_list(instances)
@@ -61,7 +61,7 @@ class EvaluateSubcommand(Subcommand):
             # Prepare the extra input arguments
             eval_args = []
             for field in metric.required_fields:
-                eval_args.append([instance.fields[field] for instance in instances])
+                eval_args.append([instance.fields[field].to_input() for instance in instances])
 
             # Score all the summaries
             this_macro, this_micro_list = metric.evaluate(summaries, *eval_args)

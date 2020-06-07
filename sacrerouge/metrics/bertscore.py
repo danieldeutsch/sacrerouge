@@ -4,9 +4,8 @@ from typing import List
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
 
 try:
@@ -116,12 +115,8 @@ else:
             return metrics_lists
 
         def score_multi_all(self,
-                            summaries_list: List[List[SummaryField]],
-                            references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-            # Just take the summaries themselves, not the fields
-            summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-            references_list = [field.references for field in references_list]
-
+                            summaries_list: List[List[SummaryType]],
+                            references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
             return self._run(summaries_list, references_list)
 
 

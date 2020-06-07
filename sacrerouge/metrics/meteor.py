@@ -9,9 +9,8 @@ from typing import List, Dict, Tuple
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
 
 logger = logging.getLogger(__name__)
@@ -112,21 +111,15 @@ class Meteor(Metric):
             return macro_metrics, micro_metrics_list
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        references_list = [field.references for field in references_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryField]],
-                 references_list: List[List[ReferencesField]]) -> Tuple[MetricsDict, List[MetricsDict]]:
-        summaries_list = [[field.summary] for field in summaries]
-        references_list = [field.references for field in references_list]
-
+                 summaries: List[SummaryType],
+                 references_list: List[List[ReferenceType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[summary] for summary in summaries]
         macro_metrics, micro_metrics_lists = self._run(summaries_list, references_list)
         micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
         return macro_metrics, micro_metrics_list

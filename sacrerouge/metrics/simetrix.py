@@ -9,8 +9,7 @@ from typing import List, Tuple
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import DocumentsField, SummaryField
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import DocumentType, SummaryType
 from sacrerouge.metrics import Metric
 
 logger = logging.getLogger(__name__)
@@ -141,20 +140,15 @@ class SIMetrix(Metric):
             return macro_results, micro_results
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        documents_list: List[DocumentsField]) -> List[List[MetricsDict]]:
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        documents_list = [field.documents for field in documents_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        documents_list: List[List[DocumentType]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, documents_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryType]],
-                 documents_list: List[List[SummaryType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
-        summaries_list = [[field.summary] for field in summaries]
-        documents_list = [field.documents for field in documents_list]
-
+                 summaries: List[SummaryType],
+                 documents_list: List[List[DocumentType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[summary] for summary in summaries]
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, documents_list)
 
         macro_metrics = macro_metrics_list[0]

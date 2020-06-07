@@ -1,4 +1,6 @@
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
+
+from sacrerouge.data.types import DocumentType, ReferenceType, SummaryType
 
 
 class Field(object):
@@ -8,9 +10,13 @@ class Field(object):
     def __eq__(self, other: 'Field') -> bool:
         raise NotImplementedError
 
+    def to_input(self) -> Any:
+        """Returns what should be passed as input to the evaluation metric."""
+        raise NotImplementedError
+
 
 class DocumentsField(Field):
-    def __init__(self, documents: Union[List[str], List[List[str]]]) -> None:
+    def __init__(self, documents: List[DocumentType]) -> None:
         self.documents = documents
 
     def __hash__(self) -> int:
@@ -25,9 +31,12 @@ class DocumentsField(Field):
     def __eq__(self, other: 'DocumentsField') -> bool:
         return self.documents == other.documents
 
+    def to_input(self) -> List[DocumentType]:
+        return self.documents
+
 
 class ReferencesField(Field):
-    def __init__(self, references: Union[List[str], List[List[str]]]) -> None:
+    def __init__(self, references: List[ReferenceType]) -> None:
         self.references = references
 
     def __hash__(self) -> int:
@@ -42,9 +51,12 @@ class ReferencesField(Field):
     def __eq__(self, other: 'ReferencesField') -> bool:
         return self.references == other.references
 
+    def to_input(self) -> List[ReferenceType]:
+        return self.references
+
 
 class SummaryField(Field):
-    def __init__(self, summary: Union[str, List[str]]) -> None:
+    def __init__(self, summary: SummaryType) -> None:
         self.summary = summary
 
     def __hash__(self) -> int:
@@ -55,9 +67,13 @@ class SummaryField(Field):
     def __eq__(self, other: 'SummaryField') -> bool:
         return self.summary == other.summary
 
+    def to_input(self) -> SummaryType:
+        return self.summary
+
 
 class Fields(dict):
     def __init__(self, fields: Dict[str, Field]) -> None:
+        super().__init__()
         for name, field in fields.items():
             assert isinstance(field, Field)
             self[name] = field

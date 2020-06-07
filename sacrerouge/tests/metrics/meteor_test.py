@@ -2,7 +2,6 @@ import pytest
 import unittest
 
 from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Meteor
 
@@ -61,8 +60,8 @@ class TestMeteor(unittest.TestCase):
             gold = JsonlReader(gold_file_path).read()
             model = JsonlReader(model_file_path).read()
 
-            gold = [ReferencesField([summary['summary']]) for summary in gold]
-            model = [SummaryField(summary['summary']) for summary in model]
+            gold = [[summary['summary']] for summary in gold]
+            model = [summary['summary'] for summary in model]
 
             meteor = Meteor()
             score, _ = meteor.evaluate(model, gold)

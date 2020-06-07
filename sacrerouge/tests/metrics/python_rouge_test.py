@@ -4,7 +4,6 @@ import pytest
 import unittest
 
 from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.metrics import PythonRouge, Rouge
 from sacrerouge.metrics.python_rouge import shorten_summary
 
@@ -116,12 +115,12 @@ class TestPythonRouge(unittest.TestCase):
 
     def test_python_rouge(self):
         python_rouge = PythonRouge()
-        summary = SummaryField([
+        summary = [
             "His tenacity holds despite the summary trials and harsh punishments for Xu, Wang Youcai and Qin Yongmin prominent party principals from the provinces who were sentenced to 11 and 12 years and despite threatening signs from the ruling Communist Party.",
             "The dissidents Xu Wenli, who was sentenced Monday to 13 years in prison, Wang Youcai, who received an 11-year sentence, and Qin Yongming, who was reported to have received 12 years were charged with subversion.",
             "As police moved against Xu's friends, labor rights campaigner Liu Nianchun was taken from a prison camp outside Beijing and, with his wife and daughter, was put on a plane to Canada and then New York, his first taste of freedom in more than 3 1/2 years."
-        ])
-        gold_summaries = ReferencesField([
+        ]
+        gold_summaries = [
             [
                 "While China plans to sign the International Covenant on Civil and Political Rights at the U.N., it is still harassing and arresting human rights campaigners.",
                 "Three prominent leaders of the China Democratic Party were put to trial and sentenced to 11-, 12- and 13-year prison terms.",
@@ -153,7 +152,7 @@ class TestPythonRouge(unittest.TestCase):
                 "The harsh sentences and speeches signal a crackdown on dissent, but Zha Jianguo, another Democracy Party leader, says he will continue to push for change.",
                 "Western nations condemned the sentences as violations of U.N. rights treaties signed by China."
             ]
-        ])
+        ]
 
         compute_rouge_l = True
         use_porter_stemmer = False
