@@ -37,6 +37,9 @@ class AutoSummENG(Metric):
         self.autosummeng_root = autosummeng_root
         self.verbose = verbose
 
+        if not os.path.exists(autosummeng_root):
+            raise Exception(f'AutoSummENG path "{autosummeng_root}" does not exist. Have you setup AutoSummENG?')
+
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
         if dirname:
