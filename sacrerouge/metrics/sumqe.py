@@ -44,11 +44,19 @@ class SumQE(Metric):
             summaries_file = f'{temp_dir}/summaries.jsonl'
             predictions_file = f'{temp_dir}/predictions.json'
 
-            # Save all of the summaries to a file
+            # Save all of the summaries to a file, keeping track of the indices
+            # that are empty summaries
+            empty_summaries = set()
             with JsonlWriter(summaries_file) as out:
+                index = 0
                 for summaries in summaries_list:
                     for summary in summaries:
-                        out.write({'summary': self._flatten_summary(summary)})
+                        summary = self._flatten_summary(summary)
+                        if len(summary) > 0:
+                            out.write({'summary': summary})
+                        else:
+                            empty_summaries.add(index)
+                        index += 1
 
             commands = [f'cd {self.sum_qe_root}']
             if self.environment_name:
@@ -71,20 +79,33 @@ class SumQE(Metric):
             predictions = json.loads(open(predictions_file, 'r').read())
 
             index = 0
+            output_index = 0
             metrics_lists = []
             for summaries in summaries_list:
                 metrics_lists.append([])
-                for summary in summaries:
-                    preds = predictions[index]
-                    metrics_lists[-1].append(MetricsDict({
-                        'SumQE': {
-                            'Q1': preds[0],
-                            'Q2': preds[1],
-                            'Q3': preds[2],
-                            'Q4': preds[3],
-                            'Q5': preds[4]
-                        }
-                    }))
+                for _ in summaries:
+                    if index in empty_summaries:
+                        metrics_lists[-1].append(MetricsDict({
+                            'SumQE': {
+                                'Q1': 0.0,
+                                'Q2': 0.0,
+                                'Q3': 0.0,
+                                'Q4': 0.0,
+                                'Q5': 0.0
+                            }
+                        }))
+                    else:
+                        preds = predictions[output_index]
+                        metrics_lists[-1].append(MetricsDict({
+                            'SumQE': {
+                                'Q1': preds[0],
+                                'Q2': preds[1],
+                                'Q3': preds[2],
+                                'Q4': preds[3],
+                                'Q5': preds[4]
+                            }
+                        }))
+                        output_index += 1
                     index += 1
 
             return metrics_lists
