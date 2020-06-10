@@ -5,7 +5,7 @@ from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summa
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Meteor
 
-_duc2004_file_path = 'datasets/duc-tac/duc2004/task2.jsonl'
+_duc2004_file_path = 'datasets/duc-tac/duc2004/v1.0/task2.jsonl'
 _centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 
 
