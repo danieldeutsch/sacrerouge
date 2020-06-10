@@ -21,12 +21,12 @@ class SumQE(Metric):
     def __init__(self,
                  model_file: str = f'{DATA_ROOT}/metrics/SumQE/models/multitask_5-duc2006_duc2007.npy',
                  sum_qe_root: str = f'{DATA_ROOT}/metrics/SumQE',
-                 environment_name: str = None,
+                 python_binary: str = 'python',
                  verbose: bool = False):
         super().__init__([])
         self.model_file = os.path.abspath(model_file)
         self.sum_qe_root = sum_qe_root
-        self.environment_name = environment_name
+        self.python_binary = python_binary
         self.verbose = verbose
 
         if not os.path.exists(model_file):
@@ -58,12 +58,10 @@ class SumQE(Metric):
                             empty_summaries.add(index)
                         index += 1
 
-            commands = [f'cd {self.sum_qe_root}']
-            if self.environment_name:
-                commands += [f'source activate {self.environment_name}']
-            commands += [
+            commands = [
+                f'cd {self.sum_qe_root}',
                 ' '.join([
-                    'python', '-m', 'src.BERT_experiments.predict',
+                    self.python_binary, '-m', 'src.BERT_experiments.predict',
                     summaries_file,
                     self.model_file,
                     predictions_file
