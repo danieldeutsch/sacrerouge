@@ -20,6 +20,6 @@ class TestRegistrable(unittest.TestCase):
 
     def test_register(self):
         assert Registrable._registry == {
-            TestRegistrable._Base1: {'subclass1': TestRegistrable._Subclass1},
-            TestRegistrable._Base2: {'subclass2': TestRegistrable._Subclass2}
+            TestRegistrable._Base1: {'subclass1': (TestRegistrable._Subclass1, None)},
+            TestRegistrable._Base2: {'subclass2': (TestRegistrable._Subclass2, None)}
         }
