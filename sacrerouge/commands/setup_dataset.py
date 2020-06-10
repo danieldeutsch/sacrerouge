@@ -3,7 +3,7 @@ from overrides import overrides
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.datasets import chaganty2018
-from sacrerouge.datasets.duc_tac import duc2003, duc2004, duc2005, duc2006, duc2007, tac2008, tac2009, tac2010, tac2011
+from sacrerouge.datasets.duc_tac import duc2001, duc2003, duc2004, duc2005, duc2006, duc2007, tac2008, tac2009, tac2010, tac2011
 from sacrerouge.datasets.multiling import multiling2011
 
 
@@ -15,6 +15,7 @@ class SetupDatasetSubcommand(Subcommand):
 
         subcommands = [
             chaganty2018.Chaganty2018Subcommand(),
+            duc2001.DUC2001Subcommand(),
             duc2003.DUC2003Subcommand(),
             duc2004.DUC2004Subcommand(),
             duc2005.DUC2005Subcommand(),
