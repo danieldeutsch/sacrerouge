@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.duc_tac.duc2002 import tasks
+from sacrerouge.datasets.duc_tac.duc2002 import metrics, tasks
 from sacrerouge.commands import Subcommand
 
 
@@ -16,3 +16,4 @@ class DUC2002Subcommand(Subcommand):
     @overrides
     def run(self, args):
         tasks.setup(args.data_root, args.output_dir)
+        metrics.setup(args.data_root, args.output_dir)
