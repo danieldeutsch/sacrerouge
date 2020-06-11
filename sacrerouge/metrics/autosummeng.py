@@ -92,7 +92,7 @@ class AutoSummENG(Metric):
                     peer_filenames = []
                     for j, summary in enumerate(summaries):
                         filename = f'{temp_dir}/peers/{i}/{j}.txt'
-                        self._save_summary(reference, filename)
+                        self._save_summary(summary, filename)
                         peer_filenames.append(filename)
 
                     out.write(f'{",".join(reference_filenames)}\t{",".join(peer_filenames)}\n')

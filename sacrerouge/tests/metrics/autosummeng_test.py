@@ -16,11 +16,11 @@ class TestAutoSummENG(unittest.TestCase):
 
         scores = autosummeng.score_all(centroid, duc2004)
         assert scores[:5] == [
-            {'AutoSummENG': 0.428491, 'MeMoG': 1.0, 'NPowER': 0.585883},
-            {'AutoSummENG': 0.40776, 'MeMoG': 1.0, 'NPowER': 0.574915},
-            {'AutoSummENG': 0.426129, 'MeMoG': 1.0, 'NPowER': 0.584633},
-            {'AutoSummENG': 0.3949, 'MeMoG': 1.0, 'NPowER': 0.568112},
-            {'AutoSummENG': 0.463657, 'MeMoG': 1.0, 'NPowER': 0.604488}
+            {'AutoSummENG': 0.165069, 'MeMoG': 0.167011, 'NPowER': 0.196182},
+            {'AutoSummENG': 0.107501, 'MeMoG': 0.111192, 'NPowER': 0.14895},
+            {'AutoSummENG': 0.153594, 'MeMoG': 0.146739, 'NPowER': 0.184018},
+            {'AutoSummENG': 0.135788, 'MeMoG': 0.100508, 'NPowER': 0.160705},
+            {'AutoSummENG': 0.153668, 'MeMoG': 0.18651, 'NPowER': 0.19601}
         ]
 
     def test_score_multi_all_order(self):
