@@ -61,3 +61,24 @@ class TestMetricsDict(unittest.TestCase):
         m2 = MetricsDict({'k4': 4, 'k2': {'k3': 5, 'k5': 8}})
         m1.update(m2)
         assert m1 == {'k1': 1, 'k2': {'k3': 5, 'k5': 8}, 'k4': 4}
+
+    def test_approx_equal(self):
+        m1 = MetricsDict({'k1': 1, 'k2': {'k3': [1, 2, 3]}})
+        m2 = MetricsDict({'k1': 1.01, 'k2': {'k3': [1.01, 2.01, 3.01]}})
+        assert m1.approx_equal(m2, abs=0.02)
+
+        # Wrong keys
+        m1 = MetricsDict({'k1': 1})
+        m2 = MetricsDict({'k2': 1})
+        assert not m1.approx_equal(m2, abs=0.02)
+
+        # Wrong types
+        m1 = MetricsDict({'k1': 1, 'k2': {'k3': 1.0}})
+        m2 = MetricsDict({'k1': 1.01, 'k2': {'k3': [1.01, 2.01, 3.01]}})
+        assert not m1.approx_equal(m2, abs=0.02)
+
+        # Too different
+        m1 = MetricsDict({'k1': 1})
+        m2 = MetricsDict({'k1': 1.5})
+        assert not m1.approx_equal(m2, abs=0.02)
+

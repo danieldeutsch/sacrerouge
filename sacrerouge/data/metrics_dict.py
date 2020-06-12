@@ -1,4 +1,5 @@
 import copy
+import pytest
 from typing import Dict, List, Optional, Union
 
 ValueType = Union['MetricsDict', float, List[float]]
@@ -94,3 +95,23 @@ class MetricsDict(dict):
         for key, value in self.items():
             result[key] = value / denominator
         return result
+
+    def approx_equal(self, other: 'MetricsDict', rel=None, abs=None):
+        if self.keys() != other.keys():
+            return False
+        for key in self.keys():
+            value = self[key]
+            other_value = other[key]
+            if isinstance(value, MetricsDict) and isinstance(other_value, MetricsDict):
+                if not value.approx_equal(other_value, rel=rel, abs=abs):
+                    return False
+            elif isinstance(value, (int, float)) and isinstance(other_value, (int, float)):
+                if not value == pytest.approx(other_value, rel=rel, abs=abs):
+                    return False
+            elif isinstance(value, list) and isinstance(other_value, list):
+                if not value == pytest.approx(other_value, rel=rel, abs=abs):
+                    return False
+            else:
+                # Incompatible types
+                return False
+        return True
