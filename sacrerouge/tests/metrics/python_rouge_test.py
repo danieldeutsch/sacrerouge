@@ -1,6 +1,5 @@
 import pytest
 
-from sacrerouge.common.testing import FIXTURES_ROOT
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
 from sacrerouge.data import MetricsDict
 from sacrerouge.metrics import PythonRouge, Rouge
