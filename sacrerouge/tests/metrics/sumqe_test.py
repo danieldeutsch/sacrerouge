@@ -1,76 +1,27 @@
-import pytest
-import unittest
-
-from sacrerouge.common.testing import FIXTURES_ROOT, load_summaries
+from sacrerouge.common.testing.metric_test_cases import ReferencelessMetricTestCase
 from sacrerouge.metrics import SumQE
 
-_centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 
-
-class TestSumQE(unittest.TestCase):
+class TestSumQE(ReferencelessMetricTestCase):
     def test_sum_qe(self):
-        """
-        Verify SumQE runs. These scores haven't been tested to be accurate,
-        but the test will capture if anything changes with the metric.
-        """
-        sumqe = SumQE()
-        centroid = load_summaries(_centroid_file_path)
+        # This is a regression test, not necessarily a test for correctness
+        metric = SumQE()
+        expected_output = [
+            {'SumQE': {'Q1': 0.6114518642425537, 'Q2': 0.8854175806045532, 'Q3': 0.8413561582565308, 'Q4': 0.7688009738922119, 'Q5': 0.5558874011039734}},
+            {'SumQE': {'Q1': 0.5558350086212158, 'Q2': 0.9138086438179016, 'Q3': 0.7335574626922607, 'Q4': 0.6305676102638245, 'Q5': 0.3748158812522888}},
+            {'SumQE': {'Q1': 0.7050521373748779, 'Q2': 0.9852879047393799, 'Q3': 0.6667071580886841, 'Q4': 0.6230998039245605, 'Q5': 0.42010897397994995}},
+            {'SumQE': {'Q1': 0.834473192691803, 'Q2': 0.9017736911773682, 'Q3': 0.7539371252059937, 'Q4': 0.6262732148170471, 'Q5': 0.3776392638683319}},
+            {'SumQE': {'Q1': 0.8146878480911255, 'Q2': 0.7144594192504883, 'Q3': 0.5899823904037476, 'Q4': 0.6519718170166016, 'Q5': 0.384965717792511}},
+            {'SumQE': {'Q1': 0.6657560467720032, 'Q2': 0.7149282693862915, 'Q3': 0.44480863213539124, 'Q4': 0.5178157091140747, 'Q5': 0.18973197042942047}},
+            {'SumQE': {'Q1': 0.8427770137786865, 'Q2': 0.7266125082969666, 'Q3': 0.7046592831611633, 'Q4': 0.7370807528495789, 'Q5': 0.4456597864627838}},
+            {'SumQE': {'Q1': 0.5885571241378784, 'Q2': 0.6695594787597656, 'Q3': 0.33270642161369324, 'Q4': 0.5293599367141724, 'Q5': 0.15236596763134003}},
+            {'SumQE': {'Q1': 0.7803599238395691, 'Q2': 0.7456241250038147, 'Q3': 0.7939270734786987, 'Q4': 0.9066981077194214, 'Q5': 0.5868825316429138}},
+            {'SumQE': {'Q1': 0.7865289449691772, 'Q2': 0.7511206865310669, 'Q3': 0.6407886147499084, 'Q4': 0.7537230849266052, 'Q5': 0.4621696174144745}},
+            {'SumQE': {'Q1': 0.8352774381637573, 'Q2': 0.8135120272636414, 'Q3': 0.6002302169799805, 'Q4': 0.709865927696228, 'Q5': 0.4288080036640167}},
+            {'SumQE': {'Q1': 0.6729671359062195, 'Q2': 0.9227149486541748, 'Q3': 0.38279804587364197, 'Q4': 0.5190898180007935, 'Q5': 0.16473910212516785}}
+        ]
+        super().assert_expected_output(metric, expected_output)
 
-        # It's quite slow, so we only run a few examples here
-        centroid = centroid[:5]
-        scores = sumqe.score_all(centroid)
-
-        assert scores[0]['SumQE'] == pytest.approx({
-            "Q1": 0.8985345363616943,
-            "Q2": 0.9253203272819519,
-            "Q3": 0.8012534379959106,
-            "Q4": 0.871218204498291,
-            "Q5": 0.6108772158622742
-        }, abs=1e-4)
-        assert scores[1]['SumQE'] == pytest.approx({
-            "Q1": 0.7544711828231812,
-            "Q2": 0.8587688207626343,
-            "Q3": 0.9127543568611145,
-            "Q4": 0.8986099362373352,
-            "Q5": 0.623852014541626
-        }, abs=1e-4)
-        assert scores[2]['SumQE'] == pytest.approx({
-            "Q1": 0.9851462244987488,
-            "Q2": 0.8688598275184631,
-            "Q3": 0.942189633846283,
-            "Q4": 0.8591314554214478,
-            "Q5": 0.5004895925521851
-        }, abs=1e-4)
-        assert scores[3]['SumQE'] == pytest.approx({
-            "Q1": 0.3283337950706482,
-            "Q2": 0.8776571750640869,
-            "Q3": 0.8603634834289551,
-            "Q4": 0.8669484853744507,
-            "Q5": 0.44943714141845703
-        }, abs=1e-4)
-        assert scores[4]['SumQE'] == pytest.approx({
-            "Q1": 0.6950153112411499,
-            "Q2": 1.0309709310531616,
-            "Q3": 0.6369255781173706,
-            "Q4": 0.5551949143409729,
-            "Q5": 0.49241942167282104
-        }, abs=1e-4)
-
-    def test_score_multi_all_order(self):
-        """Tests to ensure the scoring returns the same results, no matter the order."""
-        sumqe = SumQE()
-        centroid1 = load_summaries(_centroid_file_path)
-        # Just test a few because this is a slow metric
-        centroid1 = centroid1[:5]
-        centroid2 = list(reversed(centroid1))  # Just create a second fake dataset
-
-        summaries_list = list(zip(*[centroid1, centroid2]))
-        metrics_lists1 = sumqe.score_multi_all(summaries_list)
-        metrics_lists1 = list(zip(*metrics_lists1))
-
-        summaries_list = list(zip(*[centroid2, centroid1]))
-        metrics_lists2 = sumqe.score_multi_all(summaries_list)
-        metrics_lists2 = list(zip(*metrics_lists2))
-
-        metrics_lists2 = list(reversed(metrics_lists2))
-        assert metrics_lists1 == metrics_lists2
+    def test_sum_que_order_invariant(self):
+        metric = SumQE()
+        self.assert_order_invariant(metric)
