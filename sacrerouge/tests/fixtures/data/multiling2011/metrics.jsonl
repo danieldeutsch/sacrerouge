@@ -1,0 +1,12 @@
+{"instance_id": "M000", "summarizer_id": "1", "summarizer_type": "peer", "metrics": {"grade": [2, 3, 3], "length_aware_grade": [2.0, 3.0, 3.0]}}
+{"instance_id": "M000", "summarizer_id": "2", "summarizer_type": "peer", "metrics": {"grade": [4, 4, 3], "length_aware_grade": [4.0, 4.0, 3.0]}}
+{"instance_id": "M000", "summarizer_id": "A", "summarizer_type": "reference", "metrics": {"grade": [5, 4, 3], "length_aware_grade": [3.0, 2.0, 3.0]}}
+{"instance_id": "M000", "summarizer_id": "B", "summarizer_type": "reference", "metrics": {"grade": [4, 5, 5], "length_aware_grade": [5.0, 4.0, 1.0]}}
+{"instance_id": "M001", "summarizer_id": "1", "summarizer_type": "peer", "metrics": {"grade": [2, 4, 4], "length_aware_grade": [2.0, 4.0, 4.0]}}
+{"instance_id": "M001", "summarizer_id": "2", "summarizer_type": "peer", "metrics": {"grade": [3, 5, 3], "length_aware_grade": [3.0, 5.0, 3.0]}}
+{"instance_id": "M001", "summarizer_id": "A", "summarizer_type": "reference", "metrics": {"grade": [2, 1, 5], "length_aware_grade": [1.0, 3.0, 4.0]}}
+{"instance_id": "M001", "summarizer_id": "B", "summarizer_type": "reference", "metrics": {"grade": [4, 2, 5], "length_aware_grade": [4.0, 2.0, 3.0]}}
+{"instance_id": "M002", "summarizer_id": "1", "summarizer_type": "peer", "metrics": {"grade": [4, 4, 5], "length_aware_grade": [3.03, 3.03, 3.79]}}
+{"instance_id": "M002", "summarizer_id": "2", "summarizer_type": "peer", "metrics": {"grade": [4, 5, 5], "length_aware_grade": [4.0, 5.0, 5.0]}}
+{"instance_id": "M002", "summarizer_id": "A", "summarizer_type": "reference", "metrics": {"grade": [2, 5, 3], "length_aware_grade": [1.0, 1.0, 3.0]}}
+{"instance_id": "M002", "summarizer_id": "B", "summarizer_type": "reference", "metrics": {"grade": [5, 5, 5], "length_aware_grade": [4.0, 3.0, 4.0]}}
