@@ -1,9 +1,9 @@
 import math
-import os
 import pytest
-import unittest
 
-from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
+from sacrerouge.common.testing import FIXTURES_ROOT
+from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.data import MetricsDict
 from sacrerouge.metrics import PythonRouge, Rouge
 from sacrerouge.metrics.python_rouge import shorten_summary
 
@@ -11,7 +11,7 @@ _duc2004_file_path = 'datasets/duc-tac/duc2004/v1.0/task2.jsonl'
 _centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 
 
-class TestPythonRouge(unittest.TestCase):
+class TestPythonRouge(ReferenceBasedMetricTestCase):
     def test_normalize_and_tokenize(self):
         """
         Tests to ensure the python version of Rouge correctly implements the
@@ -113,8 +113,19 @@ class TestPythonRouge(unittest.TestCase):
         actual = rouge.preprocess_summary(original)
         assert expected == actual
 
-    def test_python_rouge(self):
-        python_rouge = PythonRouge()
+    def assert_same_as_rouge(self, python: MetricsDict, perl: MetricsDict):
+        self.assertAlmostEqual(perl['rouge-1']['precision'], python['python-rouge-1']['precision'], places=2)
+        self.assertAlmostEqual(perl['rouge-1']['recall'], python['python-rouge-1']['recall'], places=2)
+        self.assertAlmostEqual(perl['rouge-1']['f1'], python['python-rouge-1']['f1'], places=2)
+        self.assertAlmostEqual(perl['rouge-2']['precision'], python['python-rouge-2']['precision'], places=2)
+        self.assertAlmostEqual(perl['rouge-2']['recall'], python['python-rouge-2']['recall'], places=2)
+        self.assertAlmostEqual(perl['rouge-2']['f1'], python['python-rouge-2']['f1'], places=2)
+        self.assertAlmostEqual(perl['rouge-l']['precision'], python['python-rouge-l']['precision'], places=2)
+        self.assertAlmostEqual(perl['rouge-l']['recall'], python['python-rouge-l']['recall'], places=2)
+        self.assertAlmostEqual(perl['rouge-l']['f1'], python['python-rouge-l']['f1'], places=2)
+
+
+    def test_python_rouge_correctness(self):
         summary = [
             "His tenacity holds despite the summary trials and harsh punishments for Xu, Wang Youcai and Qin Yongmin prominent party principals from the provinces who were sentenced to 11 and 12 years and despite threatening signs from the ruling Communist Party.",
             "The dissidents Xu Wenli, who was sentenced Monday to 13 years in prison, Wang Youcai, who received an 11-year sentence, and Qin Yongming, who was reported to have received 12 years were charged with subversion.",
@@ -166,15 +177,7 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords)
         expected_metrics = rouge.score(summary, gold_summaries)
         actual_metrics = python_rouge.score(summary, gold_summaries)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['precision'], actual_metrics['python-rouge-2']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['recall'], actual_metrics['python-rouge-2']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['f1'], actual_metrics['python-rouge-2']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], places=2)
+        self.assert_same_as_rouge(actual_metrics, expected_metrics)
 
         use_porter_stemmer = False
         remove_stopwords = True
@@ -187,15 +190,7 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords)
         expected_metrics = rouge.score(summary, gold_summaries)
         actual_metrics = python_rouge.score(summary, gold_summaries)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['precision'], actual_metrics['python-rouge-2']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['recall'], actual_metrics['python-rouge-2']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['f1'], actual_metrics['python-rouge-2']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], places=2)
+        self.assert_same_as_rouge(actual_metrics, expected_metrics)
 
         use_porter_stemmer = True
         remove_stopwords = False
@@ -208,15 +203,7 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords)
         expected_metrics = rouge.score(summary, gold_summaries)
         actual_metrics = python_rouge.score(summary, gold_summaries)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['precision'], actual_metrics['python-rouge-2']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['recall'], actual_metrics['python-rouge-2']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['f1'], actual_metrics['python-rouge-2']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], places=2)
+        self.assert_same_as_rouge(actual_metrics, expected_metrics)
 
         use_porter_stemmer = True
         remove_stopwords = True
@@ -229,25 +216,14 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords)
         expected_metrics = rouge.score(summary, gold_summaries)
         actual_metrics = python_rouge.score(summary, gold_summaries)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['precision'], actual_metrics['python-rouge-2']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['recall'], actual_metrics['python-rouge-2']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-2']['f1'], actual_metrics['python-rouge-2']['f1'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], places=2)
-        self.assertAlmostEqual(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], places=2)
+        self.assert_same_as_rouge(actual_metrics, expected_metrics)
 
-    @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
-    def test_hong2014(self):
-        duc2004 = load_references(_duc2004_file_path)
-        centroid = load_summaries(_centroid_file_path)
-
+    def test_python_rouge_multiling(self):
         use_porter_stemmer = True
         remove_stopwords = False
         compute_rouge_l = True
         max_words = 100
+
         rouge = Rouge(max_ngram=2,
                       use_porter_stemmer=use_porter_stemmer,
                       remove_stopwords=remove_stopwords,
@@ -257,34 +233,10 @@ class TestPythonRouge(unittest.TestCase):
                                    remove_stopwords=remove_stopwords,
                                    max_words=max_words,
                                    compute_rouge_l=compute_rouge_l)
-        expected_metrics, _ = rouge.evaluate(centroid, duc2004)
-        actual_metrics, _ = python_rouge.evaluate(centroid, duc2004)
-        assert math.isclose(expected_metrics['rouge-1']['precision'], actual_metrics['python-rouge-1']['precision'], abs_tol=1e-2)
-        assert math.isclose(expected_metrics['rouge-1']['recall'], actual_metrics['python-rouge-1']['recall'], abs_tol=2e-2)
-        assert math.isclose(expected_metrics['rouge-1']['f1'], actual_metrics['python-rouge-1']['f1'], abs_tol=2e-2)
-        assert math.isclose(expected_metrics['rouge-2']['precision'], actual_metrics['python-rouge-2']['precision'], abs_tol=1e-2)
-        assert math.isclose(expected_metrics['rouge-2']['recall'], actual_metrics['python-rouge-2']['recall'], abs_tol=1e-2)
-        assert math.isclose(expected_metrics['rouge-2']['f1'], actual_metrics['python-rouge-2']['f1'], abs_tol=1e-2)
-        # Rouge-L is a little further off, but still reasonably close enough that I'm not worried
-        assert math.isclose(expected_metrics['rouge-l']['precision'], actual_metrics['python-rouge-l']['precision'], abs_tol=1e-1)
-        assert math.isclose(expected_metrics['rouge-l']['recall'], actual_metrics['python-rouge-l']['recall'], abs_tol=1e-1)
-        assert math.isclose(expected_metrics['rouge-l']['f1'], actual_metrics['python-rouge-l']['f1'], abs_tol=1e-1)
+        expected_metrics, _ = rouge.evaluate(self.summaries, self.references_list)
+        actual_metrics, _ = python_rouge.evaluate(self.summaries, self.references_list)
+        self.assert_same_as_rouge(actual_metrics, expected_metrics)
 
-    @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
-    def test_score_multi_all_order(self):
-        """Tests to ensure the scoring returns the same results, no matter the order."""
-        python_rouge = PythonRouge()
-        duc2004 = load_references(_duc2004_file_path)
-        centroid1 = load_summaries(_centroid_file_path)
-        centroid2 = list(reversed(centroid1))  # Just create a second fake dataset
-
-        summaries_list = list(zip(*[centroid1, centroid2]))
-        metrics_lists1 = python_rouge.score_multi_all(summaries_list, duc2004)
-        metrics_lists1 = list(zip(*metrics_lists1))
-
-        summaries_list = list(zip(*[centroid2, centroid1]))
-        metrics_lists2 = python_rouge.score_multi_all(summaries_list, duc2004)
-        metrics_lists2 = list(zip(*metrics_lists2))
-
-        metrics_lists2 = list(reversed(metrics_lists2))
-        assert metrics_lists1 == metrics_lists2
+    def test_python_rouge_order_invariant(self):
+        metric = PythonRouge()
+        self.assert_order_invariant(metric)
