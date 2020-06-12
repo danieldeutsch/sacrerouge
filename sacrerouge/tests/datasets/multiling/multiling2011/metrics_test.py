@@ -1,3 +1,4 @@
+import os
 import pytest
 import unittest
 from collections import defaultdict
@@ -18,6 +19,7 @@ class TestMultiLing2011Metrics(unittest.TestCase):
             metrics_dicts[metrics.instance_id][metrics.summarizer_id] = metrics.metrics
         return metrics_dicts
 
+    @pytest.mark.skipif(not os.path.exists(_en_file_path), reason='MultiLing 2011 English data does not exist')
     def test_en_summary_level(self):
         # Test a few random metrics to ensure the data was parsed correctly
         metrics_list = JsonlReader(_en_file_path, Metrics).read()
@@ -40,6 +42,7 @@ class TestMultiLing2011Metrics(unittest.TestCase):
         assert metrics_dicts['M000']['3']['length_aware_grade'] == [2.88, 3.83, 3.83]
         assert metrics_dicts['M006']['4']['length_aware_grade'] == [1.00, 3.00, 1.00]
 
+    @pytest.mark.skipif(not os.path.exists(_fr_file_path), reason='MultiLing 2011 French data does not exist')
     def test_fr_summary_level(self):
         # Test a few random metrics to ensure the data was parsed correctly
         metrics_list = JsonlReader(_fr_file_path, Metrics).read()
