@@ -13,12 +13,12 @@ from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
 
-MOVERSCORE_EXISTS = False
+MOVERSCORE_INSTALLED = False
 
 try:
     from moverscore_v2 import get_idf_dict, word_mover_score
 
-    MOVERSCORE_EXISTS = True
+    MOVERSCORE_INSTALLED = True
 
     @Metric.register('moverscore')
     class MoverScore(Metric):
