@@ -25,8 +25,9 @@ class ReferenceBasedMetricTestCase(unittest.TestCase):
         """Ensures that the output from `score_all` is equal to the `expected_output`."""
         assert len(self.summaries) == len(expected_output)
         actual_output = metric.score_all(self.summaries, self.references_list)
+        print(actual_output)
         for i, (expected, actual) in enumerate(zip(expected_output, actual_output)):
-            assert actual.approx_equal(expected, abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
+            assert actual.approx_equal(MetricsDict(expected), abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
 
     def assert_order_invariant(self, metric: Metric):
         """Ensures that the output from `score_multi_all` returns the same results, no matter the order."""
