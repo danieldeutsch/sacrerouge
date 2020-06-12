@@ -3,8 +3,6 @@ from typing import List
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.io import JsonlReader
 
-FIXTURES_ROOT = 'sacrerouge/tests/fixtures'
-
 
 def load_summaries(file_path: str) -> List[SummaryType]:
     fields = []
