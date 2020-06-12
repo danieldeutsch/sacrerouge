@@ -25,7 +25,6 @@ class MetricTestCase(unittest.TestCase):
         """Ensures that the output from `score_all` is equal to the `expected_output`."""
         assert len(self.summaries) == len(expected_output)
         actual_output = metric.score_all(self.summaries, *args)
-        print(actual_output)
         for i, (expected, actual) in enumerate(zip(expected_output, actual_output)):
             assert actual.approx_equal(MetricsDict(expected), abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
 
@@ -45,7 +44,9 @@ class MetricTestCase(unittest.TestCase):
         metrics_lists2 = list(zip(*metrics_lists2))
 
         metrics_lists2 = list(reversed(metrics_lists2))
-        assert metrics_lists1 == metrics_lists2
+        for metrics_list1, metrics_list2 in zip(metrics_lists1, metrics_lists2):
+            for metrics1, metrics2 in zip(metrics_list1, metrics_list2):
+                assert metrics1.approx_equal(metrics2)
 
 
 class ReferenceBasedMetricTestCase(MetricTestCase):
