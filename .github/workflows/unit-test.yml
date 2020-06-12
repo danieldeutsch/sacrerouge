@@ -16,18 +16,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.7
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
+        pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install metrics
       run: |
         python -m sacrerouge setup-metric autosummeng
+        python -m sacrerouge setup-metric bewte
+        python -m sacrerouge setup-metric meteor
+        python -m sacrerouge setup-metric simetrix
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

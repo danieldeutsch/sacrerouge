@@ -1,0 +1,7 @@
+jsons
+lxml
+nltk
+numpy
+overrides
+pytest
+scipy
