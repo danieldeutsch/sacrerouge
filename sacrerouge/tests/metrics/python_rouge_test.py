@@ -1,4 +1,3 @@
-import math
 import pytest
 
 from sacrerouge.common.testing import FIXTURES_ROOT
@@ -6,9 +5,6 @@ from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTest
 from sacrerouge.data import MetricsDict
 from sacrerouge.metrics import PythonRouge, Rouge
 from sacrerouge.metrics.python_rouge import shorten_summary
-
-_duc2004_file_path = 'datasets/duc-tac/duc2004/v1.0/task2.jsonl'
-_centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 
 
 class TestPythonRouge(ReferenceBasedMetricTestCase):
@@ -114,15 +110,15 @@ class TestPythonRouge(ReferenceBasedMetricTestCase):
         assert expected == actual
 
     def assert_same_as_rouge(self, python: MetricsDict, perl: MetricsDict):
-        self.assertAlmostEqual(perl['rouge-1']['precision'], python['python-rouge-1']['precision'], places=2)
-        self.assertAlmostEqual(perl['rouge-1']['recall'], python['python-rouge-1']['recall'], places=2)
-        self.assertAlmostEqual(perl['rouge-1']['f1'], python['python-rouge-1']['f1'], places=2)
-        self.assertAlmostEqual(perl['rouge-2']['precision'], python['python-rouge-2']['precision'], places=2)
-        self.assertAlmostEqual(perl['rouge-2']['recall'], python['python-rouge-2']['recall'], places=2)
-        self.assertAlmostEqual(perl['rouge-2']['f1'], python['python-rouge-2']['f1'], places=2)
-        self.assertAlmostEqual(perl['rouge-l']['precision'], python['python-rouge-l']['precision'], places=2)
-        self.assertAlmostEqual(perl['rouge-l']['recall'], python['python-rouge-l']['recall'], places=2)
-        self.assertAlmostEqual(perl['rouge-l']['f1'], python['python-rouge-l']['f1'], places=2)
+        assert perl['rouge-1']['precision'] == pytest.approx(python['python-rouge-1']['precision'], abs=1e-2)
+        assert perl['rouge-1']['recall'] == pytest.approx( python['python-rouge-1']['recall'], abs=1e-2)
+        assert perl['rouge-1']['f1'] == pytest.approx( python['python-rouge-1']['f1'], abs=1e-2)
+        assert perl['rouge-2']['precision'] == pytest.approx( python['python-rouge-2']['precision'], abs=1e-2)
+        assert perl['rouge-2']['recall'] == pytest.approx( python['python-rouge-2']['recall'], abs=1e-2)
+        assert perl['rouge-2']['f1'] == pytest.approx( python['python-rouge-2']['f1'], abs=1e-2)
+        assert perl['rouge-l']['precision'] == pytest.approx( python['python-rouge-l']['precision'], abs=1e-2)
+        assert perl['rouge-l']['recall'] == pytest.approx( python['python-rouge-l']['recall'], abs=1e-2)
+        assert perl['rouge-l']['f1'] == pytest.approx( python['python-rouge-l']['f1'], abs=1e-2)
 
 
     def test_python_rouge_correctness(self):
