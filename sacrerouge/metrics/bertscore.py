@@ -11,6 +11,8 @@ from sacrerouge.metrics import Metric
 try:
     from bert_score import score, create_idf_dict
 except ImportError:
+    BERTSCORE_INSTALLED = False
+
     @Metric.register('bertscore')
     class BertScore(Metric):
         def __init__(self, *args, **kwargs):
@@ -19,6 +21,8 @@ except ImportError:
         def score_multi_all(self, *args, **kwargs):
             raise NotImplementedError('Please install the "bert_score" python library library to use BertScore')
 else:
+    BERTSCORE_INSTALLED = True
+
     @Metric.register('bertscore')
     class BertScore(Metric):
         def __init__(self,
