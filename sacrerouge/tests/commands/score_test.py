@@ -5,18 +5,17 @@ from collections import defaultdict
 from subprocess import PIPE, Popen
 
 from sacrerouge.common import TemporaryDirectory
-from sacrerouge.common.testing import FIXTURES_ROOT
+from sacrerouge.common.testing import FIXTURES_ROOT, MULTILING_SUMMARIES
 from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
-_summaries_file_path = 'datasets/duc-tac/tac2008/v1.0/task1.A.summaries.jsonl'
 _config_file_path = f'{FIXTURES_ROOT}/configs/score.json'
 
 
 class TestScore(unittest.TestCase):
-    @pytest.mark.skipif(not os.path.exists(_summaries_file_path), reason='TAC 2008 summaries file does not exist')
     def test_score(self):
         with TemporaryDirectory() as temp_dir:
+            # Runs a regression test for the "score" command
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'score',
@@ -25,9 +24,9 @@ class TestScore(unittest.TestCase):
             ]
 
             process = Popen(command, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = process.communicate()
+            process.communicate()
 
-            instances = JsonlReader(_summaries_file_path).read()
+            instances = JsonlReader(MULTILING_SUMMARIES).read()
             metrics_list = JsonlReader(output_file, Metrics).read()
             metrics_dicts = defaultdict(dict)
 
@@ -49,38 +48,38 @@ class TestScore(unittest.TestCase):
 
             # Test a couple of instances. I did not check to see if these are correct,
             # but the test will check if the results have changed
-            assert metrics_dicts['d0801-A']['0'].metrics == {
-                'python-rouge-1': {
-                    'precision': 29.444444444444446,
-                    'recall': 26.700251889168765,
-                    'f1': 28.005284015852048
+            assert metrics_dicts['M000']['1'].metrics == {
+                "python-rouge-1": {
+                  "precision": 41.699867197875164,
+                  "recall": 40.516129032258064,
+                  "f1": 41.09947643979057
                 },
-                'python-rouge-2': {
-                    'precision': 2.8089887640449436,
-                    'recall': 2.5445292620865136,
-                    'f1': 2.67022696929239
+                "python-rouge-2": {
+                  "precision": 10.533333333333333,
+                  "recall": 10.233160621761659,
+                  "f1": 10.38107752956636
                 },
-                'python-rouge-1_jk': {
-                    'precision': 29.444444444444443,
-                    'recall': 26.719572295067344,
-                    'f1': 28.015250464050713
+                "python-rouge-1_jk": {
+                  "precision": 41.699867197875164,
+                  "recall": 40.514662613316766,
+                  "f1": 41.098355761265616
                 },
-                'python-rouge-2_jk': {
-                    'precision': 2.808988764044944,
-                    'recall': 2.549772468714448,
-                    'f1': 2.6730599647266313
+                "python-rouge-2_jk": {
+                  "precision": 10.533333333333333,
+                  "recall": 10.226158358122346,
+                  "f1": 10.3773782079838
                 }
             }
 
-            assert metrics_dicts['d0805-A']['B'].metrics == {
-                'python-rouge-1_jk': {
-                    'precision': 37.84722222222222,
-                    'recall': 36.21262458471761,
-                    'f1': 37.011884550084886
+            assert metrics_dicts['M001']['B'].metrics == {
+                "python-rouge-1_jk": {
+                  "precision": 51.59362549800797,
+                  "recall": 51.18577075098815,
+                  "f1": 51.3888888888889
                 },
-                'python-rouge-2_jk': {
-                    'precision': 9.12280701754386,
-                    'recall': 8.724832214765101,
-                    'f1': 8.919382504288166
+                "python-rouge-2_jk": {
+                  "precision": 20.4,
+                  "recall": 20.238095238095237,
+                  "f1": 20.318725099601597
                 }
             }
