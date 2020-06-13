@@ -19,7 +19,10 @@ class TestRegistrable(unittest.TestCase):
         pass
 
     def test_register(self):
-        assert Registrable._registry == {
-            TestRegistrable._Base1: {'subclass1': (TestRegistrable._Subclass1, None)},
-            TestRegistrable._Base2: {'subclass2': (TestRegistrable._Subclass2, None)}
-        }
+        assert TestRegistrable._Base1 in Registrable._registry
+        assert len(Registrable._registry[TestRegistrable._Base1]) == 1
+        assert Registrable._registry[TestRegistrable._Base1]['subclass1'] == (TestRegistrable._Subclass1, None)
+
+        assert TestRegistrable._Base2 in Registrable._registry
+        assert len(Registrable._registry[TestRegistrable._Base2]) == 1
+        assert Registrable._registry[TestRegistrable._Base2]['subclass2'] == (TestRegistrable._Subclass2, None)

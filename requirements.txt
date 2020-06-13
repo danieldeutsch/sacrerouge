@@ -1,0 +1,9 @@
+googledrivedownloader
+jsons
+lxml
+nltk
+numpy
+overrides
+pytest
+requests
+scipy

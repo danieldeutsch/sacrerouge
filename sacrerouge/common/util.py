@@ -1,5 +1,6 @@
 import os
 import urllib
+from google_drive_downloader import GoogleDriveDownloader
 from shutil import which
 
 
@@ -32,3 +33,16 @@ def download_url_to_file(url: str, file_path: str, force: bool = False) -> None:
 
     print(f'Downloading {url} to {file_path}')
     urllib.request.urlretrieve(url, file_path)
+
+
+def download_file_from_google_drive(file_id: str, file_path: str, force: bool = False) -> None:
+    dirname = os.path.dirname(file_path)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+
+    if os.path.exists(file_path) and not force:
+        print(f'Skipping downloading file {file_id}')
+        return
+
+    print(f'Downloading file {file_id} to {file_path}')
+    GoogleDriveDownloader.download_file_from_google_drive(file_id, file_path, overwrite=True)

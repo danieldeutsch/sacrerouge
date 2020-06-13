@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import shutil
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -9,6 +8,7 @@ from typing import List, Optional, Tuple
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
+from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -223,11 +223,23 @@ class RougeSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         self.parser = parser.add_parser('rouge')
-        self.parser.add_argument('rouge_root')
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides
     def run(self, args):
-        print(f'Copying {args.rouge_root} to {DATA_ROOT}/metrics/ROUGE-1.5.5')
-        shutil.copy(args.rouge_root, f'{DATA_ROOT}/metrics/ROUGE-1.5.5')
-        print('ROUGE setup success')
+        print(f'Downloading ROUGE-1.5.5')
+        download_file_from_google_drive('1y0rDnTplQ83b2PQu_TgezbFpGOthP0gG', f'{DATA_ROOT}/metrics/ROUGE-1.5.5.zip')
+
+        commands = [
+            f'cd {DATA_ROOT}/metrics',
+            f'unzip ROUGE-1.5.5.zip',
+            f'rm ROUGE-1.5.5.zip'
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode == 0:
+            print('ROUGE setup success')
+        else:
+            print('ROUGE setup failure')

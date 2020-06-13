@@ -119,7 +119,6 @@ class TestPythonRouge(ReferenceBasedMetricTestCase):
         assert perl['rouge-l']['recall'] == pytest.approx( python['python-rouge-l']['recall'], abs=1e-2)
         assert perl['rouge-l']['f1'] == pytest.approx( python['python-rouge-l']['f1'], abs=1e-2)
 
-
     def test_python_rouge_correctness(self):
         summary = [
             "His tenacity holds despite the summary trials and harsh punishments for Xu, Wang Youcai and Qin Yongmin prominent party principals from the provinces who were sentenced to 11 and 12 years and despite threatening signs from the ruling Communist Party.",
