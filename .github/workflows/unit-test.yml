@@ -35,6 +35,10 @@ jobs:
         python -m sacrerouge setup-metric bewte
         python -m sacrerouge setup-metric meteor
         python -m sacrerouge setup-metric simetrix
+
+        pip install moverscore
+        python -m sacrerouge setup-metric moverscore
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
