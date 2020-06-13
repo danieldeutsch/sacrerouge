@@ -24,10 +24,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Set up Perl
-      uses: shogo82148/actions-setup-perl@v1
-      with:
-        - perl-version: '5.30'
+    - name: Set up ROUGE perl libraries
       run: cpan install XML::DOM
     - name: Install dependencies
       run: |
