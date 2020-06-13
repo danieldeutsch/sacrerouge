@@ -128,6 +128,6 @@ class MoverScoreSetupSubcommand(Subcommand):
         process = Popen(command, shell=True)
         process.communicate()
         if process.returncode == 0:
-            print('MoverScore setup success')
+            print('MoverScore data downloaded. Please install the "moverscore" pip package.')
         else:
             print('MoverScore setup failure')
