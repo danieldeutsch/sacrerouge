@@ -8,7 +8,8 @@ from sacrerouge.metrics import autosummeng, bertscore, bewte, meteor, moverscore
 class SetupMetricSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('setup-metric')
+        description = 'Setup an evaluation metric'
+        self.parser = parser.add_parser('setup-metric', description=description, help=description)
         subparsers = self.parser.add_subparsers()
 
         subcommands = [

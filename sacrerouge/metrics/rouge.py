@@ -222,7 +222,8 @@ class Rouge(Metric):
 class RougeSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('rouge')
+        description = 'Setup the ROUGE metric'
+        self.parser = parser.add_parser('rouge', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

@@ -258,7 +258,8 @@ class BEwTE(Metric):
 class BEwTESetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('bewte')
+        description = 'Setup the BEwT-E metric'
+        self.parser = parser.add_parser('bewte', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     def _edit_pom(self, file_path: str) -> None:

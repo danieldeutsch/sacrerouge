@@ -159,7 +159,8 @@ class SIMetrix(Metric):
 class SIMetrixSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('simetrix')
+        description = 'Setup the SIMetrix metric'
+        self.parser = parser.add_parser('simetrix', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

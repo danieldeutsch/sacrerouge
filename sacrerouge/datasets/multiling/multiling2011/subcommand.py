@@ -9,8 +9,13 @@ from sacrerouge.common.util import download_url_to_file
 class MultiLing2011Subcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('multiling2011')
-        self.parser.add_argument('output_dir')
+        description = 'Setup the MultiLing 2011 dataset'
+        self.parser = parser.add_parser('multiling2011', description=description, help=description)
+        self.parser.add_argument(
+            'output_dir',
+            type=str,
+            help='The directory where the data should be saved'
+        )
         self.parser.set_defaults(subfunc=self.run)
 
     def _notify_about_license(self):

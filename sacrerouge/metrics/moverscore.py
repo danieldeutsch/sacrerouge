@@ -113,7 +113,8 @@ except ImportError:
 class MoverScoreSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('moverscore')
+        description = 'Setup the MoverScore metric'
+        self.parser = parser.add_parser('moverscore', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

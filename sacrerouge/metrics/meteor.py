@@ -128,7 +128,8 @@ class Meteor(Metric):
 class MeteorSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('meteor')
+        description = 'Setup the METEOR metric'
+        self.parser = parser.add_parser('meteor', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

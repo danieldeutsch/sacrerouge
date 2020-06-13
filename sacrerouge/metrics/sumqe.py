@@ -115,10 +115,23 @@ class SumQE(Metric):
 class SumQESetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('sum-qe')
-        self.parser.add_argument('--download-2005-2006-model', action='store_true')
-        self.parser.add_argument('--download-2005-2007-model', action='store_true')
-        self.parser.add_argument('--download-2006-2007-model', action='store_true')
+        description = 'Setup the Sum-QE metric'
+        self.parser = parser.add_parser('sum-qe', description=description, help=description)
+        self.parser.add_argument(
+            '--download-2005-2006-model',
+            action='store_true',
+            help='Indicates that the model trained on DUC 2005 and 2006 should be downloaded'
+        )
+        self.parser.add_argument(
+            '--download-2005-2007-model',
+            action='store_true',
+            help='Indicates that the model trained on DUC 2005 and 2007 should be downloaded'
+        )
+        self.parser.add_argument(
+            '--download-2006-2007-model',
+            action='store_true',
+            help='Indicates that the model trained on DUC 2006 and 2007 should be downloaded'
+        )
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

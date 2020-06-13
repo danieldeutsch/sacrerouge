@@ -282,7 +282,8 @@ class PythonRouge(Metric):
 class PythonRougeSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('python-rouge')
+        description = 'Setup the Python-based ROGUE metric'
+        self.parser = parser.add_parser('python-rouge', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

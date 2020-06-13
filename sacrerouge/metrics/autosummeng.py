@@ -130,7 +130,8 @@ class AutoSummENG(Metric):
 class AutoSummENGSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('autosummeng')
+        description = 'Setup the AutoSummENG, MeMoG, and NPowER metrics'
+        self.parser = parser.add_parser('autosummeng', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

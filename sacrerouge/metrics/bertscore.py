@@ -127,7 +127,8 @@ else:
 class BertScoreSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('bertscore')
+        description = 'Setup the BERTScore metric'
+        self.parser = parser.add_parser('bertscore', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

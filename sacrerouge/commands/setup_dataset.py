@@ -10,7 +10,8 @@ from sacrerouge.datasets.multiling import multiling2011
 class SetupDatasetSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('setup-dataset')
+        description = 'Setup a dataset'
+        self.parser = parser.add_parser('setup-dataset', description=description, help=description)
         subparsers = self.parser.add_subparsers()
 
         subcommands = [

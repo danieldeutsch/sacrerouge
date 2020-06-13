@@ -14,7 +14,7 @@ The path to the Python binary can be passed to the `SumQE` class.
 
 The models can be set up with the following command:
 ```bash
-sacrerouge setup-metric sumqe \
+sacrerouge setup-metric sum-qe \
     --download-2005-2006-model \
     --download-2005-2007-model \
     --download-2006-2007-model

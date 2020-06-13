@@ -108,12 +108,33 @@ def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dic
 class ScoreSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('score')
-        self.parser.add_argument('config')
-        self.parser.add_argument('output_jsonl')
-        self.parser.add_argument('--log-file')
-        self.parser.add_argument('--silent', action='store_true')
-        self.parser.add_argument('--overrides')
+        description = 'Score all of the inputs to evaluate a metric'
+        self.parser = parser.add_parser('score', description=description, help=description)
+        self.parser.add_argument(
+            'config',
+            type=str,
+            help='The config file that specifies the dataset reader and metrics'
+        )
+        self.parser.add_argument(
+            'output_jsonl',
+            type=str,
+            help='The path to where the input-level metrics should be written'
+        )
+        self.parser.add_argument(
+            '--log-file',
+            type=str,
+            help='The file where the log should be written'
+        )
+        self.parser.add_argument(
+            '--silent',
+            action='store_true',
+            help='Controls whether the log should be written to stdout'
+        )
+        self.parser.add_argument(
+            '--overrides',
+            type=str,
+            help='A serialized json that will override the parameters passed in "config"'
+        )
         self.parser.set_defaults(func=self.run)
 
     @overrides

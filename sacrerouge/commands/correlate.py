@@ -214,13 +214,43 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
 class CorrelateSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('correlate')
-        self.parser.add_argument('--metrics-jsonl-files', nargs='+')
-        self.parser.add_argument('--metrics', nargs=2)
-        self.parser.add_argument('--summarizer-type', choices=['all', 'reference', 'peer'])
-        self.parser.add_argument('--output-file')
-        self.parser.add_argument('--log-file')
-        self.parser.add_argument('--silent', action='store_true')
+        description = 'Calculate the correlation between two different metrics'
+        self.parser = parser.add_parser('correlate', description=description, help=description)
+        self.parser.add_argument(
+            '--metrics-jsonl-files',
+            nargs='+',
+            help='The jsonl files with the metric values. If the values are split across multiple files, they can all '
+                 'be passed as arguments.',
+            required=True
+        )
+        self.parser.add_argument(
+            '--metrics',
+            nargs=2,
+            type=str,
+            help='The flattened names of the two metrics that should be correlated',
+            required=True
+        )
+        self.parser.add_argument(
+            '--summarizer-type',
+            choices=['all', 'reference', 'peer'],
+            help='The type of summarizer which should be included in the correlation calculation',
+            required=True
+        )
+        self.parser.add_argument(
+            '--output-file',
+            type=str,
+            help='The json output file which will contain the final correlations'
+        )
+        self.parser.add_argument(
+            '--log-file',
+            type=str,
+            help='The file where the log should be written'
+        )
+        self.parser.add_argument(
+            '--silent',
+            action='store_true',
+            help='Controls whether the log should be written to stdout'
+        )
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
