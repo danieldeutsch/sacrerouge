@@ -8,5 +8,6 @@ The following metrics have been implemented:
 - [METEOR](meteor.md)
 - [MoverScore](moverscore.md)
 - [ROUGE](rouge.md) and a [Python-based implementation](python-rouge.md)
+- [SIMetrix](simetrix.md)
     
 For specific details about the metrics, please refer to their corresponding documentation.
