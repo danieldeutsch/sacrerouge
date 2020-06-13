@@ -9,6 +9,11 @@ To set up the dependencies, run:
 sacrerouge setup-metric autosummeng
 ```
 
+To verify your installation, run:
+```bash
+pytest sacrerouge/tests/metrics/autosummeng_test.py
+```
+
 ## References
 [1] Giannakopoulos, George, and Vangelis Karkaletsis. "[AutoSummENG and MeMoG in Evaluating Guided Summaries.](https://tac.nist.gov/publications/2011/participant.papers/DemokritosGR.proceedings.pdf)" TAC. 2011.
 

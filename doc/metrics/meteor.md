@@ -9,5 +9,10 @@ It can be set up with the following command:
 sacrerouge setup-metric meteor
 ```
 
+To verify your installation, run:
+```bash
+pytest sacrerouge/tests/metrics/meteor_test.py
+```
+
 ## References
 [1] Michael Denkowski and Alon Lavie. "[Meteor Universal: Language Specific Translation Evaluation for Any Target Language.](https://www.cs.cmu.edu/~alavie/METEOR/pdf/meteor-1.5.pdf)" WMT 2014.

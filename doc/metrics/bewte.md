@@ -10,6 +10,11 @@ Then, it can be set up with the following command:
 sacrerouge setup-metric bewte
 ```
 
+To verify your installation, run:
+```bash
+pytest sacrerouge/tests/metrics/bewte_test.py
+```
+
 ## References
 [1] Stephen Tratz and Eduard Hovy. [BEwT­E: Basic Elements with Transformations for Evaluation](http://www.cs.cmu.edu/~./hovy/papers/08MetricsMATR-BEwT-E.pdf).
 
