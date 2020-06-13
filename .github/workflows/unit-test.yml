@@ -34,6 +34,7 @@ jobs:
         python -m sacrerouge setup-metric autosummeng
         python -m sacrerouge setup-metric bewte
         python -m sacrerouge setup-metric meteor
+        python -m sacrerouge setup-metric rouge
         python -m sacrerouge setup-metric simetrix
 
         pip install moverscore
