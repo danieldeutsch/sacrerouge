@@ -1,5 +1,6 @@
 # AutoSummENG, MeMoG, and NPowER
 AutoSummENG [1, 2], MeMoG [1], and NPoWER [3] are a family of reference-based evaluation metrics that use n-gram graphs to compare the content of a summary and set of reference summaries.
+Our implementation wraps [our modification](https://github.com/danieldeutsch/AutoSummENG) of the [original code](https://github.com/ggianna/SummaryEvaluation) which allows for evaluating batches of summaries. 
 
 ## Setting Up
 Running the AutoSummENG code requires Java 1.8 and Maven to be installed.
