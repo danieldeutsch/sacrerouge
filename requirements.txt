@@ -5,4 +5,5 @@ nltk
 numpy
 overrides
 pytest
+requests
 scipy
