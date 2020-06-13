@@ -199,6 +199,9 @@ class Rouge(Metric):
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
 
+            print(stdout.decode())
+            print(stderr.decode())
+
             macro_metrics_list, micro_metrics_lists = self._parse_rouge_stdout(stdout.decode())
             return macro_metrics_list, micro_metrics_lists
 

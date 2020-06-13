@@ -38,11 +38,6 @@ jobs:
         python -m sacrerouge setup-metric meteor
         python -m sacrerouge setup-metric rouge
         python -m sacrerouge setup-metric simetrix
-    - name: Download Hong 2014
-      run: |
-        wget http://www.cis.upenn.edu/~nlp/corpora/sumrepo/sumrepo_duc2004.tar.gz
-        tar -xzvf sumrepo_duc2004.tar.gz
-        python sacrerouge/tests/fixtures/data/hong2014/setup.py sumrepo_duc2004 sacrerouge/tests/fixtures/data/hong2014
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
