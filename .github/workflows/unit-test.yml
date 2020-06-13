@@ -25,7 +25,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Set up ROUGE perl libraries
-      run: cpan install XML::DOM
+      run: perl -MCPAN -e 'install XML::DOM'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
