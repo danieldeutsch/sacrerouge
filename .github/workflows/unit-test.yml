@@ -36,7 +36,7 @@ jobs:
         python -m sacrerouge setup-metric meteor
         python -m sacrerouge setup-metric rouge
         python -m sacrerouge setup-metric simetrix
-    - name: Set up ROUGE perl libraries
+    - name: Set up ROUGE dependencies
       run: |
         sudo apt-get install libxml-dom-perl
         pushd ~/.sacrerouge/metrics/ROUGE-1.5.5/data/WordNet-2.0-Exceptions
