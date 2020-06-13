@@ -1,11 +1,15 @@
+import os
+import pytest
+
 from sacrerouge.common.testing.metric_test_cases import ReferencelessMetricTestCase
 from sacrerouge.metrics import SumQE
 
 
+@pytest.mark.skipif('SUMQE_PYTHON_BINARY' not in os.environ, reason='SumQE python binary environment variable not set')
 class TestSumQE(ReferencelessMetricTestCase):
     def test_sum_qe(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = SumQE()
+        metric = SumQE(python_binary=os.environ['SUMQE_PYTHON_BINARY'])
         expected_output = [
             {'SumQE': {'Q1': 0.6114518642425537, 'Q2': 0.8854175806045532, 'Q3': 0.8413561582565308, 'Q4': 0.7688009738922119, 'Q5': 0.5558874011039734}},
             {'SumQE': {'Q1': 0.5558350086212158, 'Q2': 0.9138086438179016, 'Q3': 0.7335574626922607, 'Q4': 0.6305676102638245, 'Q5': 0.3748158812522888}},
@@ -23,5 +27,5 @@ class TestSumQE(ReferencelessMetricTestCase):
         super().assert_expected_output(metric, expected_output)
 
     def test_sum_que_order_invariant(self):
-        metric = SumQE()
+        metric = SumQE(python_binary=os.environ['SUMQE_PYTHON_BINARY'])
         self.assert_order_invariant(metric)
