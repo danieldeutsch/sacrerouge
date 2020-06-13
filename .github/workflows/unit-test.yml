@@ -42,7 +42,7 @@ jobs:
         python -m sacrerouge setup-metric rouge
         python -m sacrerouge setup-metric simetrix
 
-        pip install pyemd torch pytorch-transformers moverscore
+        pip install pyemd torch transformers moverscore
         python -m sacrerouge setup-metric moverscore
 
     - name: Lint with flake8
