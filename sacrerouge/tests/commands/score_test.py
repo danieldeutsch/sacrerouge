@@ -93,8 +93,7 @@ class TestScore(unittest.TestCase):
             ]
 
             process = Popen(command, stdout=PIPE, stderr=PIPE)
-            stdout, _ = process.communicate()
-            print(stdout.decode())
+            process.communicate()
 
             metrics_list = JsonlReader(output_file, Metrics).read()
 
