@@ -1,5 +1,3 @@
-import os
-import pytest
 import unittest
 from collections import defaultdict
 from subprocess import PIPE, Popen
@@ -10,6 +8,7 @@ from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
 _config_file_path = f'{FIXTURES_ROOT}/configs/score.json'
+_numeric_config_file_path = f'{FIXTURES_ROOT}/configs/evaluate-numeric.json'
 
 
 class TestScore(unittest.TestCase):
@@ -83,3 +82,50 @@ class TestScore(unittest.TestCase):
                   "f1": 20.318725099601597
                 }
             }
+
+    def test_numeric_metric(self):
+        with TemporaryDirectory() as temp_dir:
+            output_file = f'{temp_dir}/metrics.jsonl'
+            command = [
+                'python', '-m', 'sacrerouge', 'score',
+                _numeric_config_file_path,
+                output_file
+            ]
+
+            process = Popen(command, stdout=PIPE, stderr=PIPE)
+            stdout, _ = process.communicate()
+            print(stdout.decode())
+
+            metrics_list = JsonlReader(output_file, Metrics).read()
+
+            assert len(metrics_list) == 5
+            assert metrics_list[0].instance_id == 'D1'
+            assert metrics_list[1].instance_id == 'D1'
+            assert metrics_list[2].instance_id == 'D1'
+            assert metrics_list[3].instance_id == 'D1'
+            assert metrics_list[4].instance_id == 'D1'
+
+            assert metrics_list[0].summarizer_id == '1'
+            assert metrics_list[1].summarizer_id == '2'
+            assert metrics_list[2].summarizer_id == 'A'
+            assert metrics_list[3].summarizer_id == 'B'
+            assert metrics_list[4].summarizer_id == 'C'
+
+            assert metrics_list[0].summarizer_type == 'peer'
+            assert metrics_list[1].summarizer_type == 'peer'
+            assert metrics_list[2].summarizer_type == 'reference'
+            assert metrics_list[3].summarizer_type == 'reference'
+            assert metrics_list[4].summarizer_type == 'reference'
+
+            # test: 1 * 10 + 1 * 100 + 1 * 1000 == 1110
+            # test_jk = ((1 * 10 + 1 * 100) + (1 * 10 + 1 * 1000) + (1 * 100 + 1 * 1000)) / 3 == 740
+            assert metrics_list[0].metrics == {'test': 1110, 'test_jk': 740}
+            # test: 2 * 10 + 2 * 100 + 2 * 1000 == 2220
+            # test_jk = ((2 * 10 + 2 * 100) + (2 * 10 + 2 * 1000) + (2 * 100 + 2 * 1000)) / 3 == 1480
+            assert metrics_list[1].metrics == {'test': 2220, 'test_jk': 1480}  # 2 * 10 + 2 * 100 + 2 * 1000
+            # test_jk = 10 * 100 + 10 * 1000 == 11000
+            assert metrics_list[2].metrics == {'test_jk': 11000}  # 10 * 100 + 10 * 1000
+            # test_jk = 100 * 10 + 100 * 1000 == 101000
+            assert metrics_list[3].metrics == {'test_jk': 101000}  # 100 * 10 + 100 * 1000
+            # test_jk = 1000 * 10 + 10000 * 100 == 110000
+            assert metrics_list[4].metrics == {'test_jk': 110000}  # 1000 * 10 + 10000 * 100

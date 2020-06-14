@@ -147,6 +147,7 @@ class ScoreSubcommand(Subcommand):
     def run(self, args):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
+        import_module_and_submodules('sacrerouge')
         include_packages = args.include_packages or []
         for package in include_packages:
             import_module_and_submodules(package)
