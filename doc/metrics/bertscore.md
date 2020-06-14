@@ -16,7 +16,7 @@ pytest sacrerouge/tests/metrics/bertscore_test.py
 ```
 
 ## Correlations
-Here are the correlations of these metrics as implemented in SacreROUGE to the "overall responsiveness" human judgments on several datasets.
+Here are the correlations of BERTScore as implemented in SacreROUGE to the "overall responsiveness" human judgments on several datasets.
 
 Summary-level, peers only:
 <table>
