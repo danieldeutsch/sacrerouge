@@ -7,6 +7,7 @@ from typing import Dict, List
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import Params
 from sacrerouge.common.logging import prepare_global_logging
+from sacrerouge.common.util import import_module_and_submodules
 from sacrerouge.data import EvalInstance, Metrics
 from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.io import JsonlWriter
@@ -135,11 +136,20 @@ class ScoreSubcommand(Subcommand):
             type=str,
             help='A serialized json that will override the parameters passed in "config"'
         )
+        self.parser.add_argument(
+            '--include-packages',
+            nargs='+',
+            help='A list of additional packages to include'
+        )
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
+
+        include_packages = args.include_packages or []
+        for package in include_packages:
+            import_module_and_submodules(package)
 
         params = Params.from_file(args.config, args.overrides)
         dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
