@@ -1,0 +1,9 @@
+{
+  "dataset_reader": { "type": "reference-based" },
+  "input_files": ["sacrerouge/tests/fixtures/data/numeric/summaries.jsonl"],
+  "metrics": [
+    {
+      "type": "testing"
+    }
+  ]
+}
