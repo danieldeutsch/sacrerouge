@@ -1,8 +1,6 @@
 {
-  "dataset_reader": {
-    "type": "reference-based",
-    "input_jsonl": "sacrerouge/tests/fixtures/data/multiling2011/summaries.jsonl"
-  },
+  "dataset_reader": { "type": "reference-based" },
+  "input_files": ["sacrerouge/tests/fixtures/data/multiling2011/summaries.jsonl"],
   "metrics": [
     {
       "type": "python-rouge"

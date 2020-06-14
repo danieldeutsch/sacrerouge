@@ -155,7 +155,11 @@ class ScoreSubcommand(Subcommand):
         dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
         metrics = _load_metrics(params)
 
-        instances = dataset_reader.read()
+        input_files = params.pop('input_files')
+        if isinstance(input_files, str):
+            input_files = [input_files]
+
+        instances = dataset_reader.read(*input_files)
         metrics_dicts = score_instances(instances, metrics)
 
         # Save the results to the output file

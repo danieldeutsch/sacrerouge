@@ -86,7 +86,11 @@ class EvaluateSubcommand(Subcommand):
         dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
         metrics = load_metrics(params)
 
-        instances = dataset_reader.read()
+        input_files = params.pop('input_files')
+        if isinstance(input_files, str):
+            input_files = [input_files]
+
+        instances = dataset_reader.read(*input_files)
         summaries = [instance.summary.to_input() for instance in instances]
 
         macro = MetricsDict()
