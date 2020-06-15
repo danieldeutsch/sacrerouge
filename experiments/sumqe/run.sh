@@ -1,15 +1,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-input_files=(
-  'datasets/duc-tac/duc2005/v1.0/task1.summaries.jsonl'
-  'datasets/duc-tac/duc2006/v1.0/task1.summaries.jsonl'
-  'datasets/duc-tac/duc2007/v1.0/task1.summaries.jsonl'
-)
-
-metrics_files=(
-  'datasets/duc-tac/duc2005/v1.0/task1.metrics.jsonl'
-  'datasets/duc-tac/duc2006/v1.0/task1.metrics.jsonl'
-  'datasets/duc-tac/duc2007/v1.0/task1.metrics.jsonl'
+datasets=(
+  'duc2005'
+  'duc2006'
+  'duc2007'
 )
 
 model_files=(
@@ -18,27 +12,21 @@ model_files=(
   "${SACREROUGE_DATA_ROOT}/metrics/SumQE/models/multitask_5-duc2005_duc2006.npy"
 )
 
-output_dirs=(
-  'duc2005'
-  'duc2006'
-  'duc2007'
-)
-
-for ((i=0;i<${#input_files[@]};++i)); do
+for ((i=0;i<${#datasets[@]};++i)); do
   MODEL_FILE=${model_files[i]} python -m sacrerouge score \
     ${DIR}/config.jsonnet \
-    ${DIR}/output/${output_dirs[i]}/scores.jsonl \
-    --overrides '{"dataset_reader.input_jsonl": "'${input_files[i]}'"}' \
-    --log-file ${DIR}/output/${output_dirs[i]}/log.log
+    ${DIR}/output/${datasets[i]}/scores.jsonl \
+    --overrides '{"input_files": ["datasets/duc-tac/'"${datasets[i]}"'/v1.0/task1.summaries.jsonl"]}' \
+    --log-file ${DIR}/output/${datasets[i]}/log.log
 
   for q in 'Q1' 'Q2' 'Q3' 'Q4' 'Q5'; do
     for summarizer_type in 'all' 'peer'; do
       python -m sacrerouge correlate \
-        --metrics-jsonl-files ${metrics_files[i]} ${DIR}/output/${output_dirs[i]}/scores.jsonl \
+        --metrics-jsonl-files datasets/duc-tac/${datasets[i]}/v1.0/task1.metrics.jsonl ${DIR}/output/${datasets[i]}/scores.jsonl \
         --metrics linguistic_quality_${q} SumQE_${q} \
         --summarizer-type ${summarizer_type} \
-        --output-file ${DIR}/output/${output_dirs[i]}/correlations/${q}-${summarizer_type}.json \
-        --log-file ${DIR}/output/${output_dirs[i]}/correlations/log.log
+        --output-file ${DIR}/output/${datasets[i]}/correlations/${q}-${summarizer_type}.json \
+        --log-file ${DIR}/output/${datasets[i]}/correlations/log.log
     done
   done
 done
