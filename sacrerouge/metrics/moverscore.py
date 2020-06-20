@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import os
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen
@@ -8,22 +9,23 @@ from typing import List
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
 
-MOVERSCORE_EXISTS = False
+MOVERSCORE_INSTALLED = False
 
 try:
     from moverscore_v2 import get_idf_dict, word_mover_score
 
-    MOVERSCORE_EXISTS = True
+    MOVERSCORE_INSTALLED = True
 
     @Metric.register('moverscore')
     class MoverScore(Metric):
         def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
+            if not os.path.exists(moverscore_root):
+                raise Exception(f'Path "{moverscore_root}" does not exist. Have you setup MoverScore?')
             self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())
 
         def _flatten_summary(self, summary: SummaryType) -> str:
@@ -94,11 +96,8 @@ try:
 
         @overrides
         def score_multi_all(self,
-                            summaries_list: List[List[SummaryField]],
-                            references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-            # Just take the summaries themselves, not the fields
-            summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-            references_list = [field.references for field in references_list]
+                            summaries_list: List[List[SummaryType]],
+                            references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
             return self._run(summaries_list, references_list)
 
 except ImportError:
@@ -106,15 +105,16 @@ except ImportError:
     class MoverScore(Metric):
         @overrides
         def score_multi_all(self,
-                            summaries_list: List[List[SummaryField]],
-                            references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
+                            summaries_list: List[List[SummaryType]],
+                            references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
             raise NotImplementedError('Error: "moverscore" python package is not installed')
 
 
 class MoverScoreSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('moverscore')
+        description = 'Setup the MoverScore metric'
+        self.parser = parser.add_parser('moverscore', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides
@@ -129,6 +129,6 @@ class MoverScoreSetupSubcommand(Subcommand):
         process = Popen(command, shell=True)
         process.communicate()
         if process.returncode == 0:
-            print('MoverScore setup success')
+            print('MoverScore data downloaded. Please install the "moverscore" pip package.')
         else:
             print('MoverScore setup failure')

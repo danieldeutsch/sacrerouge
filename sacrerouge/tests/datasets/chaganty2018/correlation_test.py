@@ -14,7 +14,7 @@ class TestChaganty2018Correlation(unittest.TestCase):
     def test_correlation(self):
         with TemporaryDirectory() as temp_dir:
             command = [
-                'python', '-m', 'sacrerouge.compute_correlation',
+                'python', '-m', 'sacrerouge', 'correlate',
                 '--metrics-jsonl-files', _metrics_file_path,
                 '--metrics', 'chaganty2018_overall', 'chaganty2018_rouge-1_recall',
                 '--summarizer-type', 'peer',
@@ -23,7 +23,6 @@ class TestChaganty2018Correlation(unittest.TestCase):
             ]
             subprocess.run(command, check=True)
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
-            print(correlations)
             # assert correlations['system_level']['spearman']['rho'] == pytest.approx(0.910, 1e-2)
             # assert correlations['system_level']['pearson']['r'] == pytest.approx(0.778, 1e-2)
             # assert correlations['system_level']['num_summarizers'] == 4

@@ -1,4 +1,6 @@
 # SacreROUGE
+![Master](https://github.com/danieldeutsch/sacrerouge/workflows/Master/badge.svg?branch=master&event=push)
+
 SacreROUGE is a library dedicated to summarization evaluation metrics.
 Its two main uses are to evaluate summarization systems and to evaluation the evaluation metrics themselves by calculating their correlations to human judgments.
 

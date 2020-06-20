@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -9,10 +10,11 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('autosummeng')
@@ -33,6 +35,9 @@ class AutoSummENG(Metric):
         self.max_score = max_score
         self.autosummeng_root = autosummeng_root
         self.verbose = verbose
+
+        if not os.path.exists(autosummeng_root):
+            raise Exception(f'AutoSummENG path "{autosummeng_root}" does not exist. Have you setup AutoSummENG?')
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
@@ -87,7 +92,7 @@ class AutoSummENG(Metric):
                     peer_filenames = []
                     for j, summary in enumerate(summaries):
                         filename = f'{temp_dir}/peers/{i}/{j}.txt'
-                        self._save_summary(reference, filename)
+                        self._save_summary(summary, filename)
                         peer_filenames.append(filename)
 
                     out.write(f'{",".join(reference_filenames)}\t{",".join(peer_filenames)}\n')
@@ -107,27 +112,26 @@ class AutoSummENG(Metric):
                 f'cd {self.autosummeng_root}',
                 f'mvn exec:java@NPowERBatch -Dexec.args=\'{args}\''
             ]
+            command = ' && '.join(commands)
 
+            logger.info(f'Running AutoSummENG command: "{command}"')
             redirect = None if self.verbose else PIPE
-            process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+            process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
             stdout, stderr = process.communicate()
 
             return self._parse_output_file(output_file)
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        references_list = [field.references for field in references_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
         return self._run(summaries_list, references_list)
 
 
 class AutoSummENGSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('autosummeng')
+        description = 'Setup the AutoSummENG, MeMoG, and NPowER metrics'
+        self.parser = parser.add_parser('autosummeng', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

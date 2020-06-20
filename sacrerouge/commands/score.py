@@ -1,14 +1,19 @@
 import argparse
+import logging
 from collections import defaultdict
 from overrides import overrides
 from typing import Dict, List
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import Params
+from sacrerouge.common.logging import prepare_global_logging
+from sacrerouge.common.util import import_module_and_submodules
 from sacrerouge.data import EvalInstance, Metrics
 from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.io import JsonlWriter
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 def _load_metrics(params: Params) -> List[Metric]:
@@ -62,8 +67,8 @@ def _score_with_metric(metric: Metric,
                     jackknifing_flags[index].append(True)
 
     # Score the summaries
-    summaries_lists = [[instance.summary for instance in instances] for instances in instances_list]
-    args = [[fields[name] for fields in fields_list] for name in metric.required_fields]
+    summaries_lists = [[instance.summary.to_input() for instance in instances] for instances in instances_list]
+    args = [[fields[name].to_input() for fields in fields_list] for name in metric.required_fields]
     results_lists = metric.score_multi_all(summaries_lists, *args)
 
     # Used to aggregate the jk results
@@ -104,19 +109,57 @@ def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dic
 class ScoreSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('score')
-        self.parser.add_argument('config')
-        self.parser.add_argument('output_jsonl')
-        self.parser.add_argument('--overrides')
+        description = 'Score all of the inputs to evaluate a metric'
+        self.parser = parser.add_parser('score', description=description, help=description)
+        self.parser.add_argument(
+            'config',
+            type=str,
+            help='The config file that specifies the dataset reader and metrics'
+        )
+        self.parser.add_argument(
+            'output_jsonl',
+            type=str,
+            help='The path to where the input-level metrics should be written'
+        )
+        self.parser.add_argument(
+            '--log-file',
+            type=str,
+            help='The file where the log should be written'
+        )
+        self.parser.add_argument(
+            '--silent',
+            action='store_true',
+            help='Controls whether the log should be written to stdout'
+        )
+        self.parser.add_argument(
+            '--overrides',
+            type=str,
+            help='A serialized json that will override the parameters passed in "config"'
+        )
+        self.parser.add_argument(
+            '--include-packages',
+            nargs='+',
+            help='A list of additional packages to include'
+        )
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
+        prepare_global_logging(file_path=args.log_file, silent=args.silent)
+
+        include_packages = args.include_packages or []
+        for package in include_packages:
+            import_module_and_submodules(package)
+
         params = Params.from_file(args.config, args.overrides)
         dataset_reader = DatasetReader.from_params(params.pop('dataset_reader'))
         metrics = _load_metrics(params)
 
-        instances = dataset_reader.read()
+        input_files = params.pop('input_files')
+        if isinstance(input_files, str):
+            input_files = [input_files]
+
+        instances = dataset_reader.read(*input_files)
         metrics_dicts = score_instances(instances, metrics)
 
         # Save the results to the output file

@@ -1,11 +1,12 @@
 import os
 import pytest
-import unittest
 
-from sacrerouge.common.testing import FIXTURES_ROOT, load_references, load_summaries
+from sacrerouge.common.testing import FIXTURES_ROOT
+from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import load_references, load_summaries
 from sacrerouge.metrics import Rouge
 
-_duc2004_file_path = 'datasets/duc-tac/duc2004/task2.jsonl'
+_duc2004_file_path = 'datasets/duc-tac/duc2004/v1.0/task2.jsonl'
 _centroid_file_path = f'{FIXTURES_ROOT}/data/hong2014/centroid.jsonl'
 _classy04_file_path = f'{FIXTURES_ROOT}/data/hong2014/classy04.jsonl'
 _classy11_file_path = f'{FIXTURES_ROOT}/data/hong2014/classy11.jsonl'
@@ -20,8 +21,9 @@ _submodular_file_path = f'{FIXTURES_ROOT}/data/hong2014/submodular.jsonl'
 _ts_sum_file_path = f'{FIXTURES_ROOT}/data/hong2014/ts-sum.jsonl'
 
 
-class TestRouge(unittest.TestCase):
+class TestRouge(ReferenceBasedMetricTestCase):
     @pytest.mark.skipif(not os.path.exists(_duc2004_file_path), reason='DUC 2004 data does not exist')
+    @pytest.mark.skipif(not os.path.exists(_centroid_file_path), reason='Hong 2014 data does not exist')
     def test_hong2014(self):
         """
         Tests to ensure that the Rouge scores for the summaries from Hong et al. 2014
@@ -116,21 +118,70 @@ class TestRouge(unittest.TestCase):
         self.assertAlmostEqual(metrics['rouge-2']['recall'], 8.14, places=2)
         self.assertAlmostEqual(metrics['rouge-4']['recall'], 1.03, places=2)
 
-    def test_multi_all(self):
-        duc2004 = load_references(_duc2004_file_path)
-        centroid = load_summaries(_centroid_file_path)
-        classy04 = load_summaries(_classy04_file_path)
-        classy11 = load_summaries(_classy11_file_path)
+    def test_rouge(self):
+        # This is a regression test, not necessarily a test for correctness
+        metric = Rouge(max_ngram=2, compute_rouge_l=True)
+        expected_output = [
+            {
+                'rouge-1': {'recall': 40.516000000000005, 'precision': 41.699999999999996, 'f1': 41.099000000000004},
+                'rouge-2': {'recall': 10.233, 'precision': 10.533, 'f1': 10.381},
+                'rouge-l': {'recall': 36.258, 'precision': 37.317, 'f1': 36.78}
+            },
+            {
+                'rouge-1': {'recall': 48.258, 'precision': 47.765, 'f1': 48.010000000000005},
+                'rouge-2': {'recall': 19.301, 'precision': 19.103, 'f1': 19.200999999999997},
+                'rouge-l': {'recall': 44.774, 'precision': 44.317, 'f1': 44.544}
+            },
+            {
+                'rouge-1': {'recall': 49.416, 'precision': 48.659, 'f1': 49.035000000000004},
+                'rouge-2': {'recall': 16.406000000000002, 'precision': 16.154, 'f1': 16.279},
+                'rouge-l': {'recall': 45.72, 'precision': 45.019, 'f1': 45.367000000000004}
+            },
+            {
+                'rouge-1': {'recall': 44.466, 'precision': 44.038, 'f1': 44.251000000000005},
+                'rouge-2': {'recall': 11.891, 'precision': 11.776, 'f1': 11.833},
+                'rouge-l': {'recall': 40.971000000000004, 'precision': 40.577000000000005, 'f1': 40.772999999999996}
+            },
+            {
+                'rouge-1': {'recall': 42.403999999999996, 'precision': 41.473, 'f1': 41.933},
+                'rouge-2': {'recall': 10.477, 'precision': 10.245999999999999, 'f1': 10.36},
+                'rouge-l': {'recall': 37.649, 'precision': 36.822, 'f1': 37.230999999999995}
+            },
+            {
+                'rouge-1': {'recall': 43.857, 'precision': 43.061, 'f1': 43.455},
+                'rouge-2': {'recall': 13.395000000000001, 'precision': 13.150999999999998, 'f1': 13.272},
+                'rouge-l': {'recall': 40.555, 'precision': 39.818, 'f1': 40.183}},
+            {
+                'rouge-1': {'recall': 52.39, 'precision': 51.568999999999996, 'f1': 51.976},
+                'rouge-2': {'recall': 20.4, 'precision': 20.079, 'f1': 20.238},
+                'rouge-l': {'recall': 47.211, 'precision': 46.471000000000004, 'f1': 46.838}},
+            {
+                'rouge-1': {'recall': 51.186, 'precision': 51.593999999999994, 'f1': 51.388999999999996},
+                'rouge-2': {'recall': 20.238, 'precision': 20.4, 'f1': 20.319000000000003},
+                'rouge-l': {'recall': 46.64, 'precision': 47.012, 'f1': 46.825}},
+            {
+                'rouge-1': {'recall': 38.635999999999996, 'precision': 52.641000000000005, 'f1': 44.564},
+                'rouge-2': {'recall': 13.691, 'precision': 18.681, 'f1': 15.801000000000002},
+                'rouge-l': {'recall': 35.829, 'precision': 48.815999999999995, 'f1': 41.326}
+            },
+            {
+                'rouge-1': {'recall': 51.73799999999999, 'precision': 51.6, 'f1': 51.669},
+                'rouge-2': {'recall': 23.49, 'precision': 23.427, 'f1': 23.458000000000002},
+                'rouge-l': {'recall': 49.332, 'precision': 49.2, 'f1': 49.266}
+            },
+            {
+                'rouge-1': {'recall': 48.79, 'precision': 48.016, 'f1': 48.4},
+                'rouge-2': {'recall': 21.053, 'precision': 20.717, 'f1': 20.884},
+                'rouge-l': {'recall': 47.782000000000004, 'precision': 47.024, 'f1': 47.4}
+            },
+            {
+                'rouge-1': {'recall': 44.711, 'precision': 45.344, 'f1': 45.025},
+                'rouge-2': {'recall': 15.03, 'precision': 15.244, 'f1': 15.136},
+                'rouge-l': {'recall': 44.112, 'precision': 44.737, 'f1': 44.422}
+            }
+        ]
+        super().assert_expected_output(metric, expected_output)
 
-        rouge = Rouge(max_words=100)
-
-        summaries_list = list(zip(*[centroid, classy04, classy11]))
-        metrics_lists = rouge.score_multi_all(summaries_list, duc2004)
-        metrics_lists = list(zip(*metrics_lists))
-        metrics_list = [rouge.aggregate(metrics_list) for metrics_list in metrics_lists]
-
-        expected_metrics_list = []
-        for dataset in [centroid, classy04, classy11]:
-            expected_metrics_list.append(rouge.aggregate(rouge.score_all(dataset, duc2004)))
-
-        assert metrics_list == expected_metrics_list
+    def test_rouge_order_invariant(self):
+        metric = Rouge(max_words=100)
+        self.assert_order_invariant(metric)

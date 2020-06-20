@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from collections import defaultdict
 from overrides import overrides
@@ -9,10 +10,11 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('bewte')
@@ -84,9 +86,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 1 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step2(self, temp_dir: str) -> None:
@@ -118,9 +122,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@RunPipe -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 2 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step3(self, temp_dir: str) -> None:
@@ -139,9 +145,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@BEXpander -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
+        logger.info(f'Running BEwTE step 3 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        process = Popen(' && '.join(commands), stdout=redirect, stderr=redirect, shell=True)
+        process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
     def _run_step4(self, temp_dir: str) -> None:
@@ -164,8 +172,11 @@ class BEwTE(Metric):
             f'cd {self.bewte_root}',
             f'mvn exec:java@BEwT_E -Dexec.args=\'{args}\''
         ]
+        command = ' && '.join(commands)
 
-        process = Popen(' && '.join(commands), stdout=PIPE, stderr=PIPE, shell=True)
+        logger.info(f'Running BEwTE step 4 command: "{command}"')
+
+        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         stdout, _ = process.communicate()
         return stdout.decode()
 
@@ -223,12 +234,8 @@ class BEwTE(Metric):
         return metrics_lists
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        references_list = [field.references for field in references_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
         with TemporaryDirectory() as temp_dir:
             self._save_summaries(temp_dir, summaries_list, references_list)
 
@@ -251,7 +258,8 @@ class BEwTE(Metric):
 class BEwTESetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('bewte')
+        description = 'Setup the BEwT-E metric'
+        self.parser = parser.add_parser('bewte', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     def _edit_pom(self, file_path: str) -> None:
@@ -306,6 +314,7 @@ class BEwTESetupSubcommand(Subcommand):
         process.communicate()
         if process.returncode != 0:
             print('BEwT-E setup failure')
+            return
 
         self._edit_pom(f'{DATA_ROOT}/metrics/ROUGE-BEwTE/pom.xml')
 

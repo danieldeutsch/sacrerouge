@@ -1,14 +1,21 @@
+import argparse
+import logging
 import os
 from collections import defaultdict
+from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
+from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
+from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('rouge')
@@ -34,6 +41,9 @@ class Rouge(Metric):
         self.wlcs_weight = wlcs_weight
         self.rouge_script_location = f'{rouge_root}/ROUGE-1.5.5.pl'
         self.rouge_eval_home = f'{rouge_root}/data'
+
+        if not os.path.exists(rouge_root):
+            raise Exception(f'Path "{rouge_root}" does not exist. Have you setup ROUGE?')
 
     def _save_summary(self, summary: SummaryType, file_path: str) -> None:
         dirname = os.path.dirname(file_path)
@@ -185,6 +195,7 @@ class Rouge(Metric):
             # is expected in some situations for us (if we just have more summaries
             # to score for some reference sets than others). Therefore, we no longer fail
             # if stderr is not empty.
+            logger.info(f'Running ROUGE command: "{" ".join(command)}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
 
@@ -192,23 +203,44 @@ class Rouge(Metric):
             return macro_metrics_list, micro_metrics_lists
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        references_list = [field.references for field in references_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryField]],
-                 references_list: List[List[ReferencesField]]) -> Tuple[MetricsDict, List[MetricsDict]]:
-        summaries_list = [[field.summary] for field in summaries]
-        references_list = [field.references for field in references_list]
-
+                 summaries: List[SummaryType],
+                 references_list: List[List[ReferenceType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[summary] for summary in summaries]
         macro_metrics_list, micro_metrics_lists = self._run(summaries_list, references_list)
 
         macro_metrics = macro_metrics_list[0]
         micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
         return macro_metrics, micro_metrics_list
+
+
+class RougeSetupSubcommand(Subcommand):
+    @overrides
+    def add_subparser(self, parser: argparse._SubParsersAction):
+        description = 'Setup the ROUGE metric'
+        self.parser = parser.add_parser('rouge', description=description, help=description)
+        self.parser.set_defaults(subfunc=self.run)
+
+    @overrides
+    def run(self, args):
+        print(f'Downloading ROUGE-1.5.5')
+        download_file_from_google_drive('1y0rDnTplQ83b2PQu_TgezbFpGOthP0gG', f'{DATA_ROOT}/metrics/ROUGE-1.5.5.zip')
+
+        commands = [
+            f'cd {DATA_ROOT}/metrics',
+            f'unzip ROUGE-1.5.5.zip',
+            f'rm ROUGE-1.5.5.zip'
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode == 0:
+            print('ROUGE setup success')
+        else:
+            print('ROUGE setup failure')

@@ -1,4 +1,6 @@
 import argparse
+import logging
+import os
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -7,10 +9,11 @@ from typing import List, Dict, Tuple
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.fields import ReferencesField, SummaryField
 from sacrerouge.data.jackknifers import ReferencesJackknifer
-from sacrerouge.data.types import SummaryType
+from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric
+
+logger = logging.getLogger(__name__)
 
 
 @Metric.register('meteor')
@@ -18,6 +21,8 @@ class Meteor(Metric):
     def __init__(self, meteor_root: str = f'{DATA_ROOT}/metrics/METEOR'):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.meteor_root = meteor_root
+        if not os.path.exists(meteor_root):
+            raise Exception(f'Path "{meteor_root}" does not exist. Have you setup METEOR?')
 
     def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
         flattened_list = []
@@ -93,6 +98,7 @@ class Meteor(Metric):
                 '-norm'
             ]
 
+            logger.info(f'Running METEOR command: "{command}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
             if stderr:
@@ -105,21 +111,15 @@ class Meteor(Metric):
             return macro_metrics, micro_metrics_list
 
     def score_multi_all(self,
-                        summaries_list: List[List[SummaryField]],
-                        references_list: List[List[ReferencesField]]) -> List[List[MetricsDict]]:
-        # Just take the summaries themselves, not the fields
-        summaries_list = [[field.summary for field in fields] for fields in summaries_list]
-        references_list = [field.references for field in references_list]
-
+                        summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
         _, micro_metrics_lists = self._run(summaries_list, references_list)
         return micro_metrics_lists
 
     def evaluate(self,
-                 summaries: List[List[SummaryField]],
-                 references_list: List[List[ReferencesField]]) -> Tuple[MetricsDict, List[MetricsDict]]:
-        summaries_list = [[field.summary] for field in summaries]
-        references_list = [field.references for field in references_list]
-
+                 summaries: List[SummaryType],
+                 references_list: List[List[ReferenceType]]) -> Tuple[MetricsDict, List[MetricsDict]]:
+        summaries_list = [[summary] for summary in summaries]
         macro_metrics, micro_metrics_lists = self._run(summaries_list, references_list)
         micro_metrics_list = [metrics_list[0] for metrics_list in micro_metrics_lists]
         return macro_metrics, micro_metrics_list
@@ -128,7 +128,8 @@ class Meteor(Metric):
 class MeteorSetupSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser('meteor')
+        description = 'Setup the METEOR metric'
+        self.parser = parser.add_parser('meteor', description=description, help=description)
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides

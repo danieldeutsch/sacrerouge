@@ -1,10 +1,14 @@
 import argparse
+import re
 import tarfile
 from collections import defaultdict
 from nltk.tokenize import sent_tokenize
+from typing import List
 
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
+
+PARAGRAPH_SEP_REGEX = re.compile('\r?\n')
 
 
 def parse_filename(filename: str):
@@ -14,6 +18,18 @@ def parse_filename(filename: str):
     group = parts[0].split('-')[1]
     summarizer_id = parts[4]
     return instance_id, group, summarizer_id
+
+
+def _sent_tokenize(text: str) -> List[str]:
+    # Some of the summary files have newlines to separate sentences, others don't.
+    # When newlines are present, they are meaningful, so we sentence tokenize within \n-separated text
+    sentences = []
+    for paragraph in PARAGRAPH_SEP_REGEX.split(text):
+        paragraph = paragraph.strip()
+        if paragraph:
+            for sentence in sent_tokenize(paragraph):
+                sentences.append(sentence)
+    return sentences
 
 
 def load_summaries(eval_tar: str):
@@ -31,7 +47,7 @@ def load_summaries(eval_tar: str):
                     summarizer_type = 'peer'
 
                 text = tar.extractfile(member).read().decode(errors='replace').strip()
-                sentences = sent_tokenize(text)
+                sentences = _sent_tokenize(text)
                 summary = {
                     'summarizer_id': summarizer_id,
                     'summarizer_type': summarizer_type,

@@ -5,5 +5,5 @@ from sacrerouge.data import EvalInstance
 
 
 class DatasetReader(Registrable):
-    def read(self) -> List[EvalInstance]:
+    def read(self, *args: List[str]) -> List[EvalInstance]:
         raise NotImplementedError

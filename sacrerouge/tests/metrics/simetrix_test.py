@@ -5,7 +5,6 @@ import unittest
 
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.common.testing import FIXTURES_ROOT
-from sacrerouge.data.fields import DocumentsField, SummaryField
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import SIMetrix
 
@@ -31,14 +30,14 @@ class TestSIMetrix(unittest.TestCase):
 
             # Take the documents from the first instance
             first = group[0]
-            documents_lists.append(DocumentsField(first['documents']))
+            documents_lists.append(first['documents'])
 
             # Add the summaries
             summaries_list = []
             for j, instance in enumerate(group):
                 summarizer_id = instance['summarizer_id']
                 summarizer_id_to_index[summarizer_id] = j
-                summaries_list.append(SummaryField(instance['summary']))
+                summaries_list.append(instance['summary'])
             summaries_lists.append(summaries_list)
 
         return summaries_lists, documents_lists, instance_id_to_index, summarizer_id_to_index
@@ -73,8 +72,8 @@ class TestSIMetrix(unittest.TestCase):
         instances.sort(key=lambda instance: instance['summarizer_id'])
         for summarizer_id, group in itertools.groupby(instances, key=lambda instance: instance['summarizer_id']):
             group = list(group)
-            summaries = [SummaryField(member['summary']) for member in group]
-            documents_list = [DocumentsField(member['documents']) for member in group]
+            summaries = [member['summary'] for member in group]
+            documents_list = [member['documents'] for member in group]
             actual_metrics, _ = simetrix.evaluate(summaries, documents_list)
             expected_metrics = summarizer_id_to_metrics[summarizer_id]['metrics']
 

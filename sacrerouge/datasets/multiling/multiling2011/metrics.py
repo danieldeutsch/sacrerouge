@@ -2,6 +2,7 @@ import os
 import zipfile
 from collections import defaultdict
 from io import BytesIO
+from nltk import sent_tokenize
 from typing import Any, Dict
 
 from sacrerouge.data import Metrics, MetricsDict
@@ -46,6 +47,10 @@ def load_reference_summaries(data_path: str,
                         if line:
                             clean_lines.append(line)
                     text = ' '.join(clean_lines)
+                    # Sentence tokenize English only
+                    if language == 'english':
+                        text = sent_tokenize(text)
+
                     summary = {
                         'summarizer_id': summarizer_id,
                         'summarizer_type': 'reference',
@@ -69,6 +74,13 @@ def load_peer_summaries(data_path: str,
 
                     # Lines are roughly sentences (not always), so we keep them intact
                     lines = summaries_zip.read(name).decode().splitlines()
+                    clean_lines = []
+                    for line in lines:
+                        line = line.strip()
+                        if line:
+                            clean_lines.append(line)
+                    lines = clean_lines
+
                     summary = {
                         'summarizer_id': summarizer_id,
                         'summarizer_type': 'peer',

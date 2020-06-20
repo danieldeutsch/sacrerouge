@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from sacrerouge.data import EvalInstance
@@ -5,16 +6,15 @@ from sacrerouge.data.dataset_readers import DatasetReader
 from sacrerouge.data.fields import DocumentsField, Fields, SummaryField
 from sacrerouge.io import JsonlReader
 
+logger = logging.getLogger(__name__)
+
 
 @DatasetReader.register('document-based')
 class DocumentBasedDatasetReader(DatasetReader):
-    def __init__(self, input_jsonl: str) -> None:
-        super().__init__()
-        self.input_jsonl = input_jsonl
-
-    def read(self) -> List[EvalInstance]:
+    def read(self, input_jsonl: str) -> List[EvalInstance]:
+        logger.info(f'Loading evaluation instances from {input_jsonl}')
         instances = []
-        with JsonlReader(self.input_jsonl) as f:
+        with JsonlReader(input_jsonl) as f:
             for data in f:
                 summary = SummaryField(data['summary']['text'])
 
@@ -32,4 +32,6 @@ class DocumentBasedDatasetReader(DatasetReader):
                     fields
                 )
                 instances.append(instance)
+
+            logger.info(f'Loaded {len(instances)} instances')
             return instances
