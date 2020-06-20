@@ -9,7 +9,7 @@ _sds_dir = 'datasets/multiling/multiling2013/sds'
 
 
 @pytest.mark.skipif(not os.path.exists(_sds_dir), reason='MultiLing 2013 SDS data does not exist')
-class TestMultiLing2011Metrics(unittest.TestCase):
+class TestMultiLing2013SDS(unittest.TestCase):
     def test_sanity_checks(self):
         file_paths = glob(f'{_sds_dir}/*.jsonl')
         assert len(file_paths) == 40  # 40 languages
