@@ -3,7 +3,7 @@ import jsons
 import logging
 import os
 from overrides import overrides
-from typing import List
+from typing import List, Tuple
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import Params
@@ -30,6 +30,29 @@ def get_initial_micro_list(instances: List[EvalInstance]) -> List[Metrics]:
     for instance in instances:
         micro_list.append(Metrics(instance.instance_id, instance.summarizer_id, instance.summarizer_type))
     return micro_list
+
+
+def evaluate_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Tuple[MetricsDict, List[Metrics]]:
+    summaries = [instance.summary.to_input() for instance in instances]
+
+    macro = MetricsDict()
+    micro_list = get_initial_micro_list(instances)
+
+    for metric in metrics:
+        # Prepare the extra input arguments
+        eval_args = []
+        for field in metric.required_fields:
+            eval_args.append([instance.fields[field].to_input() for instance in instances])
+
+        # Score all the summaries
+        this_macro, this_micro_list = metric.evaluate(summaries, *eval_args)
+
+        # Update the global metrics dictionaries
+        macro.update(this_macro)
+        for micro, this_micro in zip(micro_list, this_micro_list):
+            micro.metrics.update(this_micro)
+
+    return macro, micro_list
 
 
 class EvaluateSubcommand(Subcommand):
@@ -78,6 +101,7 @@ class EvaluateSubcommand(Subcommand):
     def run(self, args):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
+        import_module_and_submodules('sacrerouge')
         include_packages = args.include_packages or []
         for package in include_packages:
             import_module_and_submodules(package)
@@ -91,24 +115,7 @@ class EvaluateSubcommand(Subcommand):
             input_files = [input_files]
 
         instances = dataset_reader.read(*input_files)
-        summaries = [instance.summary.to_input() for instance in instances]
-
-        macro = MetricsDict()
-        micro_list = get_initial_micro_list(instances)
-
-        for metric in metrics:
-            # Prepare the extra input arguments
-            eval_args = []
-            for field in metric.required_fields:
-                eval_args.append([instance.fields[field].to_input() for instance in instances])
-
-            # Score all the summaries
-            this_macro, this_micro_list = metric.evaluate(summaries, *eval_args)
-
-            # Update the global metrics dictionaries
-            macro.update(this_macro)
-            for micro, this_micro in zip(micro_list, this_micro_list):
-                micro.metrics.update(this_micro)
+        macro, micro_list = evaluate_instances(instances, metrics)
 
         dirname = os.path.dirname(args.macro_output_json)
         if dirname:

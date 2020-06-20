@@ -5,7 +5,7 @@
   "metrics": [
     {
       "type": "sum-qe",
-      "environment_name": "/shared/ddeutsch/envs/SumQE2",
+      "python_binary": std.extVar("SUMQE_PYTHON_BINARY"),
       "model_file": std.extVar("MODEL_FILE"),
       "verbose": true
     }
