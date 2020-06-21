@@ -1,8 +1,9 @@
 # SacreROUGE
 ![Master](https://github.com/danieldeutsch/sacrerouge/workflows/Master/badge.svg?branch=master&event=push)
 
-SacreROUGE is a library dedicated to summarization evaluation metrics.
-Its two main uses are to evaluate summarization systems and to evaluation the evaluation metrics themselves by calculating their correlations to human judgments.
+SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
+It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
+The inspiration for the library came from [SacreBLEU](https://github.com/mjpost/sacreBLEU), a library with a standardized implementation of BLEU and dataset readers for common machine translation datasets.
 
 The development of SacreROUGE was motivated by three problems: 
 
@@ -16,8 +17,14 @@ SacreROUGE wraps many popular evaluation metrics in a common interface so it is 
 There are there are several different correlation coefficients commonly used, there are different levels at which the correlation can be calculated, and comparing system summaries to human summaries requires implementing jackknifing.
 The evaluation code in SacreROUGE is shared among all of the metrics, so once a new metric implements the common interface, all of the details of the evaluation are taken care of for free.
 
+The two main uses of SacreROUGE are to evaluate summarization systems and to evaluation the evaluation metrics themselves by calculating their correlations to human judgments.
+
 ## Installing
-`pip install sacrerouge`
+The easiest method of using SacreROUGE is to install the [pypi library](https://pypi.org/project/sacrerouge/) via:
+```
+pip install sacrerouge
+```
+This will add a new `sacrerouge` bash command to your path, which serves as the primary interface for the library.
 
 ## Evaluating Summarization Systems
 The `sacrerouge evaluate` command is typically used when you want to evaluate a summarization model on a particular dataset using one or more evaluation metrics.
