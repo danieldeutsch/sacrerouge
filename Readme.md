@@ -85,9 +85,9 @@ def score_all(summaries: List[SummaryType],
 
 - `score_multi`: Scores a list of summaries which share common references and input document:
 ```python
-def score_all(summaries: List[SummaryType],
-              references: List[ReferenceType],
-              document: DocumentType) -> List[MetricsDict]
+def score_multi(summaries: List[SummaryType],
+                references: List[ReferenceType],
+                document: DocumentType) -> List[MetricsDict]
 ```
 
 - `score_multi_all`: Scores a list of list summaries, where each inner list shares common references and input documents: 
