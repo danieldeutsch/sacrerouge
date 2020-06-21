@@ -1,6 +1,7 @@
 # BERTScore
 BERTScore [1] is a reference-based evaluation metric based on calculating the similarity of two summaries' BERT embeddings.
 Our implementation calls the `score` function from [our fork](https://github.com/danieldeutsch/bert_score) of the [original repository](https://github.com/Tiiiger/bert_score), which we modified to expose creating the IDF dictionaries.
+The name for this metric is `bertscore`.
 
 ## Setting Up
 BERTScore can be installed via pip:
