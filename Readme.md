@@ -222,6 +222,8 @@ class MyMetric(Metric):
         return output_metrics
 ```
 The required input fields, which are passed to the super constructor, will be passed to the scoring methods in the same order as they appear in the list.
+The names correspond the keys in the `fields` data member of the `EvalInstance` class, which are populated via the dataset reader.
+
 The jackknifer is responsible for taking the input fields and returning a new list of fields for evaluation.
 The average metric's value across this new list will be equal to the jackknifed score (see `sacrerouge.data.jackknifers`)
 
