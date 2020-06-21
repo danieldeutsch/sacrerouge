@@ -1,6 +1,6 @@
 import argparse
 
-from sacrerouge.commands import correlate, evaluate, score, setup_dataset, setup_metric
+from sacrerouge.commands import correlate, evaluate, metric_command, score, setup_dataset, setup_metric
 
 
 def main():
@@ -16,6 +16,9 @@ def main():
     ]
     for subcommand in subcommands:
         subcommand.add_subparser(subparsers)
+
+    # Add a command for each individual metric
+    metric_command.add_metric_subcommands(subparsers)
 
     args = parser.parse_args()
     if 'func' in dir(args):

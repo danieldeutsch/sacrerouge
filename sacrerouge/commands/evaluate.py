@@ -55,46 +55,72 @@ def evaluate_instances(instances: List[EvalInstance], metrics: List[Metric]) -> 
     return macro, micro_list
 
 
+def save_evaluation_results(macro_results: MetricsDict,
+                            micro_results_list: List[Metrics],
+                            macro_output_json: str,
+                            micro_output_jsonl: str,
+                            silent: bool) -> None:
+    dirname = os.path.dirname(macro_output_json)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+
+    serialized_macro = jsons.dumps({'metrics': macro_results}, jdkwargs={'indent': 2})
+    with open(macro_output_json, 'w') as out:
+        out.write(serialized_macro)
+    if not silent:
+        logger.info(serialized_macro)
+
+    with JsonlWriter(micro_output_jsonl) as out:
+        for metrics_dict in micro_results_list:
+            out.write(metrics_dict)
+
+
+def add_evaluate_arguments(parser: argparse.ArgumentParser, include_config_arguments: bool) -> None:
+    if include_config_arguments:
+        parser.add_argument(
+            'config',
+            type=str,
+            help='The config file that specifies the dataset reader and metrics'
+        )
+        parser.add_argument(
+            '--overrides',
+            type=str,
+            help='A serialized json that will override the parameters passed in "config"'
+        )
+
+    parser.add_argument(
+        'macro_output_json',
+        type=str,
+        help='The path to where the system-level metrics should be written'
+    )
+    parser.add_argument(
+        'micro_output_jsonl',
+        type=str,
+        help='The path to where the input-level metrics should be written'
+    )
+    parser.add_argument(
+        '--log-file',
+        type=str,
+        help='The file where the log should be written'
+    )
+    parser.add_argument(
+        '--silent',
+        action='store_true',
+        help='Controls whether the log should be written to stdout'
+    )
+    parser.add_argument(
+        '--include-packages',
+        nargs='+',
+        help='A list of additional packages to include'
+    )
+
+
 class EvaluateSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Evaluate a summarization model'
         self.parser = parser.add_parser('evaluate', description=description, help=description)
-        self.parser.add_argument(
-            'config',
-            type=str,
-            help='The config file that specifies the dataset reader and metrics'
-        )
-        self.parser.add_argument(
-            'macro_output_json',
-            type=str,
-            help='The path to where the system-level metrics should be written'
-        )
-        self.parser.add_argument(
-            'micro_output_jsonl',
-            type=str,
-            help='The path to where the input-level metrics should be written'
-        )
-        self.parser.add_argument(
-            '--log-file',
-            type=str,
-            help='The file where the log should be written'
-        )
-        self.parser.add_argument(
-            '--silent',
-            action='store_true',
-            help='Controls whether the log should be written to stdout'
-        )
-        self.parser.add_argument(
-            '--overrides',
-            type=str,
-            help='A serialized json that will override the parameters passed in "config"'
-        )
-        self.parser.add_argument(
-            '--include-packages',
-            nargs='+',
-            help='A list of additional packages to include'
-        )
+        add_evaluate_arguments(self.parser, True)
         self.parser.set_defaults(func=self.run)
 
     @overrides
@@ -117,16 +143,4 @@ class EvaluateSubcommand(Subcommand):
         instances = dataset_reader.read(*input_files)
         macro, micro_list = evaluate_instances(instances, metrics)
 
-        dirname = os.path.dirname(args.macro_output_json)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-
-        serialized_macro = jsons.dumps({'metrics': macro}, jdkwargs={'indent': 2})
-        with open(args.macro_output_json, 'w') as out:
-            out.write(serialized_macro)
-        if not args.silent:
-            logger.info(serialized_macro)
-
-        with JsonlWriter(args.micro_output_jsonl) as out:
-            for metrics_dict in micro_list:
-                out.write(metrics_dict)
+        save_evaluation_results(macro, micro_list, args.macro_output_json, args.micro_output_jsonl, args.silent)
