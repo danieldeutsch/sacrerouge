@@ -41,16 +41,19 @@ class MetricSubcommand(Subcommand):
 
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
-        self.parser = parser.add_parser(self.name)
+        description = f'Run "evaluate" or "score" with the "{self.name}" metric.'
+        self.parser = parser.add_parser(self.name, description=description, help=description)
         subparsers = self.parser.add_subparsers()
 
-        self.evaluate_parser = subparsers.add_parser('evaluate')
+        description = f'Run "evaluate" with the "{self.name}" metric.'
+        self.evaluate_parser = subparsers.add_parser('evaluate', description=description, help=description)
         add_evaluate_arguments(self.evaluate_parser, False)
         add_metric_arguments(self.evaluate_parser, self.metric_type)
         add_dataset_reader_arguments(self.evaluate_parser)
         self.evaluate_parser.set_defaults(func=self.run_evaluate)
 
-        self.score_parser = subparsers.add_parser('score')
+        description = f'Run "score" with the "{self.name}" metric.'
+        self.score_parser = subparsers.add_parser('score', description=description, help=description)
         add_score_arguments(self.score_parser, False)
         add_metric_arguments(self.score_parser, self.metric_type)
         add_dataset_reader_arguments(self.score_parser)
