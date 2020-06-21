@@ -4,7 +4,8 @@ from typing import Type
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.commands.evaluate import add_evaluate_arguments, evaluate_instances, save_evaluation_results
-from sacrerouge.common import Params, Registrable
+from sacrerouge.commands.score import add_score_arguments, save_score_results, score_instances
+from sacrerouge.common import Registrable
 from sacrerouge.common.arguments import add_metric_arguments, get_dataset_reader_from_argument, get_metric_from_arguments
 from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.metrics import Metric
@@ -49,7 +50,13 @@ class MetricSubcommand(Subcommand):
         add_dataset_reader_arguments(self.evaluate_parser)
         self.evaluate_parser.set_defaults(func=self.run_evaluate)
 
-    def run_evaluate(self, args):
+        self.score_parser = subparsers.add_parser('score')
+        add_score_arguments(self.score_parser, False)
+        add_metric_arguments(self.score_parser, self.metric_type)
+        add_dataset_reader_arguments(self.score_parser)
+        self.score_parser.set_defaults(func=self.run_score)
+
+    def run_evaluate(self, args: argparse.Namespace) -> None:
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
         dataset_reader = get_dataset_reader_from_argument(args.dataset_reader)
@@ -60,3 +67,15 @@ class MetricSubcommand(Subcommand):
         macro, micro_list = evaluate_instances(instances, [metric])
 
         save_evaluation_results(macro, micro_list, args.macro_output_json, args.micro_output_jsonl, args.silent)
+
+    def run_score(self, args: argparse.Namespace) -> None:
+        prepare_global_logging(file_path=args.log_file, silent=args.silent)
+
+        dataset_reader = get_dataset_reader_from_argument(args.dataset_reader)
+        metric = get_metric_from_arguments(self.metric_type, args)
+        input_files = args.input_files
+
+        instances = dataset_reader.read(*input_files)
+        metrics_dicts = score_instances(instances, [metric])
+
+        save_score_results(metrics_dicts, args.output_jsonl, args.silent)
