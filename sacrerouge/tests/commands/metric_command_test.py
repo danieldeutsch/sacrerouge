@@ -119,7 +119,7 @@ class TestMetricCommand(unittest.TestCase):
                 'python', '-m', 'sacrerouge', 'python-rouge', 'evaluate',
                 macro_file, micro_file,
                 '--dataset-reader', 'reference-based',
-                '--input-files', 'sacrerouge/tests/fixtures/data/multiling2011/summaries.jsonl',
+                '--input-files', MULTILING_SUMMARIES,
                 '--silent'
             ]
 
@@ -146,7 +146,7 @@ class TestMetricCommand(unittest.TestCase):
                 '--remove_stopwords', 'true',
                 '--compute_rouge_l', 'true',
                 '--dataset-reader', 'reference-based',
-                '--input-files', 'sacrerouge/tests/fixtures/data/multiling2011/summaries.jsonl',
+                '--input-files', MULTILING_SUMMARIES,
                 '--silent'
             ]
 
