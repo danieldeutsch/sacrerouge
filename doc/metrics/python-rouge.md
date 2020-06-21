@@ -6,6 +6,8 @@ The Python version is significantly faster.
 The Python version currently supports ROUGE-N and ROUGE-L.
 Although, it is near-identical to the Perl version, it should only be used for development and not official evaluation, for which you should use the original [ROUGE](rouge.md).
 
+The name for this metric is `python-rouge`.
+
 ## Setting Up
 This metric only requires that ROUGE has been set up (see [here](rouge.md)).
 

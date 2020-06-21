@@ -1,6 +1,7 @@
 # ROUGE
 ROUGE [1] is a reference-based evaluation based on n-gram overlaps between a summary and its reference.
 Our implementation wraps the original Perl code.
+The name for this metric is `rouge`.
 
 ## Setting Up
 To set up ROUGE, run the following:

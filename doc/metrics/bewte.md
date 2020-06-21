@@ -2,6 +2,7 @@
 BEwT-E [1] is an extension of the Basic Elements [2].
 These metrics compare a summary and reference based on matches between heads of syntactic phrases and dependency tree-based relations.
 Our implementation wraps a [mavenized fork](https://github.com/igorbrigadir/ROUGE-BEwTE) of the original code.
+The name for this metric is `bewte`.
 
 ## Setting Up
 Running BEwT-E requires having Git LFS, Java 1.6, and Maven installed.

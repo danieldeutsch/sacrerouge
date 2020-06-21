@@ -7,6 +7,8 @@ We additionally followed the steps in the repository to retrain their multi-task
 - [Model trained on DUC 2005 and 2007](https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/SumQE/models/multitask_5-duc2005_duc2007.npy)
 - [Model trained on DUC 2006 and 2007](https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/SumQE/models/multitask_5-duc2006_duc2007.npy)
 
+The name for this metric is `sum-qe`.
+
 ## Setting Up
 Sum-QE has many Python dependencies.
 We recommend referencing the repository's instructions for creating the conda environment.

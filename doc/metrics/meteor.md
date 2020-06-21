@@ -1,6 +1,7 @@
 # METEOR
 METEOR [1] is a reference-based metric that scores a summary based on an alignment to the reference.
 Our implementation wraps the released Java library.
+The name for this metric is `meteor`.
 
 ## Setting Up
 METEOR requires Java (not sure which version) to run.

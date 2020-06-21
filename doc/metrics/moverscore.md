@@ -1,6 +1,7 @@
 # MoverScore
 MoverScore [1] is a reference-based evaluation metric using an Earth Mover's Distance between a summary and its reference that uses contextual word representations.
 Our implementation uses the `moverscore` [pip package](https://github.com/AIPHES/emnlp19-moverscore).
+The name for this metric is `moverscore`.
 
 ## Setting Up
 To set up MoverScore, pip install the package:

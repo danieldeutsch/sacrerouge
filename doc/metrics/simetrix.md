@@ -1,6 +1,7 @@
 # SIMetrix
 SIMetrix [1, 2, 3] is a reference-free evaluation metric that compares a summary to the input documents.
 Our implementation wraps [this fork](https://github.com/igorbrigadir/simetrix) of the original code.
+The name for this metric is `simetrix`.
 
 ## Setting Up
 Running SIMetrix requires Java 1.7 and Maven to be installed.
