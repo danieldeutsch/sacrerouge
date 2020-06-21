@@ -62,7 +62,7 @@ class TestEvaluate(unittest.TestCase):
         }
 
     def test_evaluate(self):
-        # This is a regresion test and does not ensure correctness
+        # This is a regression test and does not ensure correctness
         with TemporaryDirectory() as temp_dir:
             macro_file = f'{temp_dir}/macro.json'
             micro_file = f'{temp_dir}/micro.jsonl'
