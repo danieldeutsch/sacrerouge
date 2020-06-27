@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Dict, List
 
 from sacrerouge.io import JsonlWriter
-from sacrerouge.datasets.multiling.multiling2011.util import LANGUAGE_CODES
+from sacrerouge.datasets.multiling.util import LANGUAGE_CODES
 
 
 def load_documents(data_path: str) -> Dict[str, Dict[str, List]]:
