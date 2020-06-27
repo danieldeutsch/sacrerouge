@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.multiling.multiling2013 import mds, sds
+from sacrerouge.datasets.multiling.multiling2013 import mds, mds_metrics, sds
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import download_file_from_google_drive
 
@@ -26,6 +26,16 @@ class MultiLing2013Subcommand(Subcommand):
             type=str,
             help='The path to "ModelSummaries- 20130605.zip"'
         )
+        self.parser.add_argument(
+            '--mds-peer-summaries-zip',
+            type=str,
+            help='The path to "PeerSummaries - 20130601.zip"'
+        )
+        self.parser.add_argument(
+            '--metrics-zip',
+            type=str,
+            help='The path to "MultiDocument-ManualGrades-20130717.zip"'
+        )
         self.parser.set_defaults(subfunc=self.run)
 
     def _notify_about_license(self):
@@ -49,7 +59,12 @@ class MultiLing2013Subcommand(Subcommand):
         sds.setup(tar_path, f'{args.output_dir}/sds')
 
         # MDS data is password protected, so the user must provide the data
-        if args.mds_documents_zip is None or args.mds_model_summaries_zip is None:
-            print('Skipping setting up MDS task because either documenxts or model summaries zip not provided')
+        if not all([args.mds_documents_zip, args.mds_model_summaries_zip]):
+            print('Skipping setting up MDS task because either documents or model summaries zip not provided')
         else:
             mds.setup(args.mds_documents_zip, args.mds_model_summaries_zip, f'{args.output_dir}/mds')
+
+        if not all([args.mds_model_summaries_zip, args.mds_peer_summaries_zip, args.metrics_zip]):
+            print('Skipping setting up MDS metrics because either model/peer summaries or metrics zips not provided')
+        else:
+            mds_metrics.setup(args.mds_model_summaries_zip, args.mds_peer_summaries_zip, args.metrics_zip, f'{args.output_dir}/mds')
