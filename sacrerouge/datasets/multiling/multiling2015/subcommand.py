@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.multiling.multiling2015 import sds
+from sacrerouge.datasets.multiling.multiling2015 import sds, sds_metrics
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import download_file_from_google_drive
 
@@ -36,5 +36,9 @@ class MultiLing2015Subcommand(Subcommand):
         # http://multiling.iit.demokritos.gr/pages/view/1532/task-mss-single-document-summarization-data-and-information
         tar_path = f'{args.output_dir}/multilingMss2015Eval.tar.gz'
         download_file_from_google_drive('0B31rakzMfTMZa0ZIcmgzREstcVE', tar_path)
-
         sds.setup(tar_path, f'{args.output_dir}/sds')
+
+        # The SDS metrics file was provided by John Conroy
+        eval_tar_path = f'{args.output_dir}/Evaluation_MultiLing2015_MSS.tgz'
+        download_file_from_google_drive('1j_jV9JAc0t_EulCUMH7Y-dQSpqD9BpFd', eval_tar_path)
+        sds_metrics.setup(eval_tar_path, f'{args.output_dir}/sds')
