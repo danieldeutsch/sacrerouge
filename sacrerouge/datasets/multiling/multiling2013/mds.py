@@ -2,7 +2,7 @@ import zipfile
 from collections import defaultdict
 
 from sacrerouge.io import JsonlWriter
-from sacrerouge.datasets.multiling.multiling2013.util import LANGUAGE_CODES
+from sacrerouge.datasets.multiling.util import LANGUAGE_CODES
 
 
 def load_documents(documents_zip: str):

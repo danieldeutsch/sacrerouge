@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
-from sacrerouge.datasets.multiling.multiling2013.util import LANGUAGE_CODES
+from sacrerouge.datasets.multiling.util import LANGUAGE_CODES
 
 
 def load_model_summaries(summaries_zip: str):
