@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.multiling.multiling2017 import sds
+from sacrerouge.datasets.multiling.multiling2017 import sds, sds_metrics
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import download_file_from_google_drive
 
@@ -39,3 +39,4 @@ class MultiLing2017Subcommand(Subcommand):
         download_file_from_google_drive('1pK7Df5gum5mwC0zYie5mCjqDdqLLmM1j', eval_path)
 
         sds.setup(data_path, eval_path, f'{args.output_dir}/sds')
+        sds_metrics.setup(eval_path, f'{args.output_dir}/sds')

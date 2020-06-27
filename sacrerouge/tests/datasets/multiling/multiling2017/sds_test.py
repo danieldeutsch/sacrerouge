@@ -21,3 +21,12 @@ class TestMultiLing2017SDS(unittest.TestCase):
             for instance in instances:
                 assert len(instance['document']) > 0
                 assert len(instance['summary']) > 0
+
+    def test_peer_summaries(self):
+        # Run sanity checks on the peer summaries
+        for file_path in glob(f'{_sds_dir}/??.summaries.jsonl'):
+            instances = JsonlReader(file_path).read()
+            for instance in instances:
+                assert len(instance['summary']['text']) > 0
+                for reference in instance['references']:
+                    assert len(reference['text']) > 0
