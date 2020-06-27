@@ -1,7 +1,7 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.datasets.multiling.multiling2015 import sds, sds_metrics
+from sacrerouge.datasets.multiling.multiling2015 import mds, sds, sds_metrics
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.util import download_file_from_google_drive
 
@@ -15,6 +15,16 @@ class MultiLing2015Subcommand(Subcommand):
             'output_dir',
             type=str,
             help='The directory where the data should be saved'
+        )
+        self.parser.add_argument(
+            '--train-zip',
+            type=str,
+            help='The path to the "TrainingData2015-20150314.zip" file'
+        )
+        self.parser.add_argument(
+            '--test-zip',
+            type=str,
+            help='The path to the "SourceTextsV2b-20150214.zip" file'
         )
         self.parser.set_defaults(subfunc=self.run)
 
@@ -42,3 +52,9 @@ class MultiLing2015Subcommand(Subcommand):
         eval_tar_path = f'{args.output_dir}/Evaluation_MultiLing2015_MSS.tgz'
         download_file_from_google_drive('1j_jV9JAc0t_EulCUMH7Y-dQSpqD9BpFd', eval_tar_path)
         sds_metrics.setup(eval_tar_path, f'{args.output_dir}/sds')
+
+        # The MDS data is password protected, so the user must provide the zips
+        if not all([args.train_zip, args.test_zip]):
+            print('Skipping setting up MDS data because either the training or testing zip is missing')
+        else:
+            mds.setup(args.train_zip, args.test_zip, f'{args.output_dir}/mds')
