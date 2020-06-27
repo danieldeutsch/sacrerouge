@@ -1,7 +1,7 @@
 # MultiLing 2015
 [Homepage](http://multiling.iit.demokritos.gr/pages/view/1516/multiling-2015)
 
-For MultiLing 2015, we provide dataset readers for the SDS task and the peer SDS summaries:
+For MultiLing 2015, we provide dataset readers for the SDS task, peer SDS summaries, and MDS task:
 ```bash
 sacrerouge setup-dataset multiling2015 \
     <output-dir> \
