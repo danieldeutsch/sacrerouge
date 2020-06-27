@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlWriter
-from sacrerouge.datasets.multiling.multiling2011.util import LANGUAGE_CODES
+from sacrerouge.datasets.multiling.util import LANGUAGE_CODES
 
 
 FILE_ID_TO_INSTANCE_ID = {

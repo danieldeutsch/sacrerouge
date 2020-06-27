@@ -2,7 +2,7 @@ import zipfile
 from collections import defaultdict
 
 from sacrerouge.io import JsonlWriter
-from sacrerouge.datasets.multiling.multiling2015.util import LANGUAGE_CODES
+from sacrerouge.datasets.multiling.util import LANGUAGE_CODES
 
 
 def load_training_data(train_zip: str):
