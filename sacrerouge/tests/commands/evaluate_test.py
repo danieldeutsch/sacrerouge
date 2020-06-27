@@ -9,6 +9,7 @@ from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
 _config_file_path = f'{FIXTURES_ROOT}/configs/evaluate.json'
+_numeric_config_file_path = f'{FIXTURES_ROOT}/configs/evaluate-numeric.json'
 
 
 class TestEvaluate(unittest.TestCase):
@@ -61,7 +62,7 @@ class TestEvaluate(unittest.TestCase):
         }
 
     def test_evaluate(self):
-        # This is a regresion test and does not ensure correctness
+        # This is a regression test and does not ensure correctness
         with TemporaryDirectory() as temp_dir:
             macro_file = f'{temp_dir}/macro.json'
             micro_file = f'{temp_dir}/micro.jsonl'
@@ -81,3 +82,48 @@ class TestEvaluate(unittest.TestCase):
 
             self._check_macro(macro_metrics)
             self._check_micro_list(micro_metrics_list)
+
+    def test_numeric_metric(self):
+        with TemporaryDirectory() as temp_dir:
+            macro_file = f'{temp_dir}/macro.json'
+            micro_file = f'{temp_dir}/micro.jsonl'
+            command = [
+                'python', '-m', 'sacrerouge', 'evaluate',
+                _numeric_config_file_path,
+                macro_file,
+                micro_file,
+                '--silent'
+            ]
+
+            process = Popen(command, stdout=PIPE, stderr=PIPE)
+            process.communicate()
+
+            macro_metrics = json.load(open(macro_file, 'r'))
+            micro_metrics_list = JsonlReader(micro_file, Metrics).read()
+
+            assert macro_metrics == {'metrics': {'test': 45066}}
+
+            assert len(micro_metrics_list) == 5
+            assert micro_metrics_list[0].instance_id == 'D1'
+            assert micro_metrics_list[1].instance_id == 'D1'
+            assert micro_metrics_list[2].instance_id == 'D1'
+            assert micro_metrics_list[3].instance_id == 'D1'
+            assert micro_metrics_list[4].instance_id == 'D1'
+
+            assert micro_metrics_list[0].summarizer_id == '1'
+            assert micro_metrics_list[1].summarizer_id == '2'
+            assert micro_metrics_list[2].summarizer_id == 'A'
+            assert micro_metrics_list[3].summarizer_id == 'B'
+            assert micro_metrics_list[4].summarizer_id == 'C'
+
+            assert micro_metrics_list[0].summarizer_type == 'peer'
+            assert micro_metrics_list[1].summarizer_type == 'peer'
+            assert micro_metrics_list[2].summarizer_type == 'reference'
+            assert micro_metrics_list[3].summarizer_type == 'reference'
+            assert micro_metrics_list[4].summarizer_type == 'reference'
+
+            assert micro_metrics_list[0].metrics == {'test': 1110}  # 1 * 10 + 1 * 100 + 1 * 1000
+            assert micro_metrics_list[1].metrics == {'test': 2220}  # 2 * 10 + 2 * 100 + 2 * 1000
+            assert micro_metrics_list[2].metrics == {'test': 11000}  # 10 * 100 + 10 * 1000
+            assert micro_metrics_list[3].metrics == {'test': 101000}  # 100 * 10 + 100 * 1000
+            assert micro_metrics_list[4].metrics == {'test': 110000}  # 1000 * 10 + 10000 * 100

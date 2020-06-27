@@ -1,13 +1,11 @@
 # SacreROUGE
 ![Master](https://github.com/danieldeutsch/sacrerouge/workflows/Master/badge.svg?branch=master&event=push)
 
-SacreROUGE is a library dedicated to summarization evaluation metrics.
-Its two main uses are to evaluate summarization systems and to evaluation the evaluation metrics themselves by calculating their correlations to human judgments.
+SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
+It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
+The inspiration for the library came from [SacreBLEU](https://github.com/mjpost/sacreBLEU), a library with a standardized implementation of BLEU and dataset readers for common machine translation datasets.
 
 The development of SacreROUGE was motivated by three problems: 
-
-- Datasets for evaluating summarization metrics formatted differently and can be hard to parse (e.g., DUC and TAC).
-SacreROUGE addresses this problem by providing dataset readers to load and reformat the data into a common schema.
 
 - The official implementations for various evaluation metrics do not use a common interface, so running many of them on a dataset is frustrating and time consuming.
 SacreROUGE wraps many popular evaluation metrics in a common interface so it is straightforward and fast to setup and run a new metric.
@@ -16,74 +14,228 @@ SacreROUGE wraps many popular evaluation metrics in a common interface so it is 
 There are there are several different correlation coefficients commonly used, there are different levels at which the correlation can be calculated, and comparing system summaries to human summaries requires implementing jackknifing.
 The evaluation code in SacreROUGE is shared among all of the metrics, so once a new metric implements the common interface, all of the details of the evaluation are taken care of for free.
 
+- Datasets for evaluating summarization metrics formatted differently and can be hard to parse (e.g., DUC and TAC).
+SacreROUGE addresses this problem by providing dataset readers to load and reformat the data into a common schema.
+
+The two main uses of SacreROUGE are to evaluate summarization systems and to evaluation the evaluation metrics themselves by calculating their correlations to human judgments.
+
 ## Installing
-`pip install sacrerouge`
+The easiest method of using SacreROUGE is to install the [pypi library](https://pypi.org/project/sacrerouge/) via:
+```
+pip install sacrerouge
+```
+This will add a new `sacrerouge` bash command to your path, which serves as the primary interface for the library.
 
-## Evaluating Summarization Systems
-The `sacrerouge evaluate` command is typically used when you want to evaluate a summarization model on a particular dataset using one or more evaluation metrics.
-It will calculate the value of each metric specified in the config file for each input summary.
-The command outputs two files:
-The "macro" file contains the metric values averaged over all of the inputs, and the "micro" file has the metric values for each input.
+## Supported Metrics
+The list of metrics which are currently supported by SacreROUGE can be found [here](doc/metrics/metrics.md).
+Running many of the metrics require some dependencies, either data resources, models, or source code that needs to be compiled.
+Therefore, before you are able to use some of the metrics, these dependencies must be taken care of.
 
-### Setting up Evaluation Metrics
-Many of the evaluation metrics implemented in SacreROUGE require extra resources, often in the form of external libraries, data, or models.
-Therefore, before you are able to evaluate with a metric, it may be necessary to download its dependencies.
-The `sacrerouge setup-metric` command is the interface to do so.
-Running that command will provide a list of metric names that can be setup.
+Setting up a metric in SacreROUGE is straightforward.
+Each metric has a command that can be run that will prepare its dependencies.
+The commands look like the following:
+```bash
+sacrerouge setup-metric <metric-name>
+```
+where `<metric-name>` is the registered name of the metric you are setting up.
+The metric names are included in their respective documentation.
+The dependencies will be downloaded to `~/.sacrerouge` (or `$SACREROUGE_DATA_ROOT` if the environment variable exists).
 
-You can view a list of the metrics implemented in this library [here](doc/metrics/metrics.md).
+For example, to setup the AutoSummENG metric, the following command will clone the official Java repository and compile the necessary jars with Maven:
+```bash
+sacrerouge setup-metric autosummeng
+```
 
-## Evaluating Metrics
-The two main steps for evaluating a metric itself are to score a set of summaries across systems and inputs (using jackknifing where necessary) and then calculate the correlation of the metric's values to human judgments.
-These are done in SacreROUGE with the `sacrerouge score` and `sacrerouge correlate` commands.
+## Python Interface
+All of the metrics supported by SacreROUGE extend the `Metric` base class, and therefore share a common Python-based interface.
+They can be imported and run, like as follows:
 
-The `sacrerouge score` command will evaluate the input summaries with the metrics specified in the config file both normally and with jackknifing (if jackknifing can and needs to be done).
-The output file will have the corresponding metrics' values for each input.
-If the jackknifing was done, there will be an entry for that metric with a `_jk` suffix on the top-level entry.
-For instance, one entry in the output could look like the following:
+```python
+>>> summary = 'Dan walked to the bakery this morning.'
+>>> reference = 'Dan went to buy scones earlier this morning.'
+>>>
+>>> from sacrerouge.metrics import Rouge
+>>> rouge = Rouge(max_ngram=2)
+>>> rouge.score(summary, [reference])
+{'rouge-1': {'recall': 50.0, 'precision': 57.143, 'f1': 53.333}, 'rouge-2': {'recall': 14.285999999999998, 'precision': 16.667, 'f1': 15.384999999999998}}
+>>>
+>>> from sacrerouge.metrics import AutoSummENG
+>>> autosummeng = AutoSummENG()
+>>> autosummeng.score(summary, [reference])
+{'AutoSummENG': 0.300813, 'MeMoG': 0.300813, 'NPowER': 0.308208}
+```
+Behind the scenes, the `score` method is running a subprocess to run the original Perl and Java code for ROUGE and AutoSummENG, respectively.
+
+The methods supported by `Metric`s each have slightly different semantics.
+Their signatures will be slightly different across `Metric`s depending on the required fields (e.g., some may require the input document, others reference summaries).
+The methods are explained below, using an example `Metric` that requires a list of reference summaries and the input document to score a summary: 
+- `score`: Scores a single summary using its references and input document:
+```python
+def score(summary: SummaryType,
+          references: List[ReferenceType],
+          document: DocumentType) -> MetricsDict
+```
+  
+- `score_all`: Scores a list of summaries, each with their own set of references and input documents:
+```python
+def score_all(summaries: List[SummaryType],
+              references_list: List[List[ReferenceType]],
+              documents: List[DocumentType]) -> List[MetricsDict]
+```
+
+- `score_multi`: Scores a list of summaries which share common references and input document:
+```python
+def score_multi(summaries: List[SummaryType],
+                references: List[ReferenceType],
+                document: DocumentType) -> List[MetricsDict]
+```
+
+- `score_multi_all`: Scores a list of list summaries, where each inner list shares common references and input documents: 
+```python
+def score_multi_all(summaries_list: List[List[SummaryType]],
+                    references_list: List[List[ReferenceType]],
+                    documents: List[DocumentType]) -> List[List[MetricsDict]]
+```
+Here, the summaries in `summaries_list[i]` should all be scored against `references_list[i]` and `documents[i]`.
+The output `MetricsDict`s will be parallel to the `summaries_list`.
+
+- `evaluate`: Score a list of summaries, each with their own references and input document, and calculate system-level metrics:
+```python
+def evaluate(summaries: List[SummaryType],
+             references_list: List[List[ReferenceType]],
+             documents: List[DocumentType]) -> Tuple[MetricsDict, List[MetricsDict]]
+```
+The first returned value is the system-level metrics.
+The second returned value contains the input-level metrics for each summary.
+This method would be most commonly used to evaluate a summarization system over a set of output summaries.
+
+## Command Line Interface 
+In addition to the Python interface, SacreROUGE also contains a command line interface.
+The primary commands are `evaluate`, `score`, and `correlate`, described next.
+
+### Evaluating Systems
+The `evaluate` command is most often used to evaluate a summarization model based on its output.
+Each `Metric` has its own automatically generated `evaluate` command:
+```bash
+sacrerouge rouge evaluate \
+    <macro-output-file> \
+    <micro-output-file> \
+    --dataset-reader reference-based \
+    --input-files <input-file>+
+    --max_ngram 2 \
+    --use_porter_stemmer false
+```
+All of the evaluate commands require an output path for the system-level metrics (`<macro-output-file>`), an output path for the summary-level metrics (`<micro-output-file>`), the type of dataset reader (here, `reference-based`), and the input file(s) (`<input-file>`).
+The input files will be passed to the dataset reader's `read` method (see `sacrerouge.data.datset_readers`).
+
+Then, each command will also accept parameters that correspond to the parameters for the respective `Metric`'s constructor.
+In the above example, `--max_ngram` and `--use_porter_stemmer` correspond to parameters for the `Rouge` constructor.
+
+The system-level output file will contain a json-serialized `MetricsDict` object that represents the metric's value aggregated over all summaries.
+The summary-level output file will contain one json-serialized `Metrics` that represents the metric's value for just that particular summary.
+ 
+### Evaluating Metrics
+The `score` and `correlate` commands are used to evaluate a metric by calculating its correlation to human judgments.
+
+When evaluating metrics, it is often desirable to be able to compare how well the metric scores system-generated summaries and human-written summaries at the same time.
+This procedure requires running jackknifing to ensure system and human summaries can be fairly compared.
+The main differences between `evaluate` and `score` are that the `score` command will automatically run jackknifing if the metric requires and there is no system-level output (as many systems are typically being scored at the same time).
+
+Like `evaluate`, the `score` command is automatically created for each `Metric`:
+```bash
+sacrerouge rouge score \
+    <output-file>
+    --dataset-reader reference-based \
+    --input-files <input-file>+ \
+    --max_ngram 2 \
+    --use_porter_stemmer false
+```
+The `<output-file>` will contain one json-serialized `Metrics` object per line that represents the value of the metric for that input summary.
+If jackknifing was performed, the metric name will have `_jk` appended to its name.
+For instance, here is an example output for a single summary:
 ```json
 {
-  "my_metric": {
-    "precision": 0.4,
-    "recall": 0.8
-  },
-  "my_metric_jk": {
-    "precision": 0.35,
-    "recall": 0.7
+  "instance_id": "242",
+  "summarizer_id": "21",
+  "summarizer_type": "peer",
+  "metrics": {
+    "rouge-1": {
+      "precision": 0.3,
+      "recall": 0.8,
+      "f1": 0.44
+    },
+    "rouge-1_jk": {
+      "precision": 0.5,
+      "recall": 0.6,
+      "f1": 0.55
+    }
   }
 }
-```
-The `my_metric` entry is the standard score and `my_metric_jk` is the jackknifed version.
+``` 
 
-The `sacrerouge correlate` command will calculate several different correlation coefficients between the two provided input metrics.
-The output will have the correlation metrics that are calculated in three different ways:
+After the scores have been calculated, the `correlate` command can be used to calculate several different correlation coefficients between two provided input metrics.
+```bash
+sacrerouge correlate \
+    --metrics-jsonl-files <metrics-file>+ \
+    --metrics <metric-name-1> <metric-name-2> \
+    --summarizer-type {all, reference, peer} \
+    --output-file <output-file>
+``` 
+The `<metrics-file>` parameters should all have one json-serialized `Metrics` object per line.
+The `<output-file>` will have the correlation between the two input metrics calculated in three different ways:
 
 - Summary-level: Calculates the average correlation across inputs
 - System-level: Calculates the average metric value per system, then calculates the correlation of those values
-- Global: Directly calculates the correlation between all values of the metrics 
+- Global: Directly calculates the correlation between all values of the metrics
+
+The `--summarizer-type` flag controls what types of summaries the correlation should be calculated over. 
 
 ## Developing a New Metric
-Every metric in SacreROUGE implements the `Metric` interface.
-The constructor of `Metric` requires two arguments: the names of the `Field`s required to calculate the metric and the `Jackknifer` which implements jackknifing for the input fields.
+SacreROUGE can be used to easily develop new evaluation metrics.
+Once a metric is implemented within our framework, (1) it can immediately be evaluated using many different datasets without writing any boilerplate code and (2) it automatically gets `evaluate` and `score` commands generated for it.
 
-Then, the `score_multi_all` method needs to be implemented.
-The method accepts two arguments: `summaries_list` and `*args`.
-Argument `summaries_list` is 2d list of summaries that should be evaluated.
-Each inner list is a group that should be evaluated using the same context in `*args`, for example, using the same set of reference summaries.
-Each element in `*args` has the same length as `summaries_list` and represents some context field.
-The order of the fields in `*args` will be the same as the order provided to the constructor's `required_fields` argument. 
+All metrics in SacreROUGE must extend the `Metric` base class.
+Additionally, these steps must be performed:
+- Registering the metric
+- Providing a list of required input fields
+- Provide a jackknifing class (if necessary)
+- Override the `score_multi_all` method.
 
-For instance, if your metric requires reference summaries and the input documents, the `score_multi_all` signature could look like this:
+Here is an example reference-based metric:
 ```python
-def score_multi_all(self,
-                    summaries_list: List[List[SummaryField]],
-                    references_list: List[ReferencesField],
-                    documents_list: List[DocumentsField]) -> List[List[MetricsDict]]:
-    pass
-```
-where `references_list[i]` and `documents_list[i]` should be used to evaluate all of the summaries in `summaries_list[i]`.
+# Register the metric so it can be referred to by this name
+@Metric.register('my-metric')
+class MyMetric(Metric):
+    def __init__(self):
+        # Provide a list of required input fields, specify which jackknifer should be used
+        super().__init__(['references'], jackknifer=ReferencesJackknifer())
 
-The output of the `score_multi_all` should be a nested list of `MetricDict`s that is the same shape as `summaries_list`.
+    # Override the `score_multi_all` method
+    def score_multi_all(summaries_list: List[List[SummaryType]],
+                        references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]
+        output_metrics = []
+        for summaries, references in zip(summaries_list, references_list):
+            output_metrics.append([])
+            for summary in summaries:
+                value = some_scoring_function(summary, references)
+                output_metrics[-1].append(MetricsDict({'my-metric': value}))
+        return output_metrics
+```
+The required input fields, which are passed to the super constructor, will be passed to the scoring methods in the same order as they appear in the list.
+The names correspond the keys in the `fields` data member of the `EvalInstance` class, which are populated via the dataset reader.
+
+The jackknifer is responsible for taking the input fields and returning a new list of fields for evaluation.
+The average metric's value across this new list will be equal to the jackknifed score (see `sacrerouge.data.jackknifers`)
+
+Only the `score_multi_all` method is required to be overridden.
+By default, the other methods (e.g., `score`, `score_all`) call `score_multi_all`.
+
+After the above class has been defined, SacreROUGE will automatically generate commands
+```bash
+sacrerouge my-metric evaluate
+sacrerouge my-metric score
+```
+and `MyMetric` is accessible via the Python interface.
 
 ## Setting up a Dataset
 SacreROUGE also contains data to load some summarization datasets and save them in a common format.

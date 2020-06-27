@@ -16,6 +16,41 @@ from sacrerouge.metrics import Metric
 logger = logging.getLogger(__name__)
 
 
+def add_score_arguments(parser: argparse.ArgumentParser, include_config_arguments: bool) -> None:
+    if include_config_arguments:
+        parser.add_argument(
+            'config',
+            type=str,
+            help='The config file that specifies the dataset reader and metrics'
+        )
+        parser.add_argument(
+            '--overrides',
+            type=str,
+            help='A serialized json that will override the parameters passed in "config"'
+        )
+
+    parser.add_argument(
+        'output_jsonl',
+        type=str,
+        help='The path to where the input-level metrics should be written'
+    )
+    parser.add_argument(
+        '--log-file',
+        type=str,
+        help='The file where the log should be written'
+    )
+    parser.add_argument(
+        '--silent',
+        action='store_true',
+        help='Controls whether the log should be written to stdout'
+    )
+    parser.add_argument(
+        '--include-packages',
+        nargs='+',
+        help='A list of additional packages to include'
+    )
+
+
 def _load_metrics(params: Params) -> List[Metric]:
     metrics = []
     for metric_params in params.pop('metrics'):
@@ -106,47 +141,26 @@ def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dic
     return metrics_dicts
 
 
+def save_score_results(metrics_dicts: Dict[str, Dict[str, Metrics]], output_file: str, silent: bool) -> None:
+    with JsonlWriter(output_file) as out:
+        for instance_id in sorted(metrics_dicts.keys()):
+            for summarizer_id in sorted(metrics_dicts[instance_id].keys()):
+                out.write(metrics_dicts[instance_id][summarizer_id])
+
+
 class ScoreSubcommand(Subcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Score all of the inputs to evaluate a metric'
         self.parser = parser.add_parser('score', description=description, help=description)
-        self.parser.add_argument(
-            'config',
-            type=str,
-            help='The config file that specifies the dataset reader and metrics'
-        )
-        self.parser.add_argument(
-            'output_jsonl',
-            type=str,
-            help='The path to where the input-level metrics should be written'
-        )
-        self.parser.add_argument(
-            '--log-file',
-            type=str,
-            help='The file where the log should be written'
-        )
-        self.parser.add_argument(
-            '--silent',
-            action='store_true',
-            help='Controls whether the log should be written to stdout'
-        )
-        self.parser.add_argument(
-            '--overrides',
-            type=str,
-            help='A serialized json that will override the parameters passed in "config"'
-        )
-        self.parser.add_argument(
-            '--include-packages',
-            nargs='+',
-            help='A list of additional packages to include'
-        )
+        add_score_arguments(self.parser, True)
         self.parser.set_defaults(func=self.run)
 
     @overrides
     def run(self, args):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
+        import_module_and_submodules('sacrerouge')
         include_packages = args.include_packages or []
         for package in include_packages:
             import_module_and_submodules(package)
@@ -162,8 +176,4 @@ class ScoreSubcommand(Subcommand):
         instances = dataset_reader.read(*input_files)
         metrics_dicts = score_instances(instances, metrics)
 
-        # Save the results to the output file
-        with JsonlWriter(args.output_jsonl) as out:
-            for instance_id in sorted(metrics_dicts.keys()):
-                for summarizer_id in sorted(metrics_dicts[instance_id].keys()):
-                    out.write(metrics_dicts[instance_id][summarizer_id])
+        save_score_results(metrics_dicts, args.output_jsonl, args.silent)
