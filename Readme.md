@@ -129,7 +129,7 @@ All of the evaluate commands require an output path for the system-level metrics
 The input files will be passed to the dataset reader's `read` method (see `sacrerouge.data.datset_readers`).
 
 The `ReferenceBasedDatasetReader` expects the input file to a `.jsonl` file (one serialized JSON object per line) where each JSON looks like the following:
-```json
+```
 {
     "instance_id": "2",        // the unique ID for the input document(s)
     "summarizer_id": "7",      // the unique ID for the system which produced this summary
@@ -140,7 +140,8 @@ The `ReferenceBasedDatasetReader` expects the input file to a `.jsonl` file (one
     "references": [            // a list of references
         {
             "text": "..."      // the text of the reference, either a `str` or `List[str]`
-        }
+        },
+        ...
     ]
 }
 ```
