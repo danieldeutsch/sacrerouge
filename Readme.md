@@ -128,6 +128,25 @@ sacrerouge rouge evaluate \
 All of the evaluate commands require an output path for the system-level metrics (`<macro-output-file>`), an output path for the summary-level metrics (`<micro-output-file>`), the type of dataset reader (here, `reference-based`), and the input file(s) (`<input-file>`).
 The input files will be passed to the dataset reader's `read` method (see `sacrerouge.data.datset_readers`).
 
+The `ReferenceBasedDatasetReader` expects the input file to a `.jsonl` file (one serialized JSON object per line) where each JSON looks like the following:
+```
+{
+    "instance_id": "2",        // the unique ID for the input document(s)
+    "summarizer_id": "7",      // the unique ID for the system which produced this summary
+    "summarizer_type": "peer"  // either "peer" or "reference,
+    "summary": {
+        "text": "..."          // the text of the summary, either a `str` or `List[str]`
+    },
+    "references": [            // a list of references
+        {
+            "text": "..."      // the text of the reference, either a `str` or `List[str]`
+        },
+        ...
+    ]
+}
+```
+Of course, you can write your own `DatasetReader` to load the data from whichever file format is most convenient.
+
 Then, each command will also accept parameters that correspond to the parameters for the respective `Metric`'s constructor.
 In the above example, `--max_ngram` and `--use_porter_stemmer` correspond to parameters for the `Rouge` constructor.
 
