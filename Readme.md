@@ -4,6 +4,7 @@
 SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
 It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
 The inspiration for the library came from [SacreBLEU](https://github.com/mjpost/sacreBLEU), a library with a standardized implementation of BLEU and dataset readers for common machine translation datasets.
+See our [arXiv paper](https://arxiv.org/abs/2007.05374) for more details.
 
 The development of SacreROUGE was motivated by three problems: 
 
@@ -259,3 +260,16 @@ and `MyMetric` is accessible via the Python interface.
 ## Setting up a Dataset
 SacreROUGE also contains data to load some summarization datasets and save them in a common format.
 Run the `sacrerouge setup-dataset` command to see the available datasets, or check [here](doc/datasets/datasets.md).
+
+## Citation
+If you use SacreROUGE for your paper, please cite the following paper:
+```
+@misc{deutsch2020sacrerouge,
+    title={{SacreROUGE: An Open-Source Library for Using and Developing Summarization Evaluation Metrics}},
+    author={Daniel Deutsch and Dan Roth},
+    year={2020},
+    eprint={2007.05374},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
+```
