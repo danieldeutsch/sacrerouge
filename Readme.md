@@ -261,6 +261,14 @@ and `MyMetric` is accessible via the Python interface.
 SacreROUGE also contains data to load some summarization datasets and save them in a common format.
 Run the `sacrerouge setup-dataset` command to see the available datasets, or check [here](doc/datasets/datasets.md).
 
+## Data Visualization
+We have also written two data visualization tools.
+The [first tool](https://danieldeutsch.github.io/pages/pyramid-visualization.html) visualizes a Pyramid and optional Pyramid annotations on peer summaries.
+It accepts the `pyramid.jsonl` and `pyramid-annotations.jsonl` files which are saved by some of the dataset readers.
+
+The [second tool](https://danieldeutsch.github.io/pages/rouge-visualization.html) visualizes the n-gram matches that are used to calculate the ROUGE score.
+It accepts the `summaries.jsonl` files which are saved by some of the dataset readers.
+
 ## Citation
 If you use SacreROUGE for your paper, please cite the following paper:
 ```
