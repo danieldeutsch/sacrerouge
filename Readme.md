@@ -4,6 +4,7 @@
 SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
 It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
 The inspiration for the library came from [SacreBLEU](https://github.com/mjpost/sacreBLEU), a library with a standardized implementation of BLEU and dataset readers for common machine translation datasets.
+See our [arXiv paper](https://arxiv.org/abs/2007.05374) for more details.
 
 The development of SacreROUGE was motivated by three problems: 
 
@@ -128,6 +129,25 @@ sacrerouge rouge evaluate \
 All of the evaluate commands require an output path for the system-level metrics (`<macro-output-file>`), an output path for the summary-level metrics (`<micro-output-file>`), the type of dataset reader (here, `reference-based`), and the input file(s) (`<input-file>`).
 The input files will be passed to the dataset reader's `read` method (see `sacrerouge.data.datset_readers`).
 
+The `ReferenceBasedDatasetReader` expects the input file to a `.jsonl` file (one serialized JSON object per line) where each JSON looks like the following:
+```
+{
+    "instance_id": "2",        // the unique ID for the input document(s)
+    "summarizer_id": "7",      // the unique ID for the system which produced this summary
+    "summarizer_type": "peer"  // either "peer" or "reference,
+    "summary": {
+        "text": "..."          // the text of the summary, either a `str` or `List[str]`
+    },
+    "references": [            // a list of references
+        {
+            "text": "..."      // the text of the reference, either a `str` or `List[str]`
+        },
+        ...
+    ]
+}
+```
+Of course, you can write your own `DatasetReader` to load the data from whichever file format is most convenient.
+
 Then, each command will also accept parameters that correspond to the parameters for the respective `Metric`'s constructor.
 In the above example, `--max_ngram` and `--use_porter_stemmer` correspond to parameters for the `Rouge` constructor.
 
@@ -240,3 +260,24 @@ and `MyMetric` is accessible via the Python interface.
 ## Setting up a Dataset
 SacreROUGE also contains data to load some summarization datasets and save them in a common format.
 Run the `sacrerouge setup-dataset` command to see the available datasets, or check [here](doc/datasets/datasets.md).
+
+## Data Visualization
+We have also written two data visualization tools.
+The [first tool](https://danieldeutsch.github.io/pages/pyramid-visualization.html) visualizes a Pyramid and optional Pyramid annotations on peer summaries.
+It accepts the `pyramid.jsonl` and `pyramid-annotations.jsonl` files which are saved by some of the dataset readers.
+
+The [second tool](https://danieldeutsch.github.io/pages/rouge-visualization.html) visualizes the n-gram matches that are used to calculate the ROUGE score.
+It accepts the `summaries.jsonl` files which are saved by some of the dataset readers.
+
+## Citation
+If you use SacreROUGE for your paper, please cite the following paper:
+```
+@misc{deutsch2020sacrerouge,
+    title={{SacreROUGE: An Open-Source Library for Using and Developing Summarization Evaluation Metrics}},
+    author={Daniel Deutsch and Dan Roth},
+    year={2020},
+    eprint={2007.05374},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
+```
