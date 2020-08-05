@@ -11,7 +11,7 @@ from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 MOVERSCORE_INSTALLED = False
 
@@ -21,7 +21,7 @@ try:
     MOVERSCORE_INSTALLED = True
 
     @Metric.register('moverscore')
-    class MoverScore(Metric):
+    class MoverScore(ReferenceBasedMetric):
         def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
             super().__init__(['references'], jackknifer=ReferencesJackknifer())
             if not os.path.exists(moverscore_root):
