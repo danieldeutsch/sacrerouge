@@ -12,13 +12,13 @@ from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('bewte')
-class BEwTE(Metric):
+class BEwTE(ReferenceBasedMetric):
     def __init__(self,
                  bewte_root: str = f'{DATA_ROOT}/metrics/ROUGE-BEwTE',
                  verbose: bool = False):

@@ -11,13 +11,13 @@ from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.io import JsonlWriter
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceFreeMetric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('sum-qe')
-class SumQE(Metric):
+class SumQE(ReferenceFreeMetric):
     def __init__(self,
                  model_file: str = f'{DATA_ROOT}/metrics/SumQE/models/multitask_5-duc2006_duc2007.npy',
                  sum_qe_root: str = f'{DATA_ROOT}/metrics/SumQE',

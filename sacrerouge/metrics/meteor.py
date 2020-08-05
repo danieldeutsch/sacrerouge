@@ -11,13 +11,13 @@ from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('meteor')
-class Meteor(Metric):
+class Meteor(ReferenceBasedMetric):
     def __init__(self, meteor_root: str = f'{DATA_ROOT}/metrics/METEOR'):
         super().__init__(['references'], jackknifer=ReferencesJackknifer())
         self.meteor_root = meteor_root

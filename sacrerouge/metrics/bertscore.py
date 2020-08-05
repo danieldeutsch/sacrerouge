@@ -6,7 +6,7 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 try:
     from bert_score import score, create_idf_dict
@@ -14,7 +14,7 @@ except ImportError:
     BERTSCORE_INSTALLED = False
 
     @Metric.register('bertscore')
-    class BertScore(Metric):
+    class BertScore(ReferenceBasedMetric):
         def __init__(self, *args, **kwargs):
             pass
 
@@ -24,7 +24,7 @@ else:
     BERTSCORE_INSTALLED = True
 
     @Metric.register('bertscore')
-    class BertScore(Metric):
+    class BertScore(ReferenceBasedMetric):
         def __init__(self,
                      model_type: str = None,
                      num_layers: int = None,
