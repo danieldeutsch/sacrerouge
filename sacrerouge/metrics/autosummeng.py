@@ -12,13 +12,13 @@ from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('autosummeng')
-class AutoSummENG(Metric):
+class AutoSummENG(ReferenceBasedMetric):
     def __init__(self,
                  min_n: int = 3,
                  max_n: int = 3,

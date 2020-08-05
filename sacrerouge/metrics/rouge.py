@@ -13,13 +13,13 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('rouge')
-class Rouge(Metric):
+class Rouge(ReferenceBasedMetric):
     def __init__(self,
                  max_ngram: int = 4,
                  use_porter_stemmer: bool = True,
