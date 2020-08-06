@@ -342,7 +342,6 @@ System-level, peers + references:
 <td>0.99</td>
 </tr>
 </table>
-__
 
 ## References
 [1] Ani Nenkova and Rebecca J. Passonneau. [Evaluating Content Selection in Summarization: The Pyramid Method](https://www.aclweb.org/anthology/N04-1019). 2004.
