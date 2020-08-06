@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @DatasetReader.register('pyramid-based')
-class ReferenceBasedDatasetReader(DatasetReader):
+class PyramidBasedDatasetReader(DatasetReader):
     def read(self,
              pyramid_jsonl: str,
              annotation_jsonl: str) -> List[EvalInstance]:
