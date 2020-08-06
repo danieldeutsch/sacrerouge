@@ -8,6 +8,7 @@ from sacrerouge.io import JsonlReader
 
 logger = logging.getLogger(__name__)
 
+
 @DatasetReader.register('summary-only')
 class SummaryOnlyDatasetReader(DatasetReader):
     def read(self, input_jsonl: str) -> List[EvalInstance]:
@@ -15,14 +16,14 @@ class SummaryOnlyDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(input_jsonl) as f:
             for data in f:
-                summary = SummaryField(data['summary']['text'])
-                fields = Fields({})
+                fields = {}
+                fields['summary'] = SummaryField(data['summary']['text'])
+                fields = Fields(fields)
 
                 instance = EvalInstance(
                     data['instance_id'],
                     data['summarizer_id'],
                     data['summarizer_type'],
-                    summary,
                     fields
                 )
                 instances.append(instance)

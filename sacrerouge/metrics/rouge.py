@@ -30,7 +30,7 @@ class Rouge(ReferenceBasedMetric):
                  skip_bigram_gap_length: Optional[int] = None,
                  wlcs_weight: Optional[float] = None,
                  rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5'):
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
         self.remove_stopwords = remove_stopwords

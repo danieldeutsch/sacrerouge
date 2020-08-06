@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @Metric.register('meteor')
 class Meteor(ReferenceBasedMetric):
     def __init__(self, meteor_root: str = f'{DATA_ROOT}/metrics/METEOR'):
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.meteor_root = meteor_root
         if not os.path.exists(meteor_root):
             raise Exception(f'Path "{meteor_root}" does not exist. Have you setup METEOR?')

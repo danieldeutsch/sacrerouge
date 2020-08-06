@@ -4,13 +4,13 @@ from typing import List
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 
 @Metric.register('testing')
-class TestingMetric(Metric):
+class TestingMetric(ReferenceBasedMetric):
     def __init__(self) -> None:
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
 
     @overrides
     def score_multi_all(self,
