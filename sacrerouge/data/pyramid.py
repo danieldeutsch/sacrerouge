@@ -68,6 +68,15 @@ class SCU(object):
         self.label = label
         self.contributors = contributors
 
+    def get_weight(self) -> int:
+        """Calculates the weight of the SCU"""
+        # We don't keep this as a data member because then it would be serialized to the json. That's probably
+        # an OK thing to do, but we have many already-created serialized pyramids, and adding that might break them.
+        #
+        # This should be just the length, but we take the unique number because there were many errors in the
+        # DUC/TAC pyramid files which may make that assumption false.
+        return len(set(contributor.summary_index for contributor in self.contributors))
+
 
 class SCUAnnotation(object):
     def __init__(self, scu_id: int, label: str, contributors: List[ContributorAnnotation]) -> None:

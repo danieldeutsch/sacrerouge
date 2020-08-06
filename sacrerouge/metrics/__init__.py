@@ -4,6 +4,7 @@ from sacrerouge.metrics.bertscore import BertScore
 from sacrerouge.metrics.bewte import BEwTE
 from sacrerouge.metrics.meteor import Meteor
 from sacrerouge.metrics.moverscore import MoverScore
+from sacrerouge.metrics.pyramid_score import PyramidScore
 from sacrerouge.metrics.python_rouge import PythonRouge
 from sacrerouge.metrics.rouge import Rouge
 from sacrerouge.metrics.simetrix import SIMetrix

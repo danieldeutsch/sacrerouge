@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
+from sacrerouge.data.pyramid import Pyramid, PyramidAnnotation
 from sacrerouge.data.types import DocumentType, ReferenceType, SummaryType
 
 
@@ -33,6 +34,40 @@ class DocumentsField(Field):
 
     def to_input(self) -> List[DocumentType]:
         return self.documents
+
+
+class PyramidField(Field):
+    def __init__(self, pyramid: Pyramid) -> None:
+        self.pyramid = pyramid
+
+    def __hash__(self) -> int:
+        hashes = []
+        hashes.append(hash(self.pyramid.instance_id))
+        for summarizer_id in self.pyramid.summarizer_ids:
+            hashes.append(hash(summarizer_id))
+        return hash(tuple(hashes))
+
+    def __eq__(self, other: 'PyramidField') -> bool:
+        return self.pyramid.instance_id == other.pyramid.instance_id and \
+               self.pyramid.summarizer_ids == other.pyramid.summarizer_ids
+
+    def to_input(self) -> Pyramid:
+        return self.pyramid
+
+
+class PyramidAnnotationField(Field):
+    def __init__(self, annotation: PyramidAnnotation) -> None:
+        self.annotation = annotation
+
+    def __hash__(self) -> int:
+        return hash(tuple([self.annotation.instance_id, self.annotation.summarizer_id]))
+
+    def __eq__(self, other: 'PyramidAnnotationField') -> bool:
+        return self.annotation.instance_id == other.annotation.instance_id and \
+               self.annotation.summarizer_id == other.annotation.summarizer_id
+
+    def to_input(self) -> PyramidAnnotation:
+        return self.annotation
 
 
 class ReferencesField(Field):
