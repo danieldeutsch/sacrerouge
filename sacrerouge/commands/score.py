@@ -62,49 +62,78 @@ def _load_metrics(params: Params) -> List[Metric]:
 def _score_with_metric(metric: Metric,
                        instances: List[EvalInstance],
                        metrics_dicts: Dict[str, Dict[str, Metrics]]) -> None:
+    # The summaries need to be grouped based on identical context. For instance, we group all of the summaries
+    # that have the same reference documents together. This can sometimes make calculating the metric faster. The
+    # following variables assist doing this.
+    #
+    # Maintains a list of the unique contexts which group the summaries
     fields_list = []
+
+    # A mapping from the context to its index in `fields_list`
     field_to_index = {}
+
+    # A nested list that will be parallel to `fields_list`. The entry at index `i` is a list of instances which should
+    # be scored with `fields_list[i]`
     instances_list = []
+
+    # A nested list that will be parallel to `instances_list` which contains the summary-specific fields
+    # for the corresponding instance
+    summary_fields_lists = []
+
+    # A nested list that will be parallel to `instances_list` which marks if the calculation for that (summary, context)
+    # pair represents jackknifing or not
     jackknifing_flags = []
 
     for instance in instances:
         # Select just the relevant fields for this metric
-        fields = instance.fields.select_fields(metric.required_fields)
+        summary_fields = instance.fields.select_fields(metric.required_summary_fields)
+        context_fields = instance.fields.select_fields(metric.required_context_fields)
 
         # Score the instance normally using all of the fields. However,
         # if the metric requires jackknifing and this is a reference summary,
         # the metric is comparable to the jackknifing metrics.
         is_jackknifing = metric.requires_jackknifing() and instance.summarizer_type == 'reference'
 
-        if fields not in field_to_index:
-            field_to_index[fields] = len(field_to_index)
-            fields_list.append(fields)
+        if context_fields not in field_to_index:
+            field_to_index[context_fields] = len(field_to_index)
+            fields_list.append(context_fields)
             instances_list.append([])
+            summary_fields_lists.append([])
             jackknifing_flags.append([])
 
-        index = field_to_index[fields]
+        index = field_to_index[context_fields]
         instances_list[index].append(instance)
+        summary_fields_lists[index].append(summary_fields)
         jackknifing_flags[index].append(is_jackknifing)
 
         # Potentially run jackknifing for the peers
         if metric.requires_jackknifing() and instance.summarizer_type == 'peer':
-            jk_fields_list = metric.jackknifer.get_jackknifing_fields_list(fields)
+            jk_fields_list = metric.jackknifer.get_jackknifing_fields_list(context_fields)
             if jk_fields_list:
                 for jk_fields in jk_fields_list:
                     if jk_fields not in field_to_index:
                         field_to_index[jk_fields] = len(field_to_index)
                         fields_list.append(jk_fields)
                         instances_list.append([])
+                        summary_fields_lists.append([])
                         jackknifing_flags.append([])
 
                     index = field_to_index[jk_fields]
                     instances_list[index].append(instance)
+                    summary_fields_lists[index].append(summary_fields)
                     jackknifing_flags[index].append(True)
 
+    # Construct the arguments that will be passed to the scoring method
+    summary_args = []
+    for name in metric.required_summary_fields:
+        summary_args.append([[summary_fields[name].to_input() for summary_fields in summary_fields_list] for summary_fields_list in summary_fields_lists])
+
+    context_args = []
+    for name in metric.required_context_fields:
+        context_args.append([fields[name].to_input() for fields in fields_list])
+
     # Score the summaries
-    summaries_lists = [[instance.summary.to_input() for instance in instances] for instances in instances_list]
-    args = [[fields[name].to_input() for fields in fields_list] for name in metric.required_fields]
-    results_lists = metric.score_multi_all(summaries_lists, *args)
+    results_lists = metric.score_multi_all(*summary_args, *context_args)
 
     # Used to aggregate the jk results
     jk_results = defaultdict(lambda: defaultdict(list))

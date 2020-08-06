@@ -1,7 +1,8 @@
 from overrides import overrides
 from typing import List
 
-from sacrerouge.data.fields import Fields, ReferencesField
+from sacrerouge.data.fields import Fields, PyramidField, ReferencesField
+from sacrerouge.data.pyramid import Pyramid
 
 
 class Jackknifer(object):
@@ -58,5 +59,25 @@ class ReferencesJackknifer(Jackknifer):
             # Copy the original fields and replace the references
             jk_fields = Fields(fields)
             jk_fields['references'] = ReferencesField(references_field.references[:i] + references_field.references[i + 1:])
+            jk_fields_list.append(jk_fields)
+        return jk_fields_list
+
+
+class PyramidJackknifer(Jackknifer):
+    """
+    Jackknives the "pyramid" field of type `PyramidField`
+    """
+    @overrides
+    def get_jackknifing_fields_list(self, fields: Fields) -> List[Fields]:
+        pyramid: Pyramid = fields['pyramid'].pyramid
+        if len(pyramid.summarizer_ids) == 1:
+            # No jackknifing can be done, return `None`
+            return None
+
+        jk_fields_list = []
+        for i in range(len(pyramid.summarizer_ids)):
+            # Copy the original fields and replace the pyramid
+            jk_fields = Fields(fields)
+            jk_fields['pyramid'] = PyramidField(pyramid.remove_summary(i))
             jk_fields_list.append(jk_fields)
         return jk_fields_list

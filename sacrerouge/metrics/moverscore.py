@@ -23,7 +23,7 @@ try:
     @Metric.register('moverscore')
     class MoverScore(ReferenceBasedMetric):
         def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
-            super().__init__(['references'], jackknifer=ReferencesJackknifer())
+            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
             if not os.path.exists(moverscore_root):
                 raise Exception(f'Path "{moverscore_root}" does not exist. Have you setup MoverScore?')
             self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())
