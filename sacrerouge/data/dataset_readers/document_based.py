@@ -16,19 +16,19 @@ class DocumentBasedDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(input_jsonl) as f:
             for data in f:
-                summary = SummaryField(data['summary']['text'])
+                fields = {}
+                fields['summary'] = SummaryField(data['summary']['text'])
 
                 if 'document' in data:
-                    documents = DocumentsField([data['document']['text']])
+                    fields['documents'] = DocumentsField([data['document']['text']])
                 else:
-                    documents = DocumentsField([document['text'] for document in data['documents']])
-                fields = Fields({'documents': documents})
+                    fields['documents'] = DocumentsField([document['text'] for document in data['documents']])
+                fields = Fields(fields)
 
                 instance = EvalInstance(
                     data['instance_id'],
                     data['summarizer_id'],
                     data['summarizer_type'],
-                    summary,
                     fields
                 )
                 instances.append(instance)

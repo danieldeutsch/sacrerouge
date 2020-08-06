@@ -33,7 +33,7 @@ else:
                      batch_size: int = 64,
                      lang: str = 'en',
                      verbose: bool = False) -> None:
-            super().__init__(['references'], jackknifer=ReferencesJackknifer())
+            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
             self.model_type = model_type
             self.num_layers = num_layers
             self.idf = idf

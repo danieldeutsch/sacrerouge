@@ -27,7 +27,7 @@ class AutoSummENG(ReferenceBasedMetric):
                  max_score: float = 1.0,
                  autosummeng_root: str = f'{DATA_ROOT}/metrics/AutoSummENG',
                  verbose: bool = False):
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.min_n = min_n
         self.max_n = max_n
         self.d_window = d_window

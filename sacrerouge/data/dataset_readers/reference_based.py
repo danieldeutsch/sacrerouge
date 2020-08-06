@@ -16,19 +16,19 @@ class ReferenceBasedDatasetReader(DatasetReader):
         instances = []
         with JsonlReader(input_jsonl) as f:
             for data in f:
-                summary = SummaryField(data['summary']['text'])
+                fields = {}
+                fields['summary'] = SummaryField(data['summary']['text'])
 
                 if 'reference' in data:
-                    references = ReferencesField([data['reference']['text']])
+                    fields['references'] = ReferencesField([data['reference']['text']])
                 else:
-                    references = ReferencesField([reference['text'] for reference in data['references']])
-                fields = Fields({'references': references})
+                    fields['references'] = ReferencesField([reference['text'] for reference in data['references']])
+                fields = Fields(fields)
 
                 instance = EvalInstance(
                     data['instance_id'],
                     data['summarizer_id'],
                     data['summarizer_type'],
-                    summary,
                     fields
                 )
                 instances.append(instance)

@@ -7,9 +7,11 @@ from sacrerouge.data.types import DocumentType, ReferenceType, SummaryType
 
 class Metric(Registrable):
     def __init__(self,
-                 required_fields: List[str],
+                 required_summary_fields: List[str],
+                 required_context_fields: List[str],
                  jackknifer: Optional[Jackknifer] = None) -> None:
-        self.required_fields = required_fields
+        self.required_summary_fields = required_summary_fields
+        self.required_context_fields = required_context_fields
         self.jackknifer = jackknifer
 
     def score(self, summary: SummaryType, *args: List[Any]) -> MetricsDict:

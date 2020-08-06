@@ -33,19 +33,21 @@ def get_initial_micro_list(instances: List[EvalInstance]) -> List[Metrics]:
 
 
 def evaluate_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Tuple[MetricsDict, List[Metrics]]:
-    summaries = [instance.summary.to_input() for instance in instances]
-
     macro = MetricsDict()
     micro_list = get_initial_micro_list(instances)
 
     for metric in metrics:
-        # Prepare the extra input arguments
-        eval_args = []
-        for field in metric.required_fields:
-            eval_args.append([instance.fields[field].to_input() for instance in instances])
+        # Prepare the input arguments
+        summary_args = []
+        for field in metric.required_summary_fields:
+            summary_args.append([instance.fields[field].to_input() for instance in instances])
+
+        context_args = []
+        for field in metric.required_context_fields:
+            context_args.append([instance.fields[field].to_input() for instance in instances])
 
         # Score all the summaries
-        this_macro, this_micro_list = metric.evaluate(summaries, *eval_args)
+        this_macro, this_micro_list = metric.evaluate(*summary_args, *context_args)
 
         # Update the global metrics dictionaries
         macro.update(this_macro)
