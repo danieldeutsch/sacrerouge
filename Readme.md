@@ -223,9 +223,10 @@ Additionally, these steps must be performed:
 
 Here is an example reference-based metric:
 ```python
-# Register the metric so it can be referred to by this name
+# Register the metric so it can be referred to by this name. We extend `ReferenceBasedMetric` because it
+# concretely defines the arguments for the different `score` methods, which can help some autocomplete libraries.
 @Metric.register('my-metric')
-class MyMetric(Metric):
+class MyMetric(ReferenceBasedMetric):
     def __init__(self):
         # Provide a list of required input fields, specify which jackknifer should be used
         super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
