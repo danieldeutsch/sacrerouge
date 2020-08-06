@@ -11,7 +11,7 @@ from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 
 def shorten_summary(summary: SummaryType,
@@ -52,7 +52,7 @@ def shorten_summary(summary: SummaryType,
 
 
 @Metric.register('python-rouge')
-class PythonRouge(Metric):
+class PythonRouge(ReferenceBasedMetric):
     _non_alphanumeric_regex = re.compile('[^A-Za-z0-9]')
 
     def __init__(self,

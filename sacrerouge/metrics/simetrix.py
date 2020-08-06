@@ -10,13 +10,13 @@ from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import DocumentType, SummaryType
-from sacrerouge.metrics import Metric
+from sacrerouge.metrics import DocumentBasedMetric, Metric
 
 logger = logging.getLogger(__name__)
 
 
 @Metric.register('simetrix')
-class SIMetrix(Metric):
+class SIMetrix(DocumentBasedMetric):
     def __init__(self,
                  use_stemmer: bool = True,
                  remove_stopwords: bool = True,

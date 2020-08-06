@@ -1,4 +1,4 @@
-from sacrerouge.metrics.metric import Metric
+from sacrerouge.metrics.metric import DocumentBasedMetric, Metric, ReferenceBasedMetric, ReferenceFreeMetric
 from sacrerouge.metrics.autosummeng import AutoSummENG
 from sacrerouge.metrics.bertscore import BertScore
 from sacrerouge.metrics.bewte import BEwTE
