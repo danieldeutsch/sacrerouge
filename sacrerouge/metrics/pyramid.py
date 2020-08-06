@@ -7,6 +7,7 @@ from sacrerouge.data.jackknifers import PyramidJackknifer
 from sacrerouge.metrics import Metric
 
 
+@Metric.register('pyramid-score')
 class ModifiedPyramidScore(Metric):
     """
     Implements calculating the modified pyramid score based on the description from page 7
