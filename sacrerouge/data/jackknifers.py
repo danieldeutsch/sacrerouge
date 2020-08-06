@@ -1,8 +1,8 @@
 from overrides import overrides
 from typing import List
 
-from sacrerouge.data import Pyramid
 from sacrerouge.data.fields import Fields, PyramidField, ReferencesField
+from sacrerouge.data.pyramid import Pyramid
 
 
 class Jackknifer(object):

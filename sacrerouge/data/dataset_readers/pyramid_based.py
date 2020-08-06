@@ -38,7 +38,7 @@ class PyramidBasedDatasetReader(DatasetReader):
             for annotation in f:
                 fields = Fields({
                     'annotation': PyramidAnnotationField(annotation),
-                    'pyramid': PyramidField(pyramids[annotation.pyramid.instance_id])
+                    'pyramid': PyramidField(pyramids[annotation.instance_id])
                 })
 
                 instance = EvalInstance(

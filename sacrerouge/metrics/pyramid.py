@@ -14,8 +14,9 @@ class ModifiedPyramidScore(Metric):
     of https://www.cis.upenn.edu/~nenkova/papers/p1-nenkova.pdf and section 3 of
     http://www.cs.columbia.edu/nlp/papers/2005/passonneau_al_05.pdf.
     """
-    def __init__(self):
+    def __init__(self, name_override: str = None):
         super().__init__(['annotation'], ['pyramid'], PyramidJackknifer())
+        self.name = name_override or 'modified_pyramid_score'
 
     def score(self, annotation: PyramidAnnotation, pyramid: Pyramid) -> MetricsDict:
         # Create a mapping from the SCU id to its weight and count how many are at each weight
@@ -52,7 +53,7 @@ class ModifiedPyramidScore(Metric):
             scus_remaining -= num_scus_taken
 
         # The modified pyramid score is the ratio of the weight to the ideal weight
-        return MetricsDict({'modified_pyramid_score': total_weight / ideal_weight})
+        return MetricsDict({self.name: total_weight / ideal_weight})
 
     def score_multi(self, annotations: List[PyramidAnnotation], pyramid: Pyramid) -> List[MetricsDict]:
         return self.score_multi_all([annotations], [pyramid])[0]

@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
-from sacrerouge.data import Pyramid, PyramidAnnotation
+from sacrerouge.data.pyramid import Pyramid, PyramidAnnotation
 from sacrerouge.data.types import DocumentType, ReferenceType, SummaryType
 
 
