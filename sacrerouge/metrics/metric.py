@@ -63,12 +63,6 @@ class SummaryBasedMetric(Metric):
         macro_metrics = self.aggregate(micro_metrics_list)
         return macro_metrics, micro_metrics_list
 
-    def aggregate(self, metrics_list: List[MetricsDict]) -> MetricsDict:
-        return sum(metrics_list) / len(metrics_list)
-
-    def requires_jackknifing(self):
-        return self.jackknifer is not None
-
 
 class ReferenceBasedMetric(SummaryBasedMetric):
     """
