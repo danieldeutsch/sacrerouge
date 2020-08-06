@@ -223,12 +223,13 @@ Additionally, these steps must be performed:
 
 Here is an example reference-based metric:
 ```python
-# Register the metric so it can be referred to by this name
+# Register the metric so it can be referred to by this name. We extend `ReferenceBasedMetric` because it
+# concretely defines the arguments for the different `score` methods, which can help some autocomplete libraries.
 @Metric.register('my-metric')
-class MyMetric(Metric):
+class MyMetric(ReferenceBasedMetric):
     def __init__(self):
         # Provide a list of required input fields, specify which jackknifer should be used
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
 
     # Override the `score_multi_all` method
     def score_multi_all(summaries_list: List[List[SummaryType]],
@@ -241,8 +242,10 @@ class MyMetric(Metric):
                 output_metrics[-1].append(MetricsDict({'my-metric': value}))
         return output_metrics
 ```
-The required input fields, which are passed to the super constructor, will be passed to the scoring methods in the same order as they appear in the list.
-The names correspond the keys in the `fields` data member of the `EvalInstance` class, which are populated via the dataset reader.
+The required input fields, which are passed to the super constructor, will be passed to the scoring methods in the same order as they appear in the lists.
+First, the `required_summary_fields` are fields specific to the summary, such as the summary itself or any extra data.
+The second, `required_context_fields` are the fields which the summary is scored against, such as the reference documents.
+The names in both lists correspond the keys in the `fields` data member of the `EvalInstance` class, which are populated via the dataset reader.
 
 The jackknifer is responsible for taking the input fields and returning a new list of fields for evaluation.
 The average metric's value across this new list will be equal to the jackknifed score (see `sacrerouge.data.jackknifers`)

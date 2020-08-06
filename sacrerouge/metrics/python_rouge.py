@@ -64,7 +64,7 @@ class PythonRouge(ReferenceBasedMetric):
                  remove_stopwords: bool = False,
                  compute_rouge_l: bool = False,
                  rouge_data_dir: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5/data'):
-        super().__init__(['references'], jackknifer=ReferencesJackknifer())
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.ngram_orders = ngram_orders
         self.max_sentences = max_sentences
         self.max_words = max_words

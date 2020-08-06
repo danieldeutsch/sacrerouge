@@ -1,6 +1,6 @@
 import jsons
 
-from sacrerouge.data.fields import Fields, SummaryField
+from sacrerouge.data.fields import Fields
 
 
 class EvalInstance(object):
@@ -8,12 +8,10 @@ class EvalInstance(object):
                  instance_id: str,
                  summarizer_id: str,
                  summarizer_type: str,
-                 summary: SummaryField,
                  fields: Fields) -> None:
         self.instance_id = instance_id
         self.summarizer_id = summarizer_id
         self.summarizer_type = summarizer_type
-        self.summary = summary
         self.fields = fields
 
     def __repr__(self) -> str:
