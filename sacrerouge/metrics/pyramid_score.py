@@ -8,7 +8,7 @@ from sacrerouge.metrics import Metric
 
 
 @Metric.register('pyramid-score')
-class ModifiedPyramidScore(Metric):
+class PyramidScore(Metric):
     """
     Implements calculating the modified pyramid score based on the description from page 7
     of https://www.cis.upenn.edu/~nenkova/papers/p1-nenkova.pdf and section 3 of
