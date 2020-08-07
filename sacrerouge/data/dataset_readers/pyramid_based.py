@@ -58,20 +58,23 @@ class PyramidBasedDatasetReader(DatasetReader):
             reference_instances = []
             for instance_id in instance_ids:
                 pyramid = pyramids[instance_id]
-                for i in range(len(pyramid.summarizer_ids)):
-                    annotation = pyramid.get_annotation(i)
-                    reduced_pyramid = pyramid.remove_summary(i)
-                    fields = Fields({
-                        'annotation': PyramidAnnotationField(annotation),
-                        'pyramid': PyramidField(reduced_pyramid)
-                    })
-                    instance = EvalInstance(
-                        annotation.instance_id,
-                        annotation.summarizer_id,
-                        annotation.summarizer_type,
-                        fields
-                    )
-                    reference_instances.append(instance)
+
+                # We can only do this if there are > 1 summaries used to construct the pyramid
+                if len(pyramid.summarizer_ids) > 1:
+                    for i in range(len(pyramid.summarizer_ids)):
+                        annotation = pyramid.get_annotation(i)
+                        reduced_pyramid = pyramid.remove_summary(i)
+                        fields = Fields({
+                            'annotation': PyramidAnnotationField(annotation),
+                            'pyramid': PyramidField(reduced_pyramid)
+                        })
+                        instance = EvalInstance(
+                            annotation.instance_id,
+                            annotation.summarizer_id,
+                            annotation.summarizer_type,
+                            fields
+                        )
+                        reference_instances.append(instance)
             logger.info(f'Generated {len(reference_instances)} reference summary annotations')
             instances.extend(reference_instances)
 
