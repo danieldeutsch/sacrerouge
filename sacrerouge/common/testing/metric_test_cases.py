@@ -21,25 +21,27 @@ class MetricTestCase(unittest.TestCase):
                     references.append(reference['text'])
                 cls.references_list.append(references)
 
-    def _assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict], *args):
+    def _assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict], *args, num_summaries: int = None):
         """Ensures that the output from `score_all` is equal to the `expected_output`."""
-        assert len(self.summaries) == len(expected_output)
-        actual_output = metric.score_all(self.summaries, *args)
+        summaries = self.summaries if num_summaries is None else self.summaries[:num_summaries]
+        assert len(summaries) == len(expected_output)
+        actual_output = metric.score_all(summaries, *args)
         for i, (expected, actual) in enumerate(zip(expected_output, actual_output)):
             assert actual.approx_equal(MetricsDict(expected), abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
 
-    def _assert_order_invariant(self, metric: Metric, *args):
+    def _assert_order_invariant(self, metric: Metric, *args, num_summaries: int = None):
         """Ensures that the output from `score_multi_all` returns the same results, no matter the order."""
         # Reverse the summaries to create a new fake set of summaries that will be grouped together
         # with the same references. It does not matter that they're not the right references since we are
         # only testing to make sure the output doesn't change.
-        faked = list(reversed(self.summaries))
+        summaries = self.summaries if num_summaries is None else self.summaries[:num_summaries]
+        faked = list(reversed(summaries))
 
-        summaries_list = list(zip(*[self.summaries, faked]))
+        summaries_list = list(zip(*[summaries, faked]))
         metrics_lists1 = metric.score_multi_all(summaries_list, *args)
         metrics_lists1 = list(zip(*metrics_lists1))
 
-        summaries_list = list(zip(*[faked, self.summaries]))
+        summaries_list = list(zip(*[faked, summaries]))
         metrics_lists2 = metric.score_multi_all(summaries_list, *args)
         metrics_lists2 = list(zip(*metrics_lists2))
 
@@ -50,11 +52,13 @@ class MetricTestCase(unittest.TestCase):
 
 
 class ReferenceBasedMetricTestCase(MetricTestCase):
-    def assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict]):
-        self._assert_expected_output(metric, expected_output, self.references_list)
+    def assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict], num_summaries: int = None):
+        references_list = self.references_list if num_summaries is None else self.references_list[:num_summaries]
+        self._assert_expected_output(metric, expected_output, references_list, num_summaries=num_summaries)
 
-    def assert_order_invariant(self, metric: Metric):
-        self._assert_order_invariant(metric, self.references_list)
+    def assert_order_invariant(self, metric: Metric, num_summaries: int = None):
+        references_list = self.references_list if num_summaries is None else self.references_list[:num_summaries]
+        self._assert_order_invariant(metric, references_list, num_summaries=num_summaries)
 
 
 class ReferencelessMetricTestCase(MetricTestCase):
