@@ -7,6 +7,8 @@ The following metrics have been implemented:
 - [BEwT-E](bewte.md)
 - [METEOR](meteor.md)
 - [MoverScore](moverscore.md)
+- [Pyramid Score](pyramid-score.md)
+- [PyrEval](pyreval.md)
 - [ROUGE](rouge.md) and a [Python-based implementation](python-rouge.md)
 - [SIMetrix](simetrix.md)
 - [Sum-QE](sumqe.md)
