@@ -343,10 +343,14 @@ class PyrEvalSetupSubcommand(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the PyrEval metric'
         self.parser = parser.add_parser('pyreval', description=description, help=description)
+        self.parser.add_argument('--force', action='store_true', help='Force setting up the metric again')
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides
     def run(self, args):
+        if args.force and os.path.exists(f'{DATA_ROOT}/metrics/PyrEval'):
+            shutil.rmtree(f'{DATA_ROOT}/metrics/PyrEval')
+
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
