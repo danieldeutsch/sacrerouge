@@ -29,7 +29,8 @@ class Rouge(ReferenceBasedMetric):
                  compute_rouge_l: bool = False,
                  skip_bigram_gap_length: Optional[int] = None,
                  wlcs_weight: Optional[float] = None,
-                 rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5'):
+                 rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5',
+                 scoring_function: str = 'average'):
         super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
@@ -41,6 +42,7 @@ class Rouge(ReferenceBasedMetric):
         self.wlcs_weight = wlcs_weight
         self.rouge_script_location = f'{rouge_root}/ROUGE-1.5.5.pl'
         self.rouge_eval_home = f'{rouge_root}/data'
+        self.scoring_function = scoring_function
 
         if not os.path.exists(rouge_root):
             raise Exception(f'Path "{rouge_root}" does not exist. Have you setup ROUGE?')
@@ -169,7 +171,6 @@ class Rouge(ReferenceBasedMetric):
                 '-a',
                 '-c', '95',
                 '-r', '1000',
-                '-f', 'A',
                 '-p', '0.5',
                 '-t', '0',
                 '-d'
@@ -188,6 +189,12 @@ class Rouge(ReferenceBasedMetric):
                 command += ['-2', str(self.skip_bigram_gap_length), '-u']
             if self.wlcs_weight is not None:
                 command += ['-w', str(self.wlcs_weight)]
+            if self.scoring_function == 'average':
+                command += ['-f', 'A']
+            elif self.scoring_function == 'max':
+                command += ['-f', 'B']
+            else:
+                raise Exception(f'Unrecognized scoring function: "{self.scoring_function}"')
             command += [config_filename]
 
             # We used to fail if anything was written to stderr, but ROUGE writes
