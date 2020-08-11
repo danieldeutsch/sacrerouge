@@ -198,7 +198,8 @@ class PyrEval(ReferenceBasedMetric):
                                        file_index_to_dir_index: Dict[int, int],
                                        input_dir: str,
                                        output_dir: str,
-                                       sort_summaries: bool) -> None:
+                                       sort_summaries: bool,
+                                       unique_summaries: bool) -> List[int]:
         os.makedirs(output_dir, exist_ok=True)
 
         # The PyrEval code changes its output based on the order of the references, so we sort if necessary
@@ -208,24 +209,40 @@ class PyrEval(ReferenceBasedMetric):
 
         # Copy the summaries from the temporary directory over to the PyrEval directory. The target directories
         # must be 1, 2, ...
-        for i, summary in enumerate(summaries):
+        array_index_to_tgt_index = []
+        summary_to_tgt_index = {}
+        index = 0
+        for summary in summaries:
+            if unique_summaries:
+                if summary in summary_to_tgt_index:
+                    array_index_to_tgt_index.append(summary_to_tgt_index[summary])
+                    continue
+                else:
+                    summary_to_tgt_index[summary] = index
+                    array_index_to_tgt_index.append(index)
+            else:
+                array_index_to_tgt_index.append(index)
+
             file_index = summary_to_index[summary]
             src = f'{input_dir}/{file_index}.xml'
-            tgt = f'{output_dir}/{i}.xml'
+            tgt = f'{output_dir}/{index}.xml'
             logging.info(f'Copying {src} to {tgt}')
             shutil.copy(f'{src}', f'{tgt}')
 
             dir_index = file_index_to_dir_index[file_index]
             src_dir = f'{input_dir}/{dir_index}'
-            tgt_dir = f'{output_dir}/{i + 1}'
+            tgt_dir = f'{output_dir}/{index + 1}'
             os.makedirs(tgt_dir)
             for ext in ['.ls', '.segs']:
                 src = f'{src_dir}/{file_index}{ext}'
-                tgt = f'{tgt_dir}/{i}{ext}'
-                logging.info(f'Copying {src} to {tgt}, updating document ID to {i + 1}')
-                self._copy_file_and_change_id(src, tgt, i + 1)
+                tgt = f'{tgt_dir}/{index}{ext}'
+                logging.info(f'Copying {src} to {tgt}, updating document ID to {index + 1}')
+                self._copy_file_and_change_id(src, tgt, index + 1)
 
-    def _score_summaries(self) -> List[MetricsDict]:
+            index += 1
+        return array_index_to_tgt_index
+
+    def _score_summaries(self, array_index_to_tgt_index: List[int]) -> List[MetricsDict]:
         logging.info('Building pyramids and scoring peers')
 
         # Each step can be run by piping its ID into the pyreval.py program.
@@ -265,7 +282,7 @@ class PyrEval(ReferenceBasedMetric):
             })
 
         metrics_list = []
-        for index in range(len(metrics_dicts)):
+        for index in array_index_to_tgt_index:
             metrics_list.append(metrics_dicts[index])
 
         logging.info('Finished building pyramids and scoring peers')
@@ -316,20 +333,22 @@ class PyrEval(ReferenceBasedMetric):
             # Now build the pyramids and score
             metrics_dict_lists = []
             for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
-                self._copy_summaries_for_processing(summaries,
-                                                    summary_to_index,
-                                                    file_index_to_dir,
-                                                    f'{temp_dir}/peers',
-                                                    f'{self.pyreval_root}/Preprocess/peer_summaries',
-                                                    False)
+                array_index_to_tgt_index = self._copy_summaries_for_processing(summaries,
+                                                                               summary_to_index,
+                                                                               file_index_to_dir,
+                                                                               f'{temp_dir}/peers',
+                                                                               f'{self.pyreval_root}/Preprocess/peer_summaries',
+                                                                               False,
+                                                                               True)
                 self._copy_summaries_for_processing(references,
                                                     summary_to_index,
                                                     file_index_to_dir,
                                                     f'{temp_dir}/peers',
                                                     f'{self.pyreval_root}/Preprocess/wise_crowd_summaries',
-                                                    True)
+                                                    True,
+                                                    False)
 
-                metrics_list = self._score_summaries()
+                metrics_list = self._score_summaries(array_index_to_tgt_index)
                 metrics_dict_lists.append(metrics_list)
 
                 # Clean for the next iteration
@@ -343,10 +362,14 @@ class PyrEvalSetupSubcommand(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the PyrEval metric'
         self.parser = parser.add_parser('pyreval', description=description, help=description)
+        self.parser.add_argument('--force', action='store_true', help='Force setting up the metric again')
         self.parser.set_defaults(subfunc=self.run)
 
     @overrides
     def run(self, args):
+        if args.force and os.path.exists(f'{DATA_ROOT}/metrics/PyrEval'):
+            shutil.rmtree(f'{DATA_ROOT}/metrics/PyrEval')
+
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
