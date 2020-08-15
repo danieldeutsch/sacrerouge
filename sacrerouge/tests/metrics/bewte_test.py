@@ -1,7 +1,10 @@
+import pytest
+
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
 from sacrerouge.metrics import BEwTE
 
 
+@pytest.mark.skip()
 class TestBEwTE(ReferenceBasedMetricTestCase):
     def test_bewte(self):
         # This is a regression test, not necessarily a test for correctness

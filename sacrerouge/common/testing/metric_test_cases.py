@@ -25,6 +25,7 @@ class MetricTestCase(unittest.TestCase):
         """Ensures that the output from `score_all` is equal to the `expected_output`."""
         assert len(self.summaries) == len(expected_output)
         actual_output = metric.score_all(self.summaries, *args)
+        assert len(actual_output) == len(expected_output)
         for i, (expected, actual) in enumerate(zip(expected_output, actual_output)):
             assert actual.approx_equal(MetricsDict(expected), abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
 
