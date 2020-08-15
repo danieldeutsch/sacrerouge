@@ -8,6 +8,7 @@ from sacrerouge.commands.score import add_score_arguments, save_score_results, s
 from sacrerouge.common import Registrable
 from sacrerouge.common.arguments import add_metric_arguments, get_dataset_reader_from_argument, get_metric_from_arguments
 from sacrerouge.common.logging import prepare_global_logging
+from sacrerouge.common.util import import_module_and_submodules
 from sacrerouge.metrics import Metric
 
 
@@ -62,6 +63,11 @@ class MetricSubcommand(Subcommand):
     def run_evaluate(self, args: argparse.Namespace) -> None:
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
+        import_module_and_submodules('sacrerouge')
+        include_packages = args.include_packages or []
+        for package in include_packages:
+            import_module_and_submodules(package)
+
         dataset_reader = get_dataset_reader_from_argument(args.dataset_reader)
         metric = get_metric_from_arguments(self.metric_type, args)
         input_files = args.input_files
@@ -74,11 +80,16 @@ class MetricSubcommand(Subcommand):
     def run_score(self, args: argparse.Namespace) -> None:
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
+        import_module_and_submodules('sacrerouge')
+        include_packages = args.include_packages or []
+        for package in include_packages:
+            import_module_and_submodules(package)
+
         dataset_reader = get_dataset_reader_from_argument(args.dataset_reader)
         metric = get_metric_from_arguments(self.metric_type, args)
         input_files = args.input_files
 
         instances = dataset_reader.read(*input_files)
-        metrics_dicts = score_instances(instances, [metric])
+        metrics_dicts = score_instances(instances, [metric], args.disable_peer_jackknifing)
 
         save_score_results(metrics_dicts, args.output_jsonl, args.silent)
