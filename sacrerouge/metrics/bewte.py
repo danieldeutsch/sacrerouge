@@ -90,9 +90,12 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 1 command: "{command}"')
+        print('Step 1')
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
-        process.communicate()
+        stdout, stderr = process.communicate()
+        print(stdout)
+        print(stderr)
 
     def _run_step2(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -126,9 +129,13 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 2 command: "{command}"')
+        print('Step 2')
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
+        stdout, stderr = process.communicate()
+        print(stdout)
+        print(stderr)
 
     def _run_step3(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -150,8 +157,12 @@ class BEwTE(ReferenceBasedMetric):
 
         logger.info(f'Running BEwTE step 3 command: "{command}"')
         redirect = None if self.verbose else PIPE
+        print('STep 3')
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
+        stdout, stderr = process.communicate()
+        print(stdout)
+        print(stderr)
 
     def _run_step4(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -176,7 +187,7 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 4 command: "{command}"')
-
+        print('step 4')
         process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         stdout, _ = process.communicate()
         return stdout.decode()
