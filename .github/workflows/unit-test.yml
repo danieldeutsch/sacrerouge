@@ -36,14 +36,6 @@ jobs:
         python -m sacrerouge setup-metric meteor
         python -m sacrerouge setup-metric rouge
         python -m sacrerouge setup-metric simetrix
-    - name: Set up ROUGE dependencies
-      run: |
-        sudo apt-get install libxml-dom-perl
-        pushd ~/.sacrerouge/metrics/ROUGE-1.5.5/data/WordNet-2.0-Exceptions
-        ./buildExeptionDB.pl . exc WordNet-2.0.exc.db
-        cd ..
-        rm WordNet-2.0.exc.db
-        ln -s WordNet-2.0-Exceptions/WordNet-2.0.exc.db WordNet-2.0.exc.db
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
