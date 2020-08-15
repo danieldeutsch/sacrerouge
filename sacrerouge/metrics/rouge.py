@@ -247,7 +247,29 @@ class RougeSetupSubcommand(Subcommand):
 
         process = Popen(command, shell=True)
         process.communicate()
-        if process.returncode == 0:
-            print('ROUGE setup success')
-        else:
+        if process.returncode != 0:
             print('ROUGE setup failure')
+
+        # ROUGE has data files which may not successfully load (I think this might be platform-dependent, but
+        # I have never verified this). Therefore, if it fails to run on a simple example, the user needs to
+        # run some perl code within the ROUGE directory to correct the data file
+        try:
+            summary = 'Dan walked to the bakery this morning.'
+            reference = 'Dan went to buy scones earlier this morning.'
+            rouge = Rouge()
+            rouge.score(summary, [reference])
+            print('ROUGE setup success')
+        except IndexError:
+            print('ROUGE setup failure')
+            print('It is very likely that you need to rebuild the ROUGE database file. See '
+                  'https://github.com/danieldeutsch/sacrerouge/blob/master/doc/metrics/rouge.md for '
+                  'instructions on how to rebuild the necessary file. Afterward, this example '
+                  'should run without failing:')
+            print()
+            print('>>> from sacrerouge.metrics import Rouge')
+            print('>>> ')
+            print('>>> summary = "Dan walked to the bakery this morning."')
+            print('>>> reference = "Dan went to buy scones earlier this morning."')
+            print('>>> ')
+            print('>>> rouge = Rouge()')
+            print('>>> rouge.score(summary, [reference])')
