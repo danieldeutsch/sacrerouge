@@ -90,12 +90,9 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 1 command: "{command}"')
-        print('Step 1')
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
-        stdout, stderr = process.communicate()
-        print('Step1 stdout', stdout.decode())
-        print('Step1 stdout', stderr.decode())
+        process.communicate()
 
     def _run_step2(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -129,13 +126,10 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 2 command: "{command}"')
-        print('Step 2')
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
-        stdout, stderr = process.communicate()
-        print('Step2 stdout', stdout.decode())
-        print('Step2 stdout', stderr.decode())
+        process.communicate()
 
     def _run_step3(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -157,12 +151,8 @@ class BEwTE(ReferenceBasedMetric):
 
         logger.info(f'Running BEwTE step 3 command: "{command}"')
         redirect = None if self.verbose else PIPE
-        print('STep 3')
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
-        stdout, stderr = process.communicate()
-        print('Step3 stdout', stdout.decode())
-        print('Step3 stdout', stderr.decode())
 
     def _run_step4(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -187,7 +177,6 @@ class BEwTE(ReferenceBasedMetric):
         command = ' && '.join(commands)
 
         logger.info(f'Running BEwTE step 4 command: "{command}"')
-        print('step 4')
         process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         stdout, _ = process.communicate()
         return stdout.decode()
@@ -364,10 +353,5 @@ class BEwTESetupSubcommand(Subcommand):
         process.communicate()
         if process.returncode == 0:
             print('BEwT-E setup success')
-            summary = "Dan walked to the bakery this morning."
-            reference = "Dan went to buy scones earlier this morning."
-            metric = BEwTE()
-            print(metric.score(summary, [reference]))
-            print('Done scoring')
         else:
             print('BEwT-E setup failure')
