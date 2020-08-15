@@ -49,6 +49,11 @@ def add_score_arguments(parser: argparse.ArgumentParser, include_config_argument
         nargs='+',
         help='A list of additional packages to include'
     )
+    parser.add_argument(
+        '--disable-peer-jackknifing',
+        action='store_true',
+        help='Disable running jackknifing for peer summaries'
+    )
 
 
 def _load_metrics(params: Params) -> List[Metric]:
@@ -61,7 +66,8 @@ def _load_metrics(params: Params) -> List[Metric]:
 
 def _score_with_metric(metric: Metric,
                        instances: List[EvalInstance],
-                       metrics_dicts: Dict[str, Dict[str, Metrics]]) -> None:
+                       metrics_dicts: Dict[str, Dict[str, Metrics]],
+                       disable_peer_jackknifing: bool = False) -> None:
     # The summaries need to be grouped based on identical context. For instance, we group all of the summaries
     # that have the same reference documents together. This can sometimes make calculating the metric faster. The
     # following variables assist doing this.
@@ -107,7 +113,7 @@ def _score_with_metric(metric: Metric,
         jackknifing_flags[index].append(is_jackknifing)
 
         # Potentially run jackknifing for the peers
-        if metric.requires_jackknifing() and instance.summarizer_type == 'peer':
+        if not disable_peer_jackknifing and metric.requires_jackknifing() and instance.summarizer_type == 'peer':
             jk_fields_list = metric.jackknifer.get_jackknifing_fields_list(context_fields)
             if jk_fields_list:
                 for jk_fields in jk_fields_list:
@@ -163,10 +169,12 @@ def _get_initial_metrics_dicts(instances: List[EvalInstance]) -> Dict[str, Dict[
     return metrics_dicts
 
 
-def score_instances(instances: List[EvalInstance], metrics: List[Metric]) -> Dict[str, Dict[str, Metrics]]:
+def score_instances(instances: List[EvalInstance],
+                    metrics: List[Metric],
+                    disable_peer_jackknifing: bool = False) -> Dict[str, Dict[str, Metrics]]:
     metrics_dicts = _get_initial_metrics_dicts(instances)
     for metric in metrics:
-        _score_with_metric(metric, instances, metrics_dicts)
+        _score_with_metric(metric, instances, metrics_dicts, disable_peer_jackknifing=disable_peer_jackknifing)
     return metrics_dicts
 
 
@@ -203,6 +211,6 @@ class ScoreSubcommand(Subcommand):
             input_files = [input_files]
 
         instances = dataset_reader.read(*input_files)
-        metrics_dicts = score_instances(instances, metrics)
+        metrics_dicts = score_instances(instances, metrics, args.disable_peer_jackknifing)
 
         save_score_results(metrics_dicts, args.output_jsonl, args.silent)
