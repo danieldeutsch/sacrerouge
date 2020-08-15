@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import sys
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -236,7 +237,19 @@ class RougeSetupSubcommand(Subcommand):
     @overrides
     def run(self, args):
         print(f'Downloading ROUGE-1.5.5')
-        download_file_from_google_drive('1y0rDnTplQ83b2PQu_TgezbFpGOthP0gG', f'{DATA_ROOT}/metrics/ROUGE-1.5.5.zip')
+
+        # I believe the ROUGE data files are platform-dependent. We verify it runs later, but in case it is, we have
+        # to download the data files for the platform.
+        # https://stackoverflow.com/questions/8220108/how-do-i-check-the-operating-system-in-python
+        if sys.platform in ['linux', 'linux2']:
+            file_id = '1K4J2wHGjAyr3LoSgaQuWZ_YyjtUGf26m'
+        elif sys.platform == 'darwin':
+            file_id = '1y0rDnTplQ83b2PQu_TgezbFpGOthP0gG'
+        else:
+            # No idea -- default to Linux
+            file_id = '1K4J2wHGjAyr3LoSgaQuWZ_YyjtUGf26m'
+
+        download_file_from_google_drive(file_id, f'{DATA_ROOT}/metrics/ROUGE-1.5.5.zip')
 
         commands = [
             f'cd {DATA_ROOT}/metrics',
@@ -250,9 +263,8 @@ class RougeSetupSubcommand(Subcommand):
         if process.returncode != 0:
             print('ROUGE setup failure')
 
-        # ROUGE has data files which may not successfully load (I think this might be platform-dependent, but
-        # I have never verified this). Therefore, if it fails to run on a simple example, the user needs to
-        # run some perl code within the ROUGE directory to correct the data file
+        # ROUGE has data files which may not successfully load. Therefore, if it fails to run on a simple example,
+        # the user needs to run some perl code within the ROUGE directory to correct the data file
         try:
             summary = 'Dan walked to the bakery this morning.'
             reference = 'Dan went to buy scones earlier this morning.'
