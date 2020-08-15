@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import shutil
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -8,7 +9,7 @@ from typing import List, Tuple
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
-from sacrerouge.common.util import command_exists
+from sacrerouge.common.util import command_exists, download_file_from_google_drive
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
@@ -260,6 +261,7 @@ class BEwTESetupSubcommand(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the BEwT-E metric'
         self.parser = parser.add_parser('bewte', description=description, help=description)
+        self.parser.add_argument('--force', action='store_true', help='Force setting up the metric again')
         self.parser.set_defaults(subfunc=self.run)
 
     def _edit_pom(self, file_path: str) -> None:
@@ -301,12 +303,35 @@ class BEwTESetupSubcommand(Subcommand):
     @overrides
     def run(self, args):
         assert command_exists('mvn'), 'BEwTE requires Maven to be installed'
-        assert command_exists('git-lfs'), 'BEwTE requires git-lfs to be installed'
 
+        if args.force and os.path.exists(f'{DATA_ROOT}/metrics/ROUGE-BEwTE'):
+            shutil.rmtree(f'{DATA_ROOT}/metrics/ROUGE-BEwTE')
+
+        # We have to clone the ROUGE-BEwTE repository and disable git-lfs, otherwise we may cause the repo
+        # to exceed the bandwidth quota, which results in a cloning failure. Afterward, the model files are downloaded
+        # and put into place
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
-            f'git clone https://github.com/igorbrigadir/ROUGE-BEwTE'
+            f'GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/igorbrigadir/ROUGE-BEwTE',
+
+        ]
+        command = ' && '.join(commands)
+
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode != 0:
+            print('BEwT-E setup failure')
+            return
+
+        # Download the models, unzip, and move to the correct directory
+        download_file_from_google_drive('1d0DjP8sxNoro_9fXaAlhB5JgqHjWMgst', f'{DATA_ROOT}/metrics/ROUGE-BEwTE/models.zip')
+        commands = [
+            f'cd {DATA_ROOT}/metrics/ROUGE-BEwTE',
+            f'unzip models.zip',
+            f'rm models.zip',
+            f'rm -r src/main/resources/models',
+            f'mv models src/main/resources/'
         ]
         command = ' && '.join(commands)
 

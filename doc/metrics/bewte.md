@@ -5,7 +5,7 @@ Our implementation wraps a [mavenized fork](https://github.com/igorbrigadir/ROUG
 The name for this metric is `bewte`.
 
 ## Setting Up
-Running BEwT-E requires having Git LFS, Java 1.6, and Maven installed.
+Running BEwT-E requires having Java 1.6 and Maven installed.
 Then, it can be set up with the following command:
 ```bash
 sacrerouge setup-metric bewte
