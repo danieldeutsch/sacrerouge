@@ -94,8 +94,8 @@ class BEwTE(ReferenceBasedMetric):
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         stdout, stderr = process.communicate()
-        print(stdout)
-        print(stderr)
+        print('Step1 stdout', stdout.decode())
+        print('Step1 stdout', stderr.decode())
 
     def _run_step2(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -134,8 +134,8 @@ class BEwTE(ReferenceBasedMetric):
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
         stdout, stderr = process.communicate()
-        print(stdout)
-        print(stderr)
+        print('Step2 stdout', stdout.decode())
+        print('Step2 stdout', stderr.decode())
 
     def _run_step3(self, temp_dir: str) -> None:
         args = ' '.join([
@@ -161,8 +161,8 @@ class BEwTE(ReferenceBasedMetric):
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
         stdout, stderr = process.communicate()
-        print(stdout)
-        print(stderr)
+        print('Step3 stdout', stdout.decode())
+        print('Step3 stdout', stderr.decode())
 
     def _run_step4(self, temp_dir: str) -> None:
         args = ' '.join([
