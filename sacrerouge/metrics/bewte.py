@@ -353,5 +353,10 @@ class BEwTESetupSubcommand(Subcommand):
         process.communicate()
         if process.returncode == 0:
             print('BEwT-E setup success')
+            summary = "Dan walked to the bakery this morning."
+            reference = "Dan went to buy scones earlier this morning."
+            metric = BEwTE()
+            print(metric.score(summary, [reference]))
+            print('Done scoring')
         else:
             print('BEwT-E setup failure')
