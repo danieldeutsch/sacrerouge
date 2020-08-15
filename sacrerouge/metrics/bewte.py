@@ -129,7 +129,6 @@ class BEwTE(ReferenceBasedMetric):
         redirect = None if self.verbose else PIPE
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
-        process.communicate()
 
     def _run_step3(self, temp_dir: str) -> None:
         args = ' '.join([
