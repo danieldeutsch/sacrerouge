@@ -2,7 +2,7 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.commands import Subcommand
-from sacrerouge.metrics import autosummeng, bertscore, bewte, meteor, moverscore, pyreval, python_rouge, rouge, simetrix, sumqe
+from sacrerouge.metrics import autosummeng, bertscore, bewte, bleurt, meteor, moverscore, pyreval, python_rouge, rouge, simetrix, sumqe
 
 
 class SetupMetricSubcommand(Subcommand):
@@ -16,6 +16,7 @@ class SetupMetricSubcommand(Subcommand):
             autosummeng.AutoSummENGSetupSubcommand(),
             bertscore.BertScoreSetupSubcommand(),
             bewte.BEwTESetupSubcommand(),
+            bleurt.BleurtSetupSubcommand(),
             meteor.MeteorSetupSubcommand(),
             moverscore.MoverScoreSetupSubcommand(),
             pyreval.PyrEvalSetupSubcommand(),
