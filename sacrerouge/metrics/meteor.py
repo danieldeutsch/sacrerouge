@@ -100,9 +100,7 @@ class Meteor(ReferenceBasedMetric):
 
             logger.info(f'Running METEOR command: "{command}"')
             process = Popen(command, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = process.communicate()
-            if stderr:
-                raise Exception(f'Meteor failed with stderr: {stderr.decode()}')
+            stdout, _ = process.communicate()
 
             final_score, individual_scores = self._parse_meteor_stdout(stdout.decode())
 
