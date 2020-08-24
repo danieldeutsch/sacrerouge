@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='sacrerouge',
-    version='0.0.6',
+    version='0.0.7',
     author='Daniel Deutsch',
     description='An open-source library for summarization evaluation metrics',
     url='https://github.com/danieldeutsch/sacrerouge',
