@@ -213,11 +213,23 @@ class Pyramid(object):
                     start -= offsets[summary_index]
                     end -= offsets[summary_index]
                     if text != summaries[summary_index][start:end]:
-                        found_text, start = _find_soft_matches(summaries[summary_index], text, start)
+                        found_text, found_start = _find_soft_matches(summaries[summary_index], text, start)
+                        if found_text is None:
+                            # Sometimes there's a &quot; character which messes it up. Try again
+                            text = re.sub('&quot;', '"', text)
+                            found_text, found_start = _find_soft_matches(summaries[summary_index], text, start)
+                            if found_text is None:
+                                print(f'Cannot find text: "{text}". Skipping part')
+                                continue
+                        start = found_start
                         end = start + len(found_text)
                         text = found_text
 
                     parts.append(Part(text, start, end))
+
+                if len(parts) == 0:
+                    print(f'SCU {scu_id} contributor "{contrib_label}" has 0 valid parts. Skipping')
+                    continue
 
                 if len(set(summary_indices)) > 1:
                     print(f'SCU {scu_id} contributor "{contrib_label}" comes from multiple summaries. Skipping contributor')
@@ -245,13 +257,17 @@ class Pyramid(object):
     @staticmethod
     def from_xml(instance_id: str,
                  file_path_or_xml: str,
-                 default_document_regex: str = None) -> 'Pyramid':
+                 default_document_regex: str = None,
+                 is_combined_file: bool = False) -> 'Pyramid':
         if os.path.exists(file_path_or_xml):
             xml = open(file_path_or_xml, 'r').read()
         else:
             xml = file_path_or_xml
 
         root = etree.fromstring(xml)
+        if is_combined_file:
+            root = root.xpath('./pyramid')[0]
+
         summaries, offsets, summarizer_ids = Pyramid._load_summaries(root, default_document_regex=default_document_regex)
         scus = Pyramid._load_scus(root, summaries, offsets)
         return Pyramid(instance_id, summaries, summarizer_ids, scus)
