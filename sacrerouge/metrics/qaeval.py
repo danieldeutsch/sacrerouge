@@ -128,29 +128,37 @@ else:
         def _answer_questions(self,
                               summaries_list: List[List[str]],
                               qa_pairs_lists: List[List[List[Tuple[str, str]]]]) -> List[List[List[List[Tuple[str, float, float]]]]]:
+            # Some (question, context) pairs might be duplicates (for instance because of jackknifing), so it should
+            # be a lot faster to deduplicate them
             qa_inputs = []
-            for summaries, qa_pairs_list in zip(summaries_list, qa_pairs_lists):
-                for summary in summaries:
-                    for qa_pairs in qa_pairs_list:
-                        for question, _ in qa_pairs:
-                            qa_inputs.append((question, summary))
+            context_to_input_index = {}
+            mapping = {}
 
-            logger.info(f'Answering {len(qa_inputs)} questions')
+            for i, (summaries, qa_pairs_list) in enumerate(zip(summaries_list, qa_pairs_lists)):
+                for j, summary in enumerate(summaries):
+                    for k, qa_pairs in enumerate(qa_pairs_list):
+                        for l, (question, _) in enumerate(qa_pairs):
+                            key = (question, summary)
+                            if key not in context_to_input_index:
+                                context_to_input_index[key] = len(qa_inputs)
+                                qa_inputs.append(key)
+                            mapping[(i, j, k, l)] = context_to_input_index[key]
+
+            logger.info(f'Answering {len(qa_inputs)} distinct (question, context) pairs')
             predictions = self.question_answerer.answer_all(qa_inputs)
             logger.info('Finished answering questions')
 
             # all_predictions_lists[instance][summary][reference] = [(prediction, prob, null_prob)]
             all_predictions_lists = []
-            index = 0
-            for summaries, qa_pairs_list in zip(summaries_list, qa_pairs_lists):
+            for i, (summaries, qa_pairs_list) in enumerate(zip(summaries_list, qa_pairs_lists)):
                 all_predictions_lists.append([])
-                for _ in summaries:
+                for j in range(len(summaries)):
                     all_predictions_lists[-1].append([])
-                    for qa_pairs in qa_pairs_list:
+                    for k, qa_pairs in enumerate(qa_pairs_list):
                         all_predictions_lists[-1][-1].append([])
-                        for question, _ in qa_pairs:
+                        for l, (question, _) in enumerate(qa_pairs):
+                            index = mapping[(i, j, k, l)]
                             all_predictions_lists[-1][-1][-1].append(predictions[index])
-                            index += 1
             return all_predictions_lists
 
         def _score_predictions(self,
