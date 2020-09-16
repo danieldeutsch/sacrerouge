@@ -98,7 +98,7 @@ else:
                     end = answer.end - answer.sent_start
                     generation_inputs.append((sentence, start, end))
 
-            logging.info(f'Generating questions for {generation_inputs} answers')
+            logging.info(f'Generating questions for {len(generation_inputs)} answers')
             question_list = self.question_generator.generate_all(generation_inputs)
             logging.info('Finished generating questions')
 
