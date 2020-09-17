@@ -69,6 +69,29 @@ else:
                     flat_summaries_list[-1].append(summary)
             return flat_summaries_list
 
+        def _get_empty_summary_mask(self,
+                                    summaries_list: List[List[str]],
+                                    references_list: List[List[str]]) -> Tuple[List[List[str]], List[List[str]], List[List[bool]]]:
+            is_empty_lists = []
+            non_empty_summaries_list = []
+            non_empty_references_list = []
+            for summaries, references in zip(summaries_list, references_list):
+                is_empty = []
+                non_empty_summaries = []
+                for summary in summaries:
+                    if len(summary.strip()) > 0:
+                        is_empty.append(False)
+                        non_empty_summaries.append(summary)
+                    else:
+                        is_empty.append(True)
+
+                is_empty_lists.append(is_empty)
+                if len(non_empty_summaries) > 0:
+                    non_empty_summaries_list.append(non_empty_summaries)
+                    non_empty_references_list.append(references)
+
+            return non_empty_summaries_list, non_empty_references_list, is_empty_lists
+
         def _generate_qa_pairs(self, references_list: List[List[str]]) -> List[List[List[Tuple[str, str]]]]:
             # To minimize time, we generate questions for distinct references
             reference_to_index = {}
@@ -185,15 +208,41 @@ else:
                     metrics_lists[-1].append(MetricsDict({'qa-eval': {'em': em, 'f1': f1}}))
             return metrics_lists
 
+        def _insert_empty_metrics(self,
+                                  metrics_list: List[List[MetricsDict]],
+                                  is_empty_lists: List[List[bool]]) -> List[List[MetricsDict]]:
+            # `is_empty_lists` tells us whether or not the respective input was empty. This runs in parallel with the
+            # original input. `metrics_list` is the output of the non-empty data. We need to insert empty metrics
+            # in the empty input positions, so we iterate over `is_empty_lists` and insert empty results and only
+            # progress through `metrics_list` if it's non-empty.
+            full_metrics_list = []
+            i = 0
+            for is_empty_list in is_empty_lists:
+                full_metrics_list.append([])
+                j = 0
+                for is_empty in is_empty_list:
+                    if is_empty:
+                        full_metrics_list[-1].append(MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}}))
+                    else:
+                        full_metrics_list[-1].append(metrics_list[i][j])
+                        j += 1
+                if j > 0:
+                    # This means we consumed one from this row
+                    i += 1
+            return full_metrics_list
+
         def score_multi_all(self,
                             summaries_list: List[List[SummaryType]],
                             references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
             summaries_list = self._flatten_summaries(summaries_list)
             references_list = self._flatten_summaries(references_list)
 
+            summaries_list, references_list, is_empty_lists = self._get_empty_summary_mask(summaries_list, references_list)
+
             qa_pairs_lists = self._generate_qa_pairs(references_list)
             all_predictions_lists = self._answer_questions(summaries_list, qa_pairs_lists)
-            return self._score_predictions(qa_pairs_lists, all_predictions_lists)
+            metrics_list = self._score_predictions(qa_pairs_lists, all_predictions_lists)
+            return self._insert_empty_metrics(metrics_list, is_empty_lists)
 
 
 class QAEvalSetupSubcommand(Subcommand):
