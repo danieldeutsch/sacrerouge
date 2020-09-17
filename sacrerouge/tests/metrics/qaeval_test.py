@@ -29,3 +29,36 @@ class TestQAEval(ReferenceBasedMetricTestCase):
     def test_qaeval_order_invariant(self):
         metric = QAEval()
         self.assert_order_invariant(metric)
+
+    def test_return_qa_pairs(self):
+        metric = QAEval()
+
+        summaries = [
+            'Dan walked to the bakery this morning.',
+            'He bought some scones today'
+        ]
+        reference = 'Dan went to buy scones earlier this morning.'
+
+        results_list = metric.score_multi(summaries, [reference], return_qa_pairs=True)
+        assert len(results_list) == 2
+        metrics, qa_pairs_list = results_list[0]
+        assert metrics['qa-eval']['em'] == 0.5
+        assert metrics['qa-eval']['f1'] == 0.5
+        assert len(qa_pairs_list) == 1
+        qa_pairs = qa_pairs_list[0]
+        assert len(qa_pairs) == 2
+        assert qa_pairs[0]['question']['question'] == 'Who went to buy scones earlier this morning?'
+        assert qa_pairs[0]['prediction']['prediction'] == 'Dan'
+        assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
+        assert qa_pairs[1]['prediction']['prediction'] == 'bakery'
+
+        metrics, qa_pairs_list = results_list[1]
+        assert metrics['qa-eval']['em'] == 0.5
+        assert metrics['qa-eval']['f1'] == 0.5
+        assert len(qa_pairs_list) == 1
+        qa_pairs = qa_pairs_list[0]
+        assert len(qa_pairs) == 2
+        assert qa_pairs[0]['question']['question'] == 'Who went to buy scones earlier this morning?'
+        assert qa_pairs[0]['prediction']['prediction'] == 'He'
+        assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
+        assert qa_pairs[1]['prediction']['prediction'] == 'scones'
