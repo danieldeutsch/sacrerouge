@@ -9,6 +9,7 @@ The following metrics have been implemented:
 - [MoverScore](moverscore.md)
 - [Pyramid Score](pyramid-score.md)
 - [PyrEval](pyreval.md)
+- [QAEval](qaeval.md)
 - [ROUGE](rouge.md) and a [Python-based implementation](python-rouge.md)
 - [SIMetrix](simetrix.md)
 - [Sum-QE](sumqe.md)

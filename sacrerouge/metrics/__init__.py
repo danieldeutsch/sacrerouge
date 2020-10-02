@@ -8,6 +8,7 @@ from sacrerouge.metrics.moverscore import MoverScore
 from sacrerouge.metrics.pyramid_score import PyramidScore
 from sacrerouge.metrics.pyreval import PyrEval
 from sacrerouge.metrics.python_rouge import PythonRouge
+from sacrerouge.metrics.qaeval import QAEval
 from sacrerouge.metrics.rouge import Rouge
 from sacrerouge.metrics.simetrix import SIMetrix
 from sacrerouge.metrics.sumqe import SumQE
