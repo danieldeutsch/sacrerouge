@@ -1,8 +1,16 @@
 import setuptools
 
+
+# version.py defines the VERSION variable.
+# We use exec here so we don't import sacrerouge whilst setting up.
+VERSION = {}
+with open('sacrerouge/version.py', 'r') as version_file:
+    exec(version_file.read(), VERSION)
+
+
 setuptools.setup(
     name='sacrerouge',
-    version='0.0.7',
+    version=VERSION['VERSION'],
     author='Daniel Deutsch',
     description='An open-source library for summarization evaluation metrics',
     url='https://github.com/danieldeutsch/sacrerouge',
