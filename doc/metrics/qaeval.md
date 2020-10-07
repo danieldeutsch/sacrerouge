@@ -4,7 +4,7 @@ It generates QA pairs from reference summaries, then uses a QA model to answer t
 The final score is the portion of questions that were answered correctly.
 
 ## Setting Up
-After installing SacreROUGE, then you must install the `qaeval` package:
+After installing SacreROUGE, then you must install the [`qaeval` package](https://github.com/danieldeutsch/qaeval):
 ```
 pip install qaeval
 ```
