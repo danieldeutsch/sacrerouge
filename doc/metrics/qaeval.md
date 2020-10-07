@@ -20,7 +20,7 @@ By default, this will download the model files to `~/.sacrerouge/metrics/qaeval/
 If you want to change this directoy, set the environment variable `SACREROUGE_DATA_ROOT` to whatever directory you want (instead of `~/.sacrerouge`).
 
 To test your setup, run the following code:
-```
+```python
 >>> import json
 >>> from sacrerouge.metrics import QAEval
 >>> 
