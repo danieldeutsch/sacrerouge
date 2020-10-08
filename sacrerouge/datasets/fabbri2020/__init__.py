@@ -1,0 +1,1 @@
+from sacrerouge.datasets.fabbri2020.subcommand import Fabbri2020Subcommand
