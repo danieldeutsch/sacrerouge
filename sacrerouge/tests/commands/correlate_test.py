@@ -133,6 +133,17 @@ class TestCorrelate(unittest.TestCase):
 
             # Check the individual summary-level correlations
             summary_level = json.load(open(f'{temp_dir}/summary-level.json', 'r'))
-            assert summary_level['pearson'] == pytest.approx([0.3216337604513384, 0.38969747442783453, 0.598326848917658], abs=1e-4)
-            assert summary_level['spearman'] == pytest.approx([0.6000000000000001, 0.316227766016838, 0.19999999999999998], abs=1e-4)
-            assert summary_level['kendall'] == pytest.approx([0.3333333333333334, 0.18257418583505539, 0.0], abs=1e-4)
+            assert len(summary_level['pearson']) == 3
+            assert summary_level['pearson']['M000'] == pytest.approx(0.3216337604513384, abs=1e-4)
+            assert summary_level['pearson']['M001'] == pytest.approx(0.38969747442783453, abs=1e-4)
+            assert summary_level['pearson']['M002'] == pytest.approx(0.598326848917658, abs=1e-4)
+
+            assert len(summary_level['spearman']) == 3
+            assert summary_level['spearman']['M000'] == pytest.approx(0.6000000000000001, abs=1e-4)
+            assert summary_level['spearman']['M001'] == pytest.approx(0.316227766016838, abs=1e-4)
+            assert summary_level['spearman']['M002'] == pytest.approx(0.19999999999999998, abs=1e-4)
+
+            assert len(summary_level['kendall']) == 3
+            assert summary_level['kendall']['M000'] == pytest.approx(0.3333333333333334, abs=1e-4)
+            assert summary_level['kendall']['M001'] == pytest.approx(0.18257418583505539, abs=1e-4)
+            assert summary_level['kendall']['M002'] == pytest.approx(0.0, abs=1e-4)

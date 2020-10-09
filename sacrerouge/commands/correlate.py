@@ -77,13 +77,13 @@ def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, MetricsDict]:
 
 def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
                                        metric1: str,
-                                       metric2: str) -> Tuple[Dict[str, float], Dict[str, List[float]]]:
-    pearsons = []
-    spearmans = []
-    kendalls = []
+                                       metric2: str) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
+    pearsons = {}
+    spearmans = {}
+    kendalls = {}
     num_nan = 0
     metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
-    for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
+    for instance_id, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
         group = list(group)
         values1 = [member.metrics[metric1] for member in group]
         values2 = [member.metrics[metric2] for member in group]
@@ -97,18 +97,18 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
             if any(np.isnan([r, rho, tau])):
                 num_nan += 1
             else:
-                pearsons.append(r)
-                spearmans.append(rho)
-                kendalls.append(tau)
+                pearsons[instance_id] = r
+                spearmans[instance_id] = rho
+                kendalls[instance_id] = tau
 
     if num_nan > 0:
         logger.warning(f'Skipped {num_nan} summary-level correlations because they were NaN')
 
     num_valid = len(pearsons)
     if num_valid > 0:
-        pearson = sum(pearsons) / len(pearsons)
-        spearman = sum(spearmans) / len(spearmans)
-        kendall = sum(kendalls) / len(kendalls)
+        pearson = sum(pearsons.values()) / len(pearsons)
+        spearman = sum(spearmans.values()) / len(spearmans)
+        kendall = sum(kendalls.values()) / len(kendalls)
     else:
         pearson, spearman, kendall = 0, 0, 0
 
