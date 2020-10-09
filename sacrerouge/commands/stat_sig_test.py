@@ -9,7 +9,6 @@ from typing import Any, Dict, Tuple
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.logging import prepare_global_logging
 
-
 logger = logging.getLogger(__name__)
 
 
