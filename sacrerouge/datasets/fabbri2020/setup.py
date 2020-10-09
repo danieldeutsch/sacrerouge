@@ -27,7 +27,8 @@ def load_judgments(file_path: str) -> Tuple[List[Dict[str, Any]], List[Dict[str,
             expert_annotations = instance['expert_annotations']
             turker_annotations = instance['turker_annotations']
 
-            # It appears that the first reference is always the ground-truth, the others are crowdsourced
+            # It appears that the first reference is always the ground-truth, the others are crowdsourced, although
+            # this is not 100% confirmed. It is only based on me looking through a handful of examples.
             assert len(references) == 11
             references[0] = {
                 'summarizer_id': 'ground-truth',
