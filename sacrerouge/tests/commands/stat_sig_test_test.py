@@ -1,5 +1,4 @@
 import json
-import pytest
 import subprocess
 import unittest
 from typing import Any, Dict
@@ -30,11 +29,11 @@ class TestStatisticalSignifianceTest(unittest.TestCase):
         assert results['alternative'] == 'two-sided'
         assert results['pearson']['n'] == 5
         assert results['pearson']['statistic'] == 3.0
-        assert results['pearson']['p_value'] == pytest.approx(0.22491588401596185, abs=1e-4)
+        assert results['pearson']['p_value'] == 0.3125
 
         assert results['spearman']['n'] == 3
         assert results['spearman']['statistic'] == 0.0
-        assert results['spearman']['p_value'] == pytest.approx(0.10880943004054568, abs=1e-4)
+        assert results['spearman']['p_value'] == 0.25
 
         assert 'kendall' not in results
 
