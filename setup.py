@@ -26,6 +26,6 @@ setuptools.setup(
         'overrides',
         'pytest',
         'requests',
-        'scipy'
+        'scipy>=1.5.2'
     ]
 )

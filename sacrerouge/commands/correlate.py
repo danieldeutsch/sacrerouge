@@ -8,7 +8,7 @@ import warnings
 from collections import defaultdict
 from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from sacrerouge.commands import Subcommand
 from sacrerouge.common.logging import prepare_global_logging
@@ -77,13 +77,13 @@ def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, MetricsDict]:
 
 def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
                                        metric1: str,
-                                       metric2: str) -> Dict[str, float]:
-    pearsons = []
-    spearmans = []
-    kendalls = []
+                                       metric2: str) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
+    pearsons = {}
+    spearmans = {}
+    kendalls = {}
     num_nan = 0
     metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
-    for _, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
+    for instance_id, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
         group = list(group)
         values1 = [member.metrics[metric1] for member in group]
         values2 = [member.metrics[metric2] for member in group]
@@ -97,33 +97,34 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
             if any(np.isnan([r, rho, tau])):
                 num_nan += 1
             else:
-                pearsons.append(r)
-                spearmans.append(rho)
-                kendalls.append(tau)
+                pearsons[instance_id] = r
+                spearmans[instance_id] = rho
+                kendalls[instance_id] = tau
 
     if num_nan > 0:
         logger.warning(f'Skipped {num_nan} summary-level correlations because they were NaN')
 
     num_valid = len(pearsons)
     if num_valid > 0:
-        pearson = sum(pearsons) / len(pearsons)
-        spearman = sum(spearmans) / len(spearmans)
-        kendall = sum(kendalls) / len(kendalls)
+        pearson = sum(pearsons.values()) / len(pearsons)
+        spearman = sum(spearmans.values()) / len(spearmans)
+        kendall = sum(kendalls.values()) / len(kendalls)
     else:
         pearson, spearman, kendall = 0, 0, 0
 
-    return {
-        'pearson': {
-            'r': pearson
-        },
-        'spearman': {
-            'rho': spearman
-        },
-        'kendall': {
-            'tau': kendall
-        },
+    averaged_correlations = {
+        'pearson': {'r': pearson},
+        'spearman': {'rho': spearman},
+        'kendall': {'tau': kendall},
         'num_summary_groups': num_valid
     }
+    individual_correlations = {
+        'pearson': pearsons,
+        'spearman': spearmans,
+        'kendall': kendalls
+    }
+
+    return averaged_correlations, individual_correlations
 
 
 def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
@@ -187,7 +188,8 @@ def compute_global_correlations(metrics_list: List[Dict[str, Any]],
 def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
                         metric1: str,
                         metric2: str,
-                        summarizer_type: str):
+                        summarizer_type: str,
+                        return_all_summary_level: bool = False):
     if isinstance(metrics_jsonl_files, str):
         metrics_jsonl_files = [metrics_jsonl_files]
 
@@ -200,7 +202,7 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
         metrics.select_metrics([metric1, metric2])
         metrics.average_values()
 
-    summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
+    summary_level, individual_summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
     system_level = compute_system_level_correlations(metrics_list, metric1, metric2)
     global_level = compute_global_correlations(metrics_list, metric1, metric2)
     results = {
@@ -208,6 +210,8 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
         'system_level': system_level,
         'global': global_level
     }
+    if return_all_summary_level:
+        results = (results, individual_summary_level)
     return results
 
 
@@ -251,13 +255,24 @@ class CorrelateSubcommand(Subcommand):
             action='store_true',
             help='Controls whether the log should be written to stdout'
         )
+        self.parser.add_argument(
+            '--summary-level-correlations-output',
+            type=str,
+            help='The file where all of the summary-level correlations should be written'
+        )
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
         metric1, metric2 = args.metrics
-        results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type)
+        return_all_summary_level = args.summary_level_correlations_output is not None
+        results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type,
+                                      return_all_summary_level=return_all_summary_level)
+
+        # Strip off the original results from the individual summary correlations
+        if return_all_summary_level:
+            results, all_summary_level = results
 
         if args.output_file:
             dirname = os.path.dirname(args.output_file)
@@ -268,3 +283,9 @@ class CorrelateSubcommand(Subcommand):
 
         if not args.silent:
             logger.info(json.dumps(results, indent=2))
+
+        # Save the individual summary-level correlations if the output file is provided. `all_summary_level`
+        # should only be defined if `return_all_summary_level` is true
+        if return_all_summary_level:
+            with open(args.summary_level_correlations_output, 'w') as out:
+                out.write(json.dumps(all_summary_level, indent=2))
