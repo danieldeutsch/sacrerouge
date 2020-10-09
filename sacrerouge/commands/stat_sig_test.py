@@ -42,6 +42,10 @@ def run_wilcoxon_tests(correlations_A: Dict[str, Dict[str, float]],
         instance_ids = set(correlations_A[coef].keys()) & set(correlations_B[coef].keys())
         logger.info(f'Found {len(instance_ids)} common instance correlations')
 
+        if len(instance_ids) == 0:
+            logger.warning('Found no common instance correlations. Skipping coefficient')
+            continue
+
         values_A = []
         values_B = []
         for instance_id in instance_ids:
