@@ -9,6 +9,12 @@ from sacrerouge.commands.stat_sig_test import run_wilcoxon_tests
 
 
 class TestStatisticalSignifianceTest(unittest.TestCase):
+    """
+    In scipy 1.4.1, the only method to calculate the p-value is through a normal approximation. In 1.5.2, they
+    added an exact calculation for samples smaller than 25 by default. These unit tests test a sample size of 3, and
+    therefore the change from 1.4.1 to 1.5.2 results in a different p-value. The tests here are written
+    to check the results against scipy 1.5.2.
+    """
     def setUp(self) -> None:
         self.correlations_A = {
             'pearson': {'A': 0.72, 'B': 0.14, 'C': 0.84, 'D': 0.98, 'E': 0.88},
