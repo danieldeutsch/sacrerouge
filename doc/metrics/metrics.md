@@ -11,6 +11,7 @@ The following metrics have been implemented:
 - [PyrEval](pyreval.md)
 - [QAEval](qaeval.md)
 - [ROUGE](rouge.md) and a [Python-based implementation](python-rouge.md)
+- [S3](s3.md)
 - [SIMetrix](simetrix.md)
 - [Sum-QE](sumqe.md)
     
