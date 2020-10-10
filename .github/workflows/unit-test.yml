@@ -80,6 +80,21 @@ jobs:
       if: steps.cache-simetrix.outputs.cache-hit != 'true'
       run: python -m sacrerouge setup-metric simetrix
 
+    - name: Create S3 Conda Environment
+      uses: conda-incubator/setup-miniconda@v1
+      with:
+        - environment-file: environments/s3.yml
+        - activate-environment: ''
+    - name: Cache S3
+      id: cache-s3
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-simetrix
+        path: ~/.sacrerouge/metrics/S3
+    - name: Install S3
+      if: steps.cache-s3.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric s3
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -87,5 +102,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+        S3_ENV: s3
       run: |
         pytest
