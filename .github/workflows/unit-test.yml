@@ -85,6 +85,7 @@ jobs:
       with:
         activate-environment: 's3'
         environment-file: environments/s3.yml
+      run: python -m nltk.downloader stopwords
     - name: Cache S3
       id: cache-s3
       uses: actions/cache@v2
@@ -104,6 +105,6 @@ jobs:
     - name: Test with pytest
       env:
         CONDA_INIT: /usr/share/miniconda/etc/profile.d/conda.sh
-        S3_ENV: s3
+#        S3_ENV: s3
       run: |
         pytest -s
