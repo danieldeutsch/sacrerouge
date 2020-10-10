@@ -129,7 +129,7 @@ class PyrEval(ReferenceBasedMetric):
         # Sentence splitting
         commands = [f'cd {self.pyreval_root}']
         if self.environment_name is not None:
-            commands.append(f'source {os.environ["CONDA_INIT"]}')
+            commands.append(f'. {os.environ["CONDA_INIT"]}')
             commands.append(f'conda activate {self.environment_name}')
         commands.append(f'python2.7 split-sent.py {self.pyreval_root}/Raw/peers {self.pyreval_root}/Raw/peers/split')
         command = ' && '.join(commands)
@@ -142,7 +142,7 @@ class PyrEval(ReferenceBasedMetric):
         # Stanford
         commands = [f'cd {self.pyreval_root}/Stanford']
         if self.environment_name is not None:
-            commands.append(f'source {os.environ["CONDA_INIT"]}')
+            commands.append(f'. {os.environ["CONDA_INIT"]}')
             commands.append(f'conda activate {self.environment_name}')
         commands.append(f'python2.7 stanford.py {self.pyreval_root}/Raw/peers/split 1 ..')
         command = ' && '.join(commands)
@@ -155,7 +155,7 @@ class PyrEval(ReferenceBasedMetric):
         # Preprocess
         commands = [f'cd {self.pyreval_root}/Preprocess']
         if self.environment_name is not None:
-            commands.append(f'source {os.environ["CONDA_INIT"]}')
+            commands.append(f'. {os.environ["CONDA_INIT"]}')
             commands.append(f'conda activate {self.environment_name}')
         commands.append(f'python2.7 preprocess.py 1')
         command = ' && '.join(commands)
@@ -251,7 +251,7 @@ class PyrEval(ReferenceBasedMetric):
         for args in ['4', '5 -t']:
             commands = [f'cd {self.pyreval_root}']
             if self.environment_name is not None:
-                commands.append(f'source {os.environ["CONDA_INIT"]}')
+                commands.append(f'. {os.environ["CONDA_INIT"]}')
                 commands.append(f'conda activate {self.environment_name}')
             commands.append(f'echo {args} | python2.7 pyreval.py')
             command = ' && '.join(commands)
