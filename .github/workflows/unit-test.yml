@@ -29,13 +29,57 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Install metrics
-      run: |
-        python -m sacrerouge setup-metric autosummeng
-        python -m sacrerouge setup-metric bewte
-        python -m sacrerouge setup-metric meteor
-        python -m sacrerouge setup-metric rouge
-        python -m sacrerouge setup-metric simetrix
+
+    - name: Cache AutoSummENG
+      id: cache-autosummeng
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-autosummeng
+        path: ~/.sacrerouge/metrics/AutoSummENG
+    - name: Install AutoSummENG
+      if: steps.cache-autosummeng.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric autosummeng
+
+    - name: Cache BEwTE
+      id: cache-bewte
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-bewte
+        path: ~/.sacrerouge/metrics/ROUGE-BEwTE
+    - name: Install BEwTE
+      if: steps.cache-bewte.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric bewte
+    
+    - name: Cache METEOR
+      id: cache-meteor
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-meteor
+        path: ~/.sacrerouge/metrics/METEOR
+    - name: Install METEOR
+      if: steps.cache-meteor.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric meteor
+    
+    - name: Cache ROUGE
+      id: cache-rouge
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-rouge
+        path: ~/.sacrerouge/metrics/ROUGE-1.5.5
+    - name: Install ROUGE
+      if: steps.cache-rouge.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric rouge
+    
+    - name: Cache SIMetrix
+      id: cache-simetrix
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-simetrix
+        path: ~/.sacrerouge/metrics/simetrix
+    - name: Install SIMetrix
+      if: steps.cache-simetrix.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric simetrix
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
