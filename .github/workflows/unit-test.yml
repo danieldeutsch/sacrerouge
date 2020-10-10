@@ -85,7 +85,11 @@ jobs:
       with:
         activate-environment: 's3'
         environment-file: environments/s3.yml
-      run: python -m nltk.downloader stopwords
+    - name: Install NLTK Stopwords
+      shell: sh -l {0}
+      run: |
+        conda activate s3
+        python -m nltk.downloader stopwords
     - name: Cache S3
       id: cache-s3
       uses: actions/cache@v2
