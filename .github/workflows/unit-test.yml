@@ -86,7 +86,7 @@ jobs:
         activate-environment: 's3'
         environment-file: environments/s3.yml
     - name: Install NLTK Stopwords
-      shell: sh -l {0}
+      shell: bash -l {0}
       run: |
         conda activate s3
         python -m nltk.downloader stopwords
