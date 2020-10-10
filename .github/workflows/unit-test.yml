@@ -100,20 +100,18 @@ jobs:
       if: steps.cache-s3.outputs.cache-hit != 'true'
       run: python -m sacrerouge setup-metric s3
 
-    - name: Create PyrEval Conda Environment
-      uses: conda-incubator/setup-miniconda@v1
-      with:
-        activate-environment: 'pyreval'
-        environment-file: environments/pyreval.yml
-    - name: Cache PyrEval
-      id: cache-pyreval
+    - name: Install QAEval dependencies
+      run:
+        pip install qaeval
+    - name: Cache QAEval
+      id: cache-qaeval
       uses: actions/cache@v2
       with:
-        key: ${{ runner.os }}-pyreval
-        path: ~/.sacrerouge/metrics/PyrEval
-    - name: Install PyrEval
-      if: steps.cache-pyreval.outputs.cache-hit != 'true'
-      run: python -m sacrerouge setup-metric pyreval
+        key: ${{ runner.os }}-qaeval
+        path: ~/.sacrerouge/metrics/qaeval
+    - name: Install QAEval
+      if: steps.cache-s3.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric qa-eval
 
     - name: Lint with flake8
       run: |
@@ -125,6 +123,5 @@ jobs:
       env:
         CONDA_INIT: /usr/share/miniconda/etc/profile.d/conda.sh
         S3_ENV: s3
-        PYREVAL_ENV: pyreval
       run: |
         pytest -s
