@@ -103,6 +103,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       env:
+        CONDA_INIT: /usr/share/miniconda/etc/profile.d/conda.sh
         S3_ENV: s3
       run: |
         pytest
