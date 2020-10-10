@@ -89,7 +89,7 @@ jobs:
       id: cache-s3
       uses: actions/cache@v2
       with:
-        key: ${{ runner.os }}-simetrix
+        key: ${{ runner.os }}-s3
         path: ~/.sacrerouge/metrics/S3
     - name: Install S3
       if: steps.cache-s3.outputs.cache-hit != 'true'
