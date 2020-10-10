@@ -83,8 +83,8 @@ jobs:
     - name: Create S3 Conda Environment
       uses: conda-incubator/setup-miniconda@v1
       with:
+        activate-environment: 's3'
         environment-file: environments/s3.yml
-        activate-environment: ''
     - name: Cache S3
       id: cache-s3
       uses: actions/cache@v2
