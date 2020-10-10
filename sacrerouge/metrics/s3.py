@@ -70,7 +70,7 @@ class S3(ReferenceBasedMetric):
 
             commands = [f'cd {self.s3_root}/S3']
             if self.environment_name is not None:
-                commands.append(f'source {os.environ["CONDA_INIT"]}')
+                commands.append(f'. {os.environ["CONDA_INIT"]}')
                 commands.append(f'conda activate {self.environment_name}')
             commands.append(f'python2.7 run_batch.py {input_file} {output_file} {self.embeddings_file} {self.model_dir}')
             command = ' && '.join(commands)
