@@ -106,4 +106,4 @@ jobs:
         CONDA_INIT: /usr/share/miniconda/etc/profile.d/conda.sh
         S3_ENV: s3
       run: |
-        pytest
+        pytest -s

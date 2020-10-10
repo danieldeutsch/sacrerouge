@@ -24,7 +24,7 @@ class S3(ReferenceBasedMetric):
                  s3_root: str = f'{DATA_ROOT}/metrics/S3',
                  embeddings_file: str = f'{DATA_ROOT}/metrics/S3/deps.words.bz2',
                  model_dir: str = f'{DATA_ROOT}/metrics/S3/models/en',
-                 verbose: bool = False):
+                 verbose: bool = True):
         super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
         self.environment_name = environment_name
         self.s3_root = s3_root
