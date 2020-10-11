@@ -29,3 +29,6 @@ class TestBleurt(ReferenceBasedMetricTestCase):
     def test_bleurt_order_invariant(self):
         metric = Bleurt(environment_name=os.environ['BLEURT_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('bleurt', ['--environment_name', f'{os.environ["BLEURT_ENV"]}'])

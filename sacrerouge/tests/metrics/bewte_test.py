@@ -28,3 +28,6 @@ class TestBEwTE(ReferenceBasedMetricTestCase):
     def test_bewte_order_invariant(self):
         metric = BEwTE()
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('bewte')

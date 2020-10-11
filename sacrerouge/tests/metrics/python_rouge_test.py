@@ -234,3 +234,6 @@ class TestPythonRouge(ReferenceBasedMetricTestCase):
     def test_python_rouge_order_invariant(self):
         metric = PythonRouge()
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('python-rouge')

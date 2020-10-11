@@ -29,3 +29,6 @@ class TestSumQE(ReferencelessMetricTestCase):
     def test_sum_que_order_invariant(self):
         metric = SumQE(python_binary=os.environ['SUMQE_PYTHON_BINARY'])
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('sum-qe', ['--python_binary', f'{os.environ["SUMQE_PYTHON_BINARY"]}'])

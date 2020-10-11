@@ -29,3 +29,6 @@ class TestPyrEval(ReferenceBasedMetricTestCase):
     def test_pyreval_order_invariant(self):
         metric = PyrEval(environment_name=os.environ['PYREVAL_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('pyreval', ['--environment_name', f'{os.environ["PYREVAL_ENV"]}'])

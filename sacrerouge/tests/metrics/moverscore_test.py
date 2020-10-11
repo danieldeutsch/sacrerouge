@@ -29,3 +29,6 @@ class TestMoverScore(ReferenceBasedMetricTestCase):
     def test_moverscore_order_invariant(self):
         metric = MoverScore()
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('moverscore')

@@ -25,3 +25,6 @@ class TestAutoSummENG(ReferenceBasedMetricTestCase):
     def test_autosummeng_order_invariant(self):
         metric = AutoSummENG()
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('autosummeng')

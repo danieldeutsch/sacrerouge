@@ -62,3 +62,6 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         assert qa_pairs[0]['prediction']['prediction'] == 'He'
         assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
         assert qa_pairs[1]['prediction']['prediction'] == 'scones'
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('qa-eval')

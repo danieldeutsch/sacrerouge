@@ -29,3 +29,6 @@ class TestS3(ReferenceBasedMetricTestCase):
     def test_s3_order_invariant(self):
         metric = S3(environment_name=os.environ['S3_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('s3', ['--environment_name', f'{os.environ["S3_ENV"]}'])

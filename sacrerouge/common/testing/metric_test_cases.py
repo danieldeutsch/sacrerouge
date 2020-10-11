@@ -1,6 +1,8 @@
+import subprocess
 import unittest
-from typing import List
+from typing import List, Type
 
+from sacrerouge.common import TemporaryDirectory
 from sacrerouge.common.testing import MULTILING_DOCUMENTS, MULTILING_SUMMARIES
 from sacrerouge.data import MetricsDict
 from sacrerouge.io import JsonlReader
@@ -61,6 +63,30 @@ class MetricTestCase(unittest.TestCase):
             for metrics1, metrics2 in zip(metrics_list1, metrics_list2):
                 assert metrics1.approx_equal(metrics2)
 
+    def _assert_commandline_runs(self,
+                                 metric_name: str,
+                                 dataset_reader_name: str,
+                                 input_files: List[str],
+                                 extra_arguments: List[str] = None):
+        # Ensures that the metric can be run through its commandline version. Does not test
+        # to make sure the output is correct. Jackknifing is disabled to make the test run a bit faster
+        extra_arguments = extra_arguments or []
+        with TemporaryDirectory() as temp_dir:
+            output_file = f'{temp_dir}/scores.jsonl'
+            command = [
+                'python', '-m', 'sacrerouge', metric_name, 'score',
+                output_file,
+                '--disable-peer-jackknifing',
+                '--dataset-reader', dataset_reader_name,
+                '--input-file', *input_files,
+                *extra_arguments
+            ]
+            subprocess.run(command, check=True)
+            scores = JsonlReader(output_file).read()
+            assert len(scores) > 0
+            for score in scores:
+                assert len(score['metrics']) > 0
+
 
 class DocumentBasedMetricTestCase(MetricTestCase):
     def assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict]):
@@ -68,6 +94,9 @@ class DocumentBasedMetricTestCase(MetricTestCase):
 
     def assert_order_invariant(self, metric: Metric):
         self._assert_order_invariant(metric, self.documents_list)
+
+    def assert_commandline_runs(self, metric_name: str, extra_arguments: List[str] = None):
+        self._assert_commandline_runs(metric_name, 'split-document-based', [MULTILING_DOCUMENTS, MULTILING_SUMMARIES], extra_arguments)
 
 
 class ReferenceBasedMetricTestCase(MetricTestCase):
@@ -77,6 +106,9 @@ class ReferenceBasedMetricTestCase(MetricTestCase):
     def assert_order_invariant(self, metric: Metric):
         self._assert_order_invariant(metric, self.references_list)
 
+    def assert_commandline_runs(self, metric_name: str, extra_arguments: List[str] = None):
+        self._assert_commandline_runs(metric_name, 'reference-based', [MULTILING_SUMMARIES], extra_arguments)
+
 
 class ReferencelessMetricTestCase(MetricTestCase):
     def assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict]):
@@ -84,3 +116,6 @@ class ReferencelessMetricTestCase(MetricTestCase):
 
     def assert_order_invariant(self, metric: Metric):
         self._assert_order_invariant(metric)
+
+    def assert_commandline_runs(self, metric_name: str, extra_arguments: List[str] = None):
+        self._assert_commandline_runs(metric_name, 'summaries-only', [MULTILING_SUMMARIES], extra_arguments)

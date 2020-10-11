@@ -50,3 +50,6 @@ class TestMeteor(ReferenceBasedMetricTestCase):
             meteor = Meteor()
             score, _ = meteor.evaluate(model, gold)
             assert score['METEOR'] == pytest.approx(0.1828372, abs=1e-7)
+
+        def test_commandline_runs(self):
+            self.assert_commandline_runs('meteor')

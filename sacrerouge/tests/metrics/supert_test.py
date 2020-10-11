@@ -52,3 +52,6 @@ class TestSUPERT(DocumentBasedMetricTestCase):
     def test_supert_order_invariant(self):
         metric = SUPERT(os.environ['SUPERT_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('supert', ['--environment_name', f'{os.environ["SUPERT_ENV"]}'])

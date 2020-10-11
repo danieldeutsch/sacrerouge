@@ -48,3 +48,6 @@ class TestBertScore(ReferenceBasedMetricTestCase):
     def test_bertscore_order_invariant(self):
         metric = BertScore()
         self.assert_order_invariant(metric)
+
+    def test_commandline_runs(self):
+        self.assert_commandline_runs('bertscore')
