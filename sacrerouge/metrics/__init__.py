@@ -13,3 +13,4 @@ from sacrerouge.metrics.rouge import Rouge
 from sacrerouge.metrics.s3 import S3
 from sacrerouge.metrics.simetrix import SIMetrix
 from sacrerouge.metrics.sumqe import SumQE
+from sacrerouge.metrics.supert import SUPERT

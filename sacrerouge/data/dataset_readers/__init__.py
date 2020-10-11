@@ -1,5 +1,5 @@
 from sacrerouge.data.dataset_readers.dataset_reader import DatasetReader
-from sacrerouge.data.dataset_readers.document_based import DocumentBasedDatasetReader
+from sacrerouge.data.dataset_readers.document_based import DocumentBasedDatasetReader, SplitDocumentBasedDatasetReader
 from sacrerouge.data.dataset_readers.pyramid_based import PyramidBasedDatasetReader
 from sacrerouge.data.dataset_readers.reference_based import ReferenceBasedDatasetReader
 from sacrerouge.data.dataset_readers.summary_only import SummaryOnlyDatasetReader

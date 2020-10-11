@@ -1,0 +1,33 @@
+name: supert
+dependencies:
+  - python=3.7
+  - pip
+  - pip:
+      - boto3==1.13.5
+      - botocore==1.16.5
+      - certifi==2020.4.5.1
+      - chardet==3.0.4
+      - click==7.1.2
+      - decorator==4.4.2
+      - docutils==0.15.2
+      - future==0.18.2
+      - idna==2.9
+      - jmespath==0.9.5
+      - joblib==0.14.1
+      - networkx==2.4
+      - nltk==3.5
+      - numpy==1.18.4
+      - python-dateutil==2.8.1
+      - pytorch-transformers==1.2.0
+      - regex==2020.5.7
+      - requests==2.23.0
+      - s3transfer==0.3.3
+      - sacremoses==0.0.43
+      - scikit-learn==0.22.2.post1
+      - scipy==1.4.1
+      - sentencepiece==0.1.86
+      - six==1.14.0
+      - sklearn==0.0
+      - torch==1.5.0
+      - tqdm==4.46.0
+      - urllib3==1.25.9

@@ -1,7 +1,7 @@
 import unittest
 from typing import List
 
-from sacrerouge.common.testing import MULTILING_SUMMARIES
+from sacrerouge.common.testing import MULTILING_DOCUMENTS, MULTILING_SUMMARIES
 from sacrerouge.data import MetricsDict
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Metric
@@ -11,15 +11,27 @@ class MetricTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls.instance_ids = []
         cls.summaries = []
         cls.references_list = []
         with JsonlReader(MULTILING_SUMMARIES) as f:
             for instance in f:
+                cls.instance_ids.append(instance['instance_id'])
                 cls.summaries.append(instance['summary']['text'])
                 references = []
                 for reference in instance['references']:
                     references.append(reference['text'])
                 cls.references_list.append(references)
+
+        # Load the documents, grouped by instance id, then put them into a list
+        # parallel with the instances
+        cls.documents_dict = {}
+        with JsonlReader(MULTILING_DOCUMENTS) as f:
+            for instance in f:
+                cls.documents_dict[instance['instance_id']] = [document['text'] for document in instance['documents']]
+        cls.documents_list = []
+        for instance_id in cls.instance_ids:
+            cls.documents_list.append(cls.documents_dict[instance_id])
 
     def _assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict], *args):
         """Ensures that the output from `score_all` is equal to the `expected_output`."""
@@ -48,6 +60,14 @@ class MetricTestCase(unittest.TestCase):
         for metrics_list1, metrics_list2 in zip(metrics_lists1, metrics_lists2):
             for metrics1, metrics2 in zip(metrics_list1, metrics_list2):
                 assert metrics1.approx_equal(metrics2)
+
+
+class DocumentBasedMetricTestCase(MetricTestCase):
+    def assert_expected_output(self, metric: Metric, expected_output: List[MetricsDict]):
+        self._assert_expected_output(metric, expected_output, self.documents_list)
+
+    def assert_order_invariant(self, metric: Metric):
+        self._assert_order_invariant(metric, self.documents_list)
 
 
 class ReferenceBasedMetricTestCase(MetricTestCase):
