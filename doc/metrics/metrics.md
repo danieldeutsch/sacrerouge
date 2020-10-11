@@ -14,6 +14,7 @@ The following metrics have been implemented:
 - [S3](s3.md)
 - [SIMetrix](simetrix.md)
 - [Sum-QE](sumqe.md)
+- [SUPERT](supert.md)
     
 For specific details about the metrics, please refer to their corresponding documentation.
 

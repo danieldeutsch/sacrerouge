@@ -85,6 +85,9 @@ class SUPERT(DocumentBasedMetric):
                 metrics_list.append([])
                 for j in range(len(summaries)):
                     score = output[str(i)][str(j)]
+                    # SUPERT will output None if the summary was empty, so we replace that with a 0.0
+                    if score is None:
+                        score = 0.0
                     metrics_list[-1].append(MetricsDict({'supert': score}))
             return metrics_list
 
