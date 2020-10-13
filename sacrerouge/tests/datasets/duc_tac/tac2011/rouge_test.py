@@ -31,7 +31,7 @@ class TestTAC2011Rouge(unittest.TestCase):
     def test_rouge(self):
         # Test the first several instances in the TAC 2011 data to ensure that
         # our computation of ROUGE matches the values released by NIST
-        instances = ReferenceBasedDatasetReader(_summaries_file_path).read()
+        instances = ReferenceBasedDatasetReader().read(_summaries_file_path)
         metrics_list = JsonlReader(_metrics_file_path, Metrics).read()
         # The LCS metrics do not match because the summaries NIST ran on were not sentence-tokenized,
         # which seems to have a very large effect on the scores. We have sentence-tokenized the summaries.
