@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Dict, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -123,7 +123,8 @@ class Meteor(ReferenceBasedMetric):
         return macro_metrics, micro_metrics_list
 
 
-class MeteorSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('meteor')
+class MeteorSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the METEOR metric'

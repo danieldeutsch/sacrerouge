@@ -6,7 +6,7 @@ from nltk.stem import PorterStemmer
 from overrides import overrides
 from typing import Dict, List, Optional, Set, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -279,7 +279,8 @@ class PythonRouge(ReferenceBasedMetric):
         return metrics_lists
 
 
-class PythonRougeSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('python-rouge')
+class PythonRougeSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the Python-based ROGUE metric'

@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -98,7 +98,8 @@ class S3(ReferenceBasedMetric):
             return metrics_list
 
 
-class S3SetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('s3')
+class S3SetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the S3 metric'

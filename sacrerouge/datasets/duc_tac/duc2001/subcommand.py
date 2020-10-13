@@ -2,10 +2,11 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.datasets.duc_tac.duc2001 import tasks
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import DatasetSetupSubcommand
 
 
-class DUC2001Subcommand(Subcommand):
+@DatasetSetupSubcommand.register('duc2001')
+class DUC2001Subcommand(DatasetSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the DUC 2001 dataset'

@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -110,7 +110,8 @@ except ImportError:
             raise NotImplementedError('Error: "moverscore" python package is not installed')
 
 
-class MoverScoreSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('moverscore')
+class MoverScoreSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the MoverScore metric'

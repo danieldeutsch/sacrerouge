@@ -5,7 +5,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -123,7 +123,8 @@ class Bleurt(ReferenceBasedMetric):
             return metrics_lists
 
 
-class BleurtSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('bleurt')
+class BleurtSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the BLEURT metric'

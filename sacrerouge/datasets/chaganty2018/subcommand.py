@@ -2,10 +2,11 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.datasets.chaganty2018 import setup
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import DatasetSetupSubcommand
 
 
-class Chaganty2018Subcommand(Subcommand):
+@DatasetSetupSubcommand.register('chaganty2018')
+class Chaganty2018Subcommand(DatasetSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the Chaganty 2018 dataset'

@@ -2,7 +2,7 @@ import argparse
 from overrides import overrides
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
@@ -124,7 +124,8 @@ else:
             return self._run(summaries_list, references_list)
 
 
-class BertScoreSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('bertscore')
+class BertScoreSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the BERTScore metric'

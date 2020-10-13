@@ -7,7 +7,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import Dict, List, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.jackknifers import ReferencesJackknifer
@@ -357,7 +357,8 @@ class PyrEval(ReferenceBasedMetric):
             return metrics_dict_lists
 
 
-class PyrEvalSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('pyreval')
+class PyrEvalSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the PyrEval metric'

@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.io import JsonlWriter
 from sacrerouge.data import MetricsDict
@@ -112,7 +112,8 @@ class SumQE(ReferenceFreeMetric):
         return self._run(summaries_list)
 
 
-class SumQESetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('sum-qe')
+class SumQESetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the Sum-QE metric'
