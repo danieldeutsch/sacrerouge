@@ -1,3 +1,4 @@
+import argparse
 from collections import defaultdict
 from typing import Dict, List
 
@@ -33,3 +34,27 @@ def load_metrics_dicts(file_path: str) -> Dict[str, Dict[str, MetricsDict]]:
         for instance in f:
             metrics_dicts[instance.instance_id][instance.summarizer_id] = instance.metrics
     return metrics_dicts
+
+
+def command_exists(parser: argparse.ArgumentParser, command: List[str]) -> bool:
+    """
+    Checks to see if a specific command exists in the `parser`. The `parser` should
+    be the root `ArgumentParser` for the command. The method will traverse through
+    the `parser` to see if the `command` exists. This method does not work for checking
+    arguments of a specific command.
+    """
+    # _subparsers is none when no subcommands exist
+    if parser._subparsers is None:
+        return False
+
+    for action in parser._subparsers._group_actions:
+        for choice, subparser in action.choices.items():
+            if choice == command[0]:
+                if len(command) == 1:
+                    # The whole command has been matched
+                    return True
+                else:
+                    return command_exists(subparser, command[1:])
+
+    # We didn't find the first command, so it doesn't exist
+    return False
