@@ -31,7 +31,7 @@ class TestTAC2008Rouge(unittest.TestCase):
     def test_rouge(self):
         # Test the first several instances in the TAC 2008 data to ensure that
         # our computation of ROUGE matches the values released by NIST
-        instances = ReferenceBasedDatasetReader(_summaries_file_path).read()
+        instances = ReferenceBasedDatasetReader().read(_summaries_file_path)
         metrics_list = JsonlReader(_metrics_file_path, Metrics).read()
         metric_names = ['rouge-1', 'rouge-2', 'rouge-3', 'rouge-4', 'rouge-l', 'rouge-su4', 'rouge-w-1.2']
         rouge = Rouge(max_ngram=4,

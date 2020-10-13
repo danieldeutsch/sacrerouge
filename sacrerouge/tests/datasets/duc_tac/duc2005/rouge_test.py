@@ -33,7 +33,7 @@ class TestDUC2005Rouge(unittest.TestCase):
         # our computation of ROUGE matches the values released by NIST. In this year,
         # they did not release the raw output for the non-jackknifing runs, so
         # we cannot compare those scores
-        instances = ReferenceBasedDatasetReader(_summaries_file_path).read()
+        instances = ReferenceBasedDatasetReader().read(_summaries_file_path)
         metrics_list = JsonlReader(_metrics_file_path, Metrics).read()
         metric_names = ['rouge-1', 'rouge-2', 'rouge-3', 'rouge-4', 'rouge-l', 'rouge-su4', 'rouge-w-1.2']
         rouge = Rouge(max_ngram=4,
