@@ -1,6 +1,7 @@
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.data import MetricsDict
 from sacrerouge.metrics import PythonRouge, Rouge
 from sacrerouge.metrics.python_rouge import shorten_summary
@@ -234,3 +235,9 @@ class TestPythonRouge(ReferenceBasedMetricTestCase):
     def test_python_rouge_order_invariant(self):
         metric = PythonRouge()
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['python-rouge'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'python-rouge'])

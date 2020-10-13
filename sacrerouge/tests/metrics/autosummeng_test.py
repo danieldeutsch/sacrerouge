@@ -1,4 +1,5 @@
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import AutoSummENG
 
 
@@ -25,3 +26,9 @@ class TestAutoSummENG(ReferenceBasedMetricTestCase):
     def test_autosummeng_order_invariant(self):
         metric = AutoSummENG()
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['autosummeng'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'autosummeng'])

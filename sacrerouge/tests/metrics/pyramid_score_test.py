@@ -2,6 +2,7 @@ import os
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.data import MetricsDict, Pyramid, PyramidAnnotation
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import PyramidScore
@@ -30,3 +31,6 @@ class TestPyramidScore(ReferenceBasedMetricTestCase):
         ]
         for i, (expected, actual) in enumerate(zip(expected_output, actual_output)):
             assert actual.approx_equal(MetricsDict(expected), abs=1e-4), f'Instance {i} not equal. Expected {expected}, actual {actual}'
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['pyramid-score'])

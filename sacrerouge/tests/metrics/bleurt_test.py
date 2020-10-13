@@ -2,6 +2,7 @@ import os
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import Bleurt
 
 
@@ -29,3 +30,9 @@ class TestBleurt(ReferenceBasedMetricTestCase):
     def test_bleurt_order_invariant(self):
         metric = Bleurt(environment_name=os.environ['BLEURT_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['bleurt'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'bleurt'])

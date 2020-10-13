@@ -4,6 +4,7 @@ import pytest
 
 from sacrerouge.common.testing import FIXTURES_ROOT
 from sacrerouge.common.testing.metric_test_cases import DocumentBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import SUPERT
 
 _TOPIC_1 = f'{FIXTURES_ROOT}/data/supert/topic_1.json'
@@ -52,3 +53,9 @@ class TestSUPERT(DocumentBasedMetricTestCase):
     def test_supert_order_invariant(self):
         metric = SUPERT(os.environ['SUPERT_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['supert'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'supert'])

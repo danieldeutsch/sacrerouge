@@ -3,7 +3,7 @@ import argparse
 from sacrerouge.commands import correlate, evaluate, metric_command, score, setup_dataset, setup_metric, stat_sig_test
 
 
-def main():
+def build_argument_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -20,7 +20,11 @@ def main():
 
     # Add a command for each individual metric
     metric_command.add_metric_subcommands(subparsers)
+    return parser
 
+
+def main():
+    parser = build_argument_parser()
     args = parser.parse_args()
     if 'func' in dir(args):
         args.func(args)

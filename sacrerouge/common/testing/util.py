@@ -2,6 +2,7 @@ import argparse
 from collections import defaultdict
 from typing import Dict, List
 
+from sacrerouge import build_argument_parser
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.io import JsonlReader
@@ -58,3 +59,9 @@ def command_exists(parser: argparse.ArgumentParser, command: List[str]) -> bool:
 
     # We didn't find the first command, so it doesn't exist
     return False
+
+
+def sacrerouge_command_exists(command: List[str]) -> bool:
+    """Verifies if the command exists for the 'sacrerouge' command."""
+    parser = build_argument_parser()
+    return command_exists(parser, command)

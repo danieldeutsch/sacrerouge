@@ -1,6 +1,7 @@
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import QAEval
 from sacrerouge.metrics.qaeval import QAEVAL_INSTALLED
 
@@ -62,3 +63,9 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         assert qa_pairs[0]['prediction']['prediction'] == 'He'
         assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
         assert qa_pairs[1]['prediction']['prediction'] == 'scones'
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['qa-eval'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'qa-eval'])

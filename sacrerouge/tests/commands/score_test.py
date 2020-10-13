@@ -4,6 +4,7 @@ from subprocess import PIPE, Popen
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.common.testing import FIXTURES_ROOT, MULTILING_SUMMARIES
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
@@ -12,6 +13,9 @@ _numeric_config_file_path = f'{FIXTURES_ROOT}/configs/evaluate-numeric.json'
 
 
 class TestScore(unittest.TestCase):
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['score'])
+
     def test_score(self):
         with TemporaryDirectory() as temp_dir:
             # Runs a regression test for the "score" command
