@@ -2,11 +2,12 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.datasets.multiling.multiling2013 import mds, mds_metrics, sds
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import DatasetSetupSubcommand
 from sacrerouge.common.util import download_file_from_google_drive
 
 
-class MultiLing2013Subcommand(Subcommand):
+@DatasetSetupSubcommand.register('multiling2013')
+class MultiLing2013Subcommand(DatasetSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the MultiLing 2013 dataset'

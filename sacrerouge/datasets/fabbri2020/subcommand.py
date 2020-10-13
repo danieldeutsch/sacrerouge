@@ -2,10 +2,11 @@ import argparse
 from overrides import overrides
 
 from sacrerouge.datasets.fabbri2020 import setup
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import DatasetSetupSubcommand
 
 
-class Fabbri2020Subcommand(Subcommand):
+@DatasetSetupSubcommand.register('fabbri2020')
+class Fabbri2020Subcommand(DatasetSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the Fabbri 2020 dataset'

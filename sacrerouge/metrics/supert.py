@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import DocumentType, SummaryType
@@ -92,7 +92,8 @@ class SUPERT(DocumentBasedMetric):
             return metrics_list
 
 
-class SUPERTSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('supert')
+class SUPERTSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the SUPERT metric'

@@ -8,7 +8,7 @@ from overrides import overrides
 from packaging import version
 from typing import Any, Dict, List, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
@@ -320,7 +320,8 @@ else:
             return self._insert_empty_outputs(output, is_empty_lists, return_qa_pairs)
 
 
-class QAEvalSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('qa-eval')
+class QAEvalSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the QAEval metric'

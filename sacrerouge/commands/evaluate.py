@@ -5,7 +5,7 @@ import os
 from overrides import overrides
 from typing import List, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import RootSubcommand
 from sacrerouge.common import Params
 from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.common.util import import_module_and_submodules
@@ -117,7 +117,8 @@ def add_evaluate_arguments(parser: argparse.ArgumentParser, include_config_argum
     )
 
 
-class EvaluateSubcommand(Subcommand):
+@RootSubcommand.register('evaluate')
+class EvaluateSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Evaluate a summarization model'

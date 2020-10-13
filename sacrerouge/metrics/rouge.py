@@ -7,7 +7,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Optional, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
@@ -227,7 +227,8 @@ class Rouge(ReferenceBasedMetric):
         return macro_metrics, micro_metrics_list
 
 
-class RougeSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('rouge')
+class RougeSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the ROUGE metric'

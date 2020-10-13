@@ -7,7 +7,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists, download_file_from_google_drive
 from sacrerouge.data import MetricsDict
@@ -255,7 +255,8 @@ class BEwTE(ReferenceBasedMetric):
             return metrics_lists
 
 
-class BEwTESetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('bewte')
+class BEwTESetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the BEwT-E metric'

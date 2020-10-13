@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import DocumentType, SummaryType
@@ -156,7 +156,8 @@ class SIMetrix(DocumentBasedMetric):
         return macro_metrics, micro_metrics_list
 
 
-class SIMetrixSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('simetrix')
+class SIMetrixSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the SIMetrix metric'

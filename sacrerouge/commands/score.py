@@ -4,7 +4,7 @@ from collections import defaultdict
 from overrides import overrides
 from typing import Dict, List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import RootSubcommand
 from sacrerouge.common import Params
 from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.common.util import import_module_and_submodules
@@ -185,7 +185,8 @@ def save_score_results(metrics_dicts: Dict[str, Dict[str, Metrics]], output_file
                 out.write(metrics_dicts[instance_id][summarizer_id])
 
 
-class ScoreSubcommand(Subcommand):
+@RootSubcommand.register('score')
+class ScoreSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Score all of the inputs to evaluate a metric'

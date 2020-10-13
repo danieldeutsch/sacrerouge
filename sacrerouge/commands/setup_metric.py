@@ -1,35 +1,21 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.commands import Subcommand
-from sacrerouge.metrics import autosummeng, bertscore, bewte, bleurt, meteor, moverscore, pyreval, python_rouge, qaeval, rouge, s3, simetrix, sumqe, supert
+from sacrerouge.common import Registrable
+from sacrerouge.commands import RootSubcommand, MetricSetupSubcommand
 
 
-class SetupMetricSubcommand(Subcommand):
+@RootSubcommand.register('setup-metric')
+class SetupMetricSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup an evaluation metric'
         self.parser = parser.add_parser('setup-metric', description=description, help=description)
         subparsers = self.parser.add_subparsers()
 
-        subcommands = [
-            autosummeng.AutoSummENGSetupSubcommand(),
-            bertscore.BertScoreSetupSubcommand(),
-            bewte.BEwTESetupSubcommand(),
-            bleurt.BleurtSetupSubcommand(),
-            meteor.MeteorSetupSubcommand(),
-            moverscore.MoverScoreSetupSubcommand(),
-            pyreval.PyrEvalSetupSubcommand(),
-            python_rouge.PythonRougeSetupSubcommand(),
-            qaeval.QAEvalSetupSubcommand(),
-            rouge.RougeSetupSubcommand(),
-            s3.S3SetupSubcommand(),
-            simetrix.SIMetrixSetupSubcommand(),
-            sumqe.SumQESetupSubcommand(),
-            supert.SUPERTSetupSubcommand(),
-        ]
-        for subcommand in subcommands:
-            subcommand.add_subparser(subparsers)
+        # Add all of the metric setup commands using the registry
+        for name, (cls_, _) in sorted(Registrable._registry[MetricSetupSubcommand].items()):
+            cls_().add_subparser(subparsers)
 
         self.parser.set_defaults(func=self.run)
 

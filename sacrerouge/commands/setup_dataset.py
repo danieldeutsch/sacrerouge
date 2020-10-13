@@ -1,40 +1,21 @@
 import argparse
 from overrides import overrides
 
-from sacrerouge.commands import Subcommand
-from sacrerouge.datasets import chaganty2018, fabbri2020
-from sacrerouge.datasets.duc_tac import duc2001, duc2002, duc2003, duc2004, duc2005, duc2006, duc2007, tac2008, tac2009, tac2010, tac2011
-from sacrerouge.datasets.multiling import multiling2011, multiling2013, multiling2015, multiling2017
+from sacrerouge.common import Registrable
+from sacrerouge.commands import RootSubcommand, DatasetSetupSubcommand
 
 
-class SetupDatasetSubcommand(Subcommand):
+@RootSubcommand.register('setup-dataset')
+class SetupDatasetSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup a dataset'
         self.parser = parser.add_parser('setup-dataset', description=description, help=description)
         subparsers = self.parser.add_subparsers()
 
-        subcommands = [
-            chaganty2018.Chaganty2018Subcommand(),
-            duc2001.DUC2001Subcommand(),
-            duc2002.DUC2002Subcommand(),
-            duc2003.DUC2003Subcommand(),
-            duc2004.DUC2004Subcommand(),
-            duc2005.DUC2005Subcommand(),
-            duc2006.DUC2006Subcommand(),
-            duc2007.DUC2007Subcommand(),
-            fabbri2020.Fabbri2020Subcommand(),
-            multiling2011.MultiLing2011Subcommand(),
-            multiling2013.MultiLing2013Subcommand(),
-            multiling2015.MultiLing2015Subcommand(),
-            multiling2017.MultiLing2017Subcommand(),
-            tac2008.TAC2008Subcommand(),
-            tac2009.TAC2009Subcommand(),
-            tac2010.TAC2010Subcommand(),
-            tac2011.TAC2011Subcommand(),
-        ]
-        for subcommand in subcommands:
-            subcommand.add_subparser(subparsers)
+        # Add all of the dataset setup commands using the registry
+        for name, (cls_, _) in sorted(Registrable._registry[DatasetSetupSubcommand].items()):
+            cls_().add_subparser(subparsers)
 
         self.parser.set_defaults(func=self.run)
 

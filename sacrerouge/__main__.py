@@ -1,26 +1,4 @@
-import argparse
-
-from sacrerouge.commands import correlate, evaluate, metric_command, score, setup_dataset, setup_metric, stat_sig_test
-
-
-def build_argument_parser():
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-
-    subcommands = [
-        correlate.CorrelateSubcommand(),
-        evaluate.EvaluateSubcommand(),
-        score.ScoreSubcommand(),
-        setup_dataset.SetupDatasetSubcommand(),
-        setup_metric.SetupMetricSubcommand(),
-        stat_sig_test.StatisticalSignificanceTestSubcommand(),
-    ]
-    for subcommand in subcommands:
-        subcommand.add_subparser(subparsers)
-
-    # Add a command for each individual metric
-    metric_command.add_metric_subcommands(subparsers)
-    return parser
+from sacrerouge import build_argument_parser
 
 
 def main():

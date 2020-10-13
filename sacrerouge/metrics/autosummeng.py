@@ -6,7 +6,7 @@ from overrides import overrides
 from subprocess import Popen, PIPE
 from typing import List
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
@@ -127,7 +127,8 @@ class AutoSummENG(ReferenceBasedMetric):
         return self._run(summaries_list, references_list)
 
 
-class AutoSummENGSetupSubcommand(Subcommand):
+@MetricSetupSubcommand.register('autosummeng')
+class AutoSummENGSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Setup the AutoSummENG, MeMoG, and NPowER metrics'

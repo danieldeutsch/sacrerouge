@@ -1,1 +1,1 @@
-from sacrerouge.commands.subcommand import Subcommand
+from sacrerouge.commands.subcommand import DatasetSetupSubcommand, MetricSetupSubcommand, RootSubcommand, Subcommand
