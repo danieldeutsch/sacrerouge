@@ -6,7 +6,7 @@ import scipy.stats
 from overrides import overrides
 from typing import Any, Dict, Tuple
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import RootSubcommand
 from sacrerouge.common.logging import prepare_global_logging
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,8 @@ def run_wilcoxon_tests(correlations_A: Dict[str, Dict[str, float]],
     return results
 
 
-class StatisticalSignificanceTestSubcommand(Subcommand):
+@RootSubcommand.register('stat-sig-test')
+class StatisticalSignificanceTestSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Run a Wilcoxon signed-rank test on two sets of summary-level correlations'

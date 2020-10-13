@@ -10,7 +10,7 @@ from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
 from typing import Any, Dict, List, Tuple, Union
 
-from sacrerouge.commands import Subcommand
+from sacrerouge.commands import RootSubcommand
 from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
@@ -215,7 +215,8 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
     return results
 
 
-class CorrelateSubcommand(Subcommand):
+@RootSubcommand.register('correlate')
+class CorrelateSubcommand(RootSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
         description = 'Calculate the correlation between two different metrics'
