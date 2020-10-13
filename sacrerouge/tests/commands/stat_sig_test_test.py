@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.commands.stat_sig_test import run_wilcoxon_tests
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 
 
 class TestStatisticalSignifianceTest(unittest.TestCase):
@@ -36,6 +37,9 @@ class TestStatisticalSignifianceTest(unittest.TestCase):
         assert results['spearman']['p_value'] == 0.25
 
         assert 'kendall' not in results
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['stat-sig-test'])
 
     def test_run_wilcoxon_tests(self):
         # This is a regression test and does not test for accuracy

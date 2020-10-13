@@ -1,6 +1,7 @@
 import unittest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import BertScore
 from sacrerouge.metrics.bertscore import BERTSCORE_INSTALLED
 
@@ -48,3 +49,9 @@ class TestBertScore(ReferenceBasedMetricTestCase):
     def test_bertscore_order_invariant(self):
         metric = BertScore()
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['bertscore'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'bertscore'])

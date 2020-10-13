@@ -2,6 +2,7 @@ import os
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import S3
 
 
@@ -29,3 +30,9 @@ class TestS3(ReferenceBasedMetricTestCase):
     def test_s3_order_invariant(self):
         metric = S3(environment_name=os.environ['S3_ENV'])
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['s3'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 's3'])

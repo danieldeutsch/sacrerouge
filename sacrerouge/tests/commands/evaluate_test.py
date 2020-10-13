@@ -5,6 +5,7 @@ from typing import Dict, List
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.common.testing import FIXTURES_ROOT, MULTILING_SUMMARIES
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.data import Metrics
 from sacrerouge.io import JsonlReader
 
@@ -60,6 +61,9 @@ class TestEvaluate(unittest.TestCase):
                 'f1': 15.136226034308779
             }
         }
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['evaluate'])
 
     def test_evaluate(self):
         # This is a regression test and does not ensure correctness

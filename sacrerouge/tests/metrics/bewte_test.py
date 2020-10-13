@@ -1,6 +1,7 @@
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import BEwTE
 
 
@@ -28,3 +29,9 @@ class TestBEwTE(ReferenceBasedMetricTestCase):
     def test_bewte_order_invariant(self):
         metric = BEwTE()
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['bewte'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'bewte'])

@@ -2,6 +2,7 @@ import os
 import pytest
 
 from sacrerouge.common.testing.metric_test_cases import ReferencelessMetricTestCase
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics import SumQE
 
 
@@ -29,3 +30,9 @@ class TestSumQE(ReferencelessMetricTestCase):
     def test_sum_que_order_invariant(self):
         metric = SumQE(python_binary=os.environ['SUMQE_PYTHON_BINARY'])
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['sum-qe'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'sum-qe'])

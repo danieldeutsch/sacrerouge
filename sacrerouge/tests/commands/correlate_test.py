@@ -5,9 +5,13 @@ import unittest
 
 from sacrerouge.common import TemporaryDirectory
 from sacrerouge.common.testing import MULTILING_METRICS
+from sacrerouge.common.testing.util import sacrerouge_command_exists
 
 
 class TestCorrelate(unittest.TestCase):
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['correlate'])
+
     def test_correlate_reference(self):
         # This is a regression test for the "correlate" command. It does not test if it's accurate
         # TODO This needs to be a better test. There are too few summarization systems to get interesting

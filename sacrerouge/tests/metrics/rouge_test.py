@@ -3,7 +3,7 @@ import pytest
 
 from sacrerouge.common.testing import FIXTURES_ROOT
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
-from sacrerouge.common.testing.util import load_references, load_summaries
+from sacrerouge.common.testing.util import load_references, load_summaries, sacrerouge_command_exists
 from sacrerouge.metrics import Rouge
 
 _duc2004_file_path = 'datasets/duc-tac/duc2004/v1.0/task2.jsonl'
@@ -185,3 +185,9 @@ class TestRouge(ReferenceBasedMetricTestCase):
     def test_rouge_order_invariant(self):
         metric = Rouge(max_words=100)
         self.assert_order_invariant(metric)
+
+    def test_command_exists(self):
+        assert sacrerouge_command_exists(['rouge'])
+
+    def test_setup_command_exists(self):
+        assert sacrerouge_command_exists(['setup-metric', 'rouge'])
