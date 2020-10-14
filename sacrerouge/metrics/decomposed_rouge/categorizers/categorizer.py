@@ -35,14 +35,14 @@ class Categorizer(object):
         recall = num_matches / num_reference_tokens * 100 if num_reference_tokens > 0 else 0
         f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
-        coverage = num_matches / intersection * 100 if len(matches) > 0 else 0
+        contribution = num_matches / intersection * 100 if len(matches) > 0 else 0
 
         return MetricsDict({
             self.name: {
                 'precision': precision,
                 'recall': recall,
                 'f1': f1,
-                'coverage': coverage
+                'contribution': contribution
             }
         })
 
@@ -94,13 +94,13 @@ class TupleCategorizer(Categorizer):
         recall = total_weight / reference_tuples_weight * 100 if reference_tuples_weight > 0 else 0
         f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
-        coverage = total_weight / intersection * 100 if len(matches) > 0 else 0
+        contribution = total_weight / intersection * 100 if len(matches) > 0 else 0
 
         return MetricsDict({
             self.name: {
                 'precision': precision,
                 'recall': recall,
                 'f1': f1,
-                'coverage': coverage
+                'contribution': contribution
             }
         })

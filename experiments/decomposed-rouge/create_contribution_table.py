@@ -45,7 +45,7 @@ def main(args):
             out.write('<tr>\n')
             out.write(f'<td>{metric}</td>\n')
             for dataset in args.dataset_names:
-                out.write(f'<td>{contributions_dict[dataset]["decomposed-rouge"][metric]["coverage"]:.2f}</td>\n')
+                out.write(f'<td>{contributions_dict[dataset]["decomposed-rouge"][metric]["contribution"]:.2f}</td>\n')
             out.write('</tr>\n')
 
         out.write('</table>\n')
