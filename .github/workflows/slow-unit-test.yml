@@ -4,9 +4,9 @@
 name: Slow Unit Test
 
 on:
-  - workflow_dispatch
-  - push:
-      branches: [ slow-unit-tests ]
+  workflow_dispatch:
+  push:
+    branches: [ slow-unit-tests ]
 
 jobs:
   build:
