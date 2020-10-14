@@ -69,9 +69,9 @@ jobs:
 
     - name: Create S3 Conda Environment
       uses: conda-incubator/setup-miniconda@v1
-        with:
-          activate-environment: 's3'
-          environment-file: environments/s3.yml
+      with:
+        activate-environment: 's3'
+        environment-file: environments/s3.yml
     - name: Install NLTK Stopwords
       shell: bash -l {0}
       run: |
