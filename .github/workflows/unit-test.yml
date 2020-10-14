@@ -34,6 +34,7 @@ jobs:
 
   setup-autosummeng:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
       - name: Cache AutoSummENG
         id: cache-autosummeng
@@ -48,6 +49,7 @@ jobs:
 
   setup-bewte:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
       - name: Cache BEwTE
         id: cache-bewte
@@ -62,6 +64,7 @@ jobs:
 
   setup-meteor:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
       - name: Cache METEOR
         id: cache-meteor
@@ -75,6 +78,7 @@ jobs:
 
   setup-rouge:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
       - name: Cache ROUGE
         id: cache-rouge
@@ -88,6 +92,7 @@ jobs:
 
   setup-simetrix:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
     - name: Cache SIMetrix
       id: cache-simetrix
@@ -101,6 +106,7 @@ jobs:
 
   run-linter:
     runs-on: ubuntu-latest
+    needs: [install-core-dependencies]
     steps:
     - name: Lint with flake8
       run: |
@@ -111,7 +117,7 @@ jobs:
 
   run-tests:
     runs-on: ubuntu-latest
-    needs: [setup-autosummeng, setup-bewte, setup-meteor, setup-rouge, setup-simetrix]
+    needs: [install-core-dependencies, setup-autosummeng, setup-bewte, setup-meteor, setup-rouge, setup-simetrix]
     steps:
       - name: Test with pytest
         run: pytest
