@@ -13,7 +13,9 @@ sacrerouge setup-metric rouge
 ```
 
 ## Correlations
-Here are the correlations of the different category-specific metrics to the "overall responsiveness" scores on the TAC data
+Here are the correlations of the different category-specific metrics to the "overall responsiveness" scores on the TAC data.
+We believe that these differ slightly from the results in the paper because they use the Spacy en_core_web_sm version 2.2.5 and the paper used 2.1.0.
+
 Summary-level, peers only:
 <table>
 <tr>
