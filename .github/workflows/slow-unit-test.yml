@@ -1,0 +1,111 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Slow Unit Test
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Cache AutoSummENG
+      id: cache-autosummeng
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-autosummeng
+        path: ~/.sacrerouge/metrics/AutoSummENG
+    - name: Install AutoSummENG
+      if: steps.cache-autosummeng.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric autosummeng
+
+    - name: Cache BEwTE
+      id: cache-bewte
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-bewte
+        path: ~/.sacrerouge/metrics/ROUGE-BEwTE
+    - name: Install BEwTE
+      if: steps.cache-bewte.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric bewte
+
+    - name: Cache METEOR
+      id: cache-meteor
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-meteor
+        path: ~/.sacrerouge/metrics/METEOR
+    - name: Install METEOR
+      if: steps.cache-meteor.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric meteor
+
+    - name: Cache ROUGE
+      id: cache-rouge
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-rouge
+        path: ~/.sacrerouge/metrics/ROUGE-1.5.5
+    - name: Install ROUGE
+      if: steps.cache-rouge.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric rouge
+
+    - name: Create S3 Conda Environment
+      uses: conda-incubator/setup-miniconda@v1
+        with:
+          activate-environment: 's3'
+          environment-file: environments/s3.yml
+    - name: Install NLTK Stopwords
+      shell: bash -l {0}
+      run: |
+        conda activate s3
+        python -m nltk.downloader stopwords
+    - name: Cache S3
+      id: cache-s3
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-s3
+        path: ~/.sacrerouge/metrics/S3
+    - name: Install S3
+      if: steps.cache-s3.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric s3
+
+    - name: Cache SIMetrix
+      id: cache-simetrix
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-simetrix
+        path: ~/.sacrerouge/metrics/simetrix
+    - name: Install SIMetrix
+      if: steps.cache-simetrix.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric simetrix
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      env:
+        CONDA_INIT: /usr/share/miniconda/etc/profile.d/conda.sh
+        S3_ENV: s3
+      run: |
+        pytest
