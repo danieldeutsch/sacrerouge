@@ -26,6 +26,7 @@ setuptools.setup(
         'overrides',
         'pytest',
         'requests',
-        'scipy>=1.5.2'
+        'scipy>=1.5.2',
+        'networkx'
     ]
 )
