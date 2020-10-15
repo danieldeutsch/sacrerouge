@@ -5,9 +5,14 @@ name: Master
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, slow-unit-tests ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      run_slow:
+        description: 'Run the slow unit tests'
+        default: 'false'
 
 jobs:
   build:
@@ -69,6 +74,13 @@ jobs:
     - name: Install ROUGE
       if: steps.cache-rouge.outputs.cache-hit != 'true'
       run: python -m sacrerouge setup-metric rouge
+
+    - name: Setup S3 Conda Environment
+      if: github.event.inputs.run_slow == 'true'
+      uses: conda-incubator/setup-miniconda@v1
+      with:
+        activate-environment: 's3'
+        environment-file: environments/s3.yml
     
     - name: Cache SIMetrix
       id: cache-simetrix
