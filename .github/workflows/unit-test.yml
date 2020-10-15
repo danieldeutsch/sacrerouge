@@ -64,7 +64,7 @@ jobs:
     - name: Install METEOR
       if: steps.cache-meteor.outputs.cache-hit != 'true'
       run: python -m sacrerouge setup-metric meteor
-    
+
     - name: Cache ROUGE
       id: cache-rouge
       uses: actions/cache@v2
@@ -81,6 +81,25 @@ jobs:
       with:
         activate-environment: 's3'
         environment-file: environments/s3.yml
+    - name: Install NLTK Stopwords
+      if: github.event.inputs.run_slow == 'true'
+      shell: bash -l {0}
+      run: |
+        conda activate s3
+        python -m nltk.downloader stopwords
+    - name: Cache S3
+      id: cache-s3
+      if: github.event.inputs.run_slow == 'true'
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-s3
+        path: ~/.sacrerouge/metrics/S3
+    - name: Install S3
+      if: github.event.inputs.run_slow == 'true' && steps.cache-s3.outputs.cache-hit != 'true'
+      run: python -m sacrerouge setup-metric s3
+    - name: Set S3 Environment Variable
+      if: github.event.inputs.run_slow == 'true'
+      run: echo "S3_ENV=s3" >> $GITHUB_ENV
     
     - name: Cache SIMetrix
       id: cache-simetrix
