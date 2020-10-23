@@ -274,10 +274,11 @@ class RougeSetupSubcommand(MetricSetupSubcommand):
             print('ROUGE setup success')
         except IndexError:
             print('ROUGE setup failure')
-            print('It is very likely that you need to rebuild the ROUGE database file. See '
+            print('It is very likely that either (1) you need to install the Perl XML::DOM library or '
+                  '(2) you need to rebuild the ROUGE database file. The first case is more likely if you '
+                  'are running on Linux or MacOS. See '
                   'https://github.com/danieldeutsch/sacrerouge/blob/master/doc/metrics/rouge.md for '
-                  'instructions on how to rebuild the necessary file. Afterward, this example '
-                  'should run without failing:')
+                  'instructions for each of these steps. Afterward, this example should run without failing:')
             print()
             print('>>> from sacrerouge.metrics import Rouge')
             print('>>> ')
