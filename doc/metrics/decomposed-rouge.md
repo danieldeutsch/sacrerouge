@@ -14,7 +14,6 @@ sacrerouge setup-metric rouge
 
 ## Correlations
 Here are the correlations of the different category-specific metrics to the "overall responsiveness" scores on the TAC data.
-We believe that these differ slightly from the results in the paper because they use the Spacy en_core_web_sm version 2.2.5 and the paper used 2.1.0.
 
 Summary-level, peers only:
 <table>
@@ -1083,6 +1082,7 @@ System-level, peers + references:
 ## Contributions
 Here are the overall contributions of each category to the overall ROUGE score.
 These numbers are the percent of token matches that can be explained by the corresponding category.
+We believe that these differ slightly from the results in the paper because they use the Spacy en_core_web_sm version 2.2.5 and the paper used 2.1.0.
 
 <table>
 <tr>
@@ -1200,4 +1200,4 @@ These numbers are the percent of token matches that can be explained by the corr
 </table>
 
 ## References
-[1] Daniel Deutsch and Dan Roth. A Content-Based Analysis of ROUGE and BERTScore. 2020.
+[1] Daniel Deutsch and Dan Roth. Understanding the Extent to which Content Quality Metrics Measure the Information Quality of Summaries. 2020.
