@@ -5,6 +5,7 @@ The following metrics have been implemented:
 - [AutoSummENG, MeMoG, and NPoWER](autosummeng.md)
 - [BERTScore](bertscore.md)
 - [BEwT-E](bewte.md)
+- [Decomposed ROUGE](decomposed-rouge.md)
 - [METEOR](meteor.md)
 - [MoverScore](moverscore.md)
 - [Pyramid Score](pyramid-score.md)
