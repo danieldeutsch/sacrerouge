@@ -345,8 +345,6 @@ else:
             summaries_list = self._flatten_summaries(summaries_list)
             references_list = self._flatten_summaries(references_list)
 
-            num_summaries = sum([len(summaries) for summaries in summaries_list])
-
             # Unroll the summaries into lists of parallel (summary, references) pairs. The additional list around
             # the summaries can potentially make the code confusing. Unrolling the list makes it slightly easier to understand
             unrolled_summaries, unrolled_references_list = self._unroll_summaries(summaries_list, references_list)
