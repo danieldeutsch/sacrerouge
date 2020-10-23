@@ -1200,4 +1200,4 @@ We believe that these differ slightly from the results in the paper because they
 </table>
 
 ## References
-[1] Daniel Deutsch and Dan Roth. Understanding the Extent to which Content Quality Metrics Measure the Information Quality of Summaries. 2020.
+[1] Daniel Deutsch and Dan Roth. Understanding the Extent to which Summarization Evaluation Metrics Measure the Information Quality of Summaries. 2020.
