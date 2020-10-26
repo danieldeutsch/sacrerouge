@@ -4,7 +4,7 @@
 SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
 It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
 The inspiration for the library came from [SacreBLEU](https://github.com/mjpost/sacreBLEU), a library with a standardized implementation of BLEU and dataset readers for common machine translation datasets.
-See our [arXiv paper](https://arxiv.org/abs/2007.05374) for more details.
+See our [paper](https://arxiv.org/abs/2007.05374) for more details or [this Jupyter Notebook](https://colab.research.google.com/drive/1RikOFUEx299c8qxd6IfCLe3KeuLX31I4?usp=sharing) that was presented at the [NLP-OSS 2020](https://nlposs.github.io/2020/) and [Eval4NLP 2020](https://nlpevaluation2020.github.io/) workshops for a demo of the library.
 
 The development of SacreROUGE was motivated by three problems: 
 
