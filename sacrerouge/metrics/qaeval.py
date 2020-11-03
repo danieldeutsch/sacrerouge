@@ -42,7 +42,7 @@ except ImportError:
 else:
     from qaeval import AnswerSelector, QuestionAnsweringModel, QuestionGenerationModel
     from qaeval.answer_selection import NP_CHUNKS_STRATEGY, AnswerOffsets
-    from qaeval.scoring import score_multiple_references
+    from qaeval.scoring import score
 
     QAEVAL_INSTALLED = True
 
@@ -61,6 +61,7 @@ else:
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)
 
         def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
+            # Flattens all of the summaries so they are `str` instead of `List[str]`
             flat_summaries_list = []
             for summaries in summaries_list:
                 flat_summaries_list.append([])
@@ -70,28 +71,37 @@ else:
                     flat_summaries_list[-1].append(summary)
             return flat_summaries_list
 
-        def _get_empty_summary_mask(self,
-                                    summaries_list: List[List[str]],
-                                    references_list: List[List[str]]) -> Tuple[List[List[str]], List[List[str]], List[List[bool]]]:
-            is_empty_lists = []
-            non_empty_summaries_list = []
-            non_empty_references_list = []
+        def _unroll_summaries(self,
+                              summaries_list: List[List[str]],
+                              references_list: List[List[str]]) -> Tuple[List[str], List[List[str]]]:
+            # The summaries are originally grouped by identical references. This will flatten the list of summaries
+            # and copy the references into a parallel list for easier processing.
+            unrolled_summaries = []
+            unrolled_references = []
             for summaries, references in zip(summaries_list, references_list):
-                is_empty = []
-                non_empty_summaries = []
                 for summary in summaries:
-                    if len(summary.strip()) > 0:
-                        is_empty.append(False)
-                        non_empty_summaries.append(summary)
-                    else:
-                        is_empty.append(True)
+                    unrolled_summaries.append(summary)
+                    unrolled_references.append(references)
+            return unrolled_summaries, unrolled_references
 
-                is_empty_lists.append(is_empty)
-                if len(non_empty_summaries) > 0:
-                    non_empty_summaries_list.append(non_empty_summaries)
+        def _get_empty_summary_mask(self,
+                                    summaries: List[str],
+                                    references_list: List[List[str]]) -> Tuple[List[str], List[List[str]], List[bool]]:
+            # This will identify any summaries that have empty text. The output will be the list of non-empty summaries
+            # with their corresponding references plus a list of booleans that is parallel will the input `summaries`
+            # which mark whether or not they are empty
+            is_empty_list = []
+            non_empty_summaries = []
+            non_empty_references_list = []
+
+            for summary, references in zip(summaries, references_list):
+                if len(summary.strip()) > 0:
+                    is_empty_list.append(False)
+                    non_empty_summaries.append(summary)
                     non_empty_references_list.append(references)
-
-            return non_empty_summaries_list, non_empty_references_list, is_empty_lists
+                else:
+                    is_empty_list.append(True)
+            return non_empty_summaries, non_empty_references_list, is_empty_list
 
         def _get_question_id(self, instance_index: int, reference_index: int, start: int, end: int) -> str:
             m = hashlib.md5()
@@ -102,7 +112,10 @@ else:
             return m.hexdigest()
 
         def _generate_qa_pairs(self, references_list: List[List[str]]) -> List[List[List[Dict[str, Any]]]]:
-            # To minimize time, we generate questions for distinct references
+            # This will generate the question-answer pairs for each reference. Since references may be repeated,
+            # we first deduplicate the references to minimize the expensive work.
+            #
+            # `reference_to_index` keeps track of where each of the unique references are in `distinct_references_list`
             reference_to_index = {}
             distinct_references_list = []
 
@@ -146,7 +159,7 @@ else:
             assert len(remapped_questions) == len(answers_list)
 
             # Remap output to align with the inputs
-            # qa_pairs_lists[input_instance][summary] = [(q, a)]
+            # qa_pairs_lists[summary_index][reference_index] = [(q, a)]
             qa_pairs_lists = []
             for i, references in enumerate(references_list):
                 qa_pairs_lists.append([])
@@ -166,139 +179,164 @@ else:
                         })
             return qa_pairs_lists
 
-        def _get_prediction_id(self, instance_index: int, summary_index: int, reference_index: int, question_index: int):
+        def _get_prediction_id(self, prediction_index: int):
             m = hashlib.md5()
-            m.update(str(instance_index).encode())
-            m.update(str(summary_index).encode())
-            m.update(str(reference_index).encode())
-            m.update(str(question_index).encode())
+            m.update(str(prediction_index).encode())
             return m.hexdigest()
 
         def _answer_questions(self,
-                              summaries_list: List[List[str]],
-                              qa_pairs_lists: List[List[List[Dict[str, Any]]]]) -> List[List[List[List[Dict[str, Any]]]]]:
-            # Some (question, context) pairs might be duplicates (for instance because of jackknifing), so it should
-            # be a lot faster to deduplicate them
+                              summaries: List[str],
+                              qa_pairs_lists: List[List[List[Dict[str, Any]]]]) -> List[List[List[Dict[str, Any]]]]:
+            # Answers all of the questions. Some of the (question, context) pairs may be duplicates, for instance because
+            # of jackknifing. It will be a lot faster to deduplicate them first.
+            #
+            # `qa_inputs` will contain the unique inputs, `context_to_input_index` maps from the (question, context) pair
+            # to its index in `qa_inputs`, and `mapping` will map from the i-th summary, j-th reference, and k-th question
+            # to the index of the corresponding data in `qa_inputs`
             qa_inputs = []
             context_to_input_index = {}
             mapping = {}
 
-            for i, (summaries, qa_pairs_list) in enumerate(zip(summaries_list, qa_pairs_lists)):
-                for j, summary in enumerate(summaries):
-                    for k, qa_pairs in enumerate(qa_pairs_list):
-                        for l, question_dict in enumerate(qa_pairs):
-                            question = question_dict['question']
-                            key = (question, summary)
-                            if key not in context_to_input_index:
-                                context_to_input_index[key] = len(qa_inputs)
-                                qa_inputs.append(key)
-                            mapping[(i, j, k, l)] = context_to_input_index[key]
+            for i, (summary, qa_pairs_list) in enumerate(zip(summaries, qa_pairs_lists)):
+                for j, qa_pairs in enumerate(qa_pairs_list):
+                    for k, qa in enumerate(qa_pairs):
+                        question = qa['question']
+                        key = (question, summary)
+                        if key not in context_to_input_index:
+                            context_to_input_index[key] = len(qa_inputs)
+                            qa_inputs.append(key)
+                        mapping[(i, j, k)] = context_to_input_index[key]
 
             logger.info(f'Answering {len(qa_inputs)} distinct (question, context) pairs')
             predictions = self.question_answerer.answer_all(qa_inputs)
             logger.info('Finished answering questions')
 
-            # all_predictions_lists[instance][summary][reference] = [(prediction, prob, null_prob)]
-            all_predictions_lists = []
-            for i, (summaries, qa_pairs_list) in enumerate(zip(summaries_list, qa_pairs_lists)):
-                all_predictions_lists.append([])
-                for j in range(len(summaries)):
-                    all_predictions_lists[-1].append([])
-                    for k, qa_pairs in enumerate(qa_pairs_list):
-                        all_predictions_lists[-1][-1].append([])
-                        for l, question_dict in enumerate(qa_pairs):
-                            index = mapping[(i, j, k, l)]
-                            prediction, probability, null_probability = predictions[index]
-                            all_predictions_lists[-1][-1][-1].append({
-                                'prediction_id': self._get_prediction_id(i, j, k, l),
-                                'prediction': prediction,
-                                'probability': probability,
-                                'null_probability': null_probability
-                            })
-            return all_predictions_lists
+            # Remap from the distinct answers back to the original QA lists
+            predictions_lists = []
+            for i, (summary, qa_pairs_list) in enumerate(zip(summaries, qa_pairs_lists)):
+                predictions_lists.append([])
+                for j, qa_pairs in enumerate(qa_pairs_list):
+                    predictions_lists[-1].append([])
+                    for k, qa in enumerate(qa_pairs):
+                        index = mapping[(i, j, k)]
+                        prediction, probability, null_probability = predictions[index]
+                        predictions_lists[-1][-1].append({
+                            'prediction_id': self._get_prediction_id(index),
+                            'prediction': prediction,
+                            'probability': probability,
+                            'null_probability': null_probability
+                        })
+            return predictions_lists
 
         def _score_predictions(self,
                                qa_pairs_lists: List[List[List[Dict[str, Any]]]],
-                               all_predictions_lists: List[List[List[List[Dict[str, Any]]]]]) -> Tuple[List[List[MetricsDict]], List[List[List[List[Dict[str, float]]]]]]:
+                               predictions_lists: List[List[List[Dict[str, Any]]]]) -> Tuple[List[MetricsDict], List[List[List[Dict[str, float]]]]]:
+            # Collect all of the (answer, prediction) pairs that need to be scored
+            input_answers = []
+            input_predictions = []
+            input_probabilities = []
+            input_null_probabilities = []
+            for qa_pairs_list, predictions_list in zip(qa_pairs_lists, predictions_lists):
+                # This is for 1 (summary, references) pair
+                for qa_pairs, predictions in zip(qa_pairs_list, predictions_list):
+                    # This is the set of QA pairs for 1 reference
+                    for qa, prediction in zip(qa_pairs, predictions):
+                        input_answers.append(qa['answer'])
+                        input_predictions.append(prediction['prediction'])
+                        input_probabilities.append(prediction['probability'])
+                        input_null_probabilities.append(prediction['null_probability'])
+
+            # Score all of the pairs
+            _, _, ems, f1s = score(input_answers, input_predictions, input_probabilities, input_null_probabilities, return_all_scores=True)
+
+            # Realign the scores with the input questions and calculate the metrics
+            index = 0
             metrics_lists = []
-            all_scores_lists = []
-            for qa_pairs_list, predictions_lists in zip(qa_pairs_lists, all_predictions_lists):
-                answers_list = []
-                for qa_pairs in qa_pairs_list:
-                    answers_list.append([qa['answer'] for qa in qa_pairs])
-
+            scores_lists = []
+            for qa_pairs_list, predictions_list in zip(qa_pairs_lists, predictions_lists):
+                # This is for 1 (summary, references) pair
                 metrics_lists.append([])
-                all_scores_lists.append([])
-                for predictions_list in predictions_lists:
-                    pred_strings_list = []
-                    probabilities_list = []
-                    null_probabilities_list = []
-                    for predictions in predictions_list:
-                        preds = [pred['prediction'] for pred in predictions]
-                        probabilities = [pred['probability'] for pred in predictions]
-                        null_probabilities = [pred['null_probability'] for pred in predictions]
-                        pred_strings_list.append(preds)
-                        probabilities_list.append(probabilities)
-                        null_probabilities_list.append(null_probabilities)
+                scores_lists.append([])
+                for qa_pairs, predictions in zip(qa_pairs_list, predictions_list):
+                    # This is the set of QA pairs for 1 reference
+                    ref_ems = []
+                    ref_f1s = []
+                    scores_lists[-1].append([])
+                    for qa, prediction in zip(qa_pairs, predictions):
+                        em = ems[index]
+                        f1 = f1s[index]
+                        scores_lists[-1][-1].append({'em': em, 'f1': f1})
 
-                    em, f1, ems_list, f1s_list = score_multiple_references(answers_list, pred_strings_list, probabilities_list, null_probabilities_list, return_all_scores=True)
-                    metrics_lists[-1].append(MetricsDict({'qa-eval': {'em': em, 'f1': f1}}))
+                        ref_ems.append(em)
+                        ref_f1s.append(f1)
 
-                    all_scores_lists[-1].append([])
-                    for reference_em, reference_f1 in zip(ems_list, f1s_list):
-                        all_scores_lists[-1][-1].append([{'em': x, 'f1': y} for x, y in zip(reference_em, reference_f1)])
+                        index += 1
 
-            return metrics_lists, all_scores_lists
+                    metrics_lists[-1].append(MetricsDict({
+                        'qa-eval': {
+                            'em': sum(ref_ems) / len(ref_ems),
+                            'f1': sum(ref_f1s) / len(ref_f1s)
+                        }
+                    }))
+
+            # Aggregate the metrics across references
+            aggregated_metrics_list = []
+            for metrics_list in metrics_lists:
+                # This is the list of metrics per reference for 1 summary
+                aggregated_metrics_list.append(sum(metrics_list) / len(metrics_list))
+
+            return aggregated_metrics_list, scores_lists
 
         def _combine_outputs(self,
-                             metrics_list: List[List[MetricsDict]],
+                             metrics_list: List[MetricsDict],
                              qa_pairs_lists: List[List[List[Dict[str, Any]]]],
-                             all_predictions_lists: List[List[List[List[Dict[str, Any]]]]],
-                             all_scores_lists: List[List[List[List[Dict[str, float]]]]]) -> List[List[List[List[Dict[str, Any]]]]]:
-            combined_lists = []
-            for metrics, qa_pairs_list, predictions_lists, scores_lists in zip(metrics_list, qa_pairs_lists, all_predictions_lists, all_scores_lists):
-                combined_lists.append([])
-                for metric, predictions_list, scores_list in zip(metrics, predictions_lists, scores_lists):
-                    combined_lists[-1].append((metric, []))
-                    for qa_pairs, predictions, scores in zip(qa_pairs_list, predictions_list, scores_list):
-                        combined_lists[-1][-1][1].append([])
-                        for qa, prediction, score in zip(qa_pairs, predictions, scores):
-                            prediction = dict(**prediction)
-                            prediction['em'] = score['em']
-                            prediction['f1'] = score['f1']
-                            combined_lists[-1][-1][1][-1].append({
-                                'question': qa,
-                                'prediction': prediction
-                            })
-            return combined_lists
+                             predictions_lists: List[List[List[Dict[str, Any]]]],
+                             scores_lists: List[List[List[Dict[str, float]]]]) -> List[List[List[Dict[str, Any]]]]:
+            # This method will combine the metrics and QA pair metadata together into a tuple so they can
+            # both be returned together
+            combined = []
+            for metrics, qa_pairs_list, predictions_list, scores_list in zip(metrics_list, qa_pairs_lists, predictions_lists, scores_lists):
+                # This is for 1 (summary, reference) pair
+                combined.append((metrics, []))
+                for qa_pairs, predictions, scores in zip(qa_pairs_list, predictions_list, scores_list):
+                    # This is for 1 reference
+                    combined[-1][1].append([])
+                    for qa, prediction, score in zip(qa_pairs, predictions, scores):
+                        prediction = dict(**prediction)
+                        prediction['em'] = score['em']
+                        prediction['f1'] = score['f1']
+                        combined[-1][1][-1].append({'question': qa, 'prediction': prediction})
+            return combined
 
         def _insert_empty_outputs(self,
-                                  metrics_list: List[List[MetricsDict]],
-                                  is_empty_lists: List[List[bool]],
-                                  include_qa_list: bool) -> List[List[MetricsDict]]:
-            # `is_empty_lists` tells us whether or not the respective input was empty. This runs in parallel with the
-            # original input. `metrics_list` is the output of the non-empty data. We need to insert empty metrics
-            # in the empty input positions, so we iterate over `is_empty_lists` and insert empty results and only
-            # progress through `metrics_list` if it's non-empty.
+                                  metrics_list: List[MetricsDict],
+                                  is_empty_list: List[bool],
+                                  include_qa_list: bool) -> List[Any]:
             full_metrics_list = []
-            i = 0
-            for is_empty_list in is_empty_lists:
-                full_metrics_list.append([])
-                j = 0
-                for is_empty in is_empty_list:
-                    if is_empty:
-                        empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}})
-                        if include_qa_list:
-                            full_metrics_list[-1].append((empty_metrics, []))
-                        else:
-                            full_metrics_list[-1].append(empty_metrics)
+            index = 0
+            for is_empty in is_empty_list:
+                if is_empty:
+                    empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}})
+                    if include_qa_list:
+                        full_metrics_list.append((empty_metrics, []))
                     else:
-                        full_metrics_list[-1].append(metrics_list[i][j])
-                        j += 1
-                if j > 0:
-                    # This means we consumed one from this row
-                    i += 1
+                        full_metrics_list.append(empty_metrics)
+                else:
+                    full_metrics_list.append(metrics_list[index])
+                    index += 1
             return full_metrics_list
+
+        def _realign_output(self,
+                            summaries_list: List[List[SummaryType]],
+                            output: List[Any]) -> List[List[Any]]:
+            realigned = []
+            index = 0
+            for summaries in summaries_list:
+                realigned.append([])
+                for _ in summaries:
+                    realigned[-1].append(output[index])
+                    index += 1
+            return realigned
 
         def score_multi_all(self,
                             summaries_list: List[List[SummaryType]],
@@ -307,17 +345,25 @@ else:
             summaries_list = self._flatten_summaries(summaries_list)
             references_list = self._flatten_summaries(references_list)
 
-            summaries_list, references_list, is_empty_lists = self._get_empty_summary_mask(summaries_list, references_list)
+            # Unroll the summaries into lists of parallel (summary, references) pairs. The additional list around
+            # the summaries can potentially make the code confusing. Unrolling the list makes it slightly easier to understand
+            unrolled_summaries, unrolled_references_list = self._unroll_summaries(summaries_list, references_list)
 
-            qa_pairs_lists = self._generate_qa_pairs(references_list)
-            all_predictions_lists = self._answer_questions(summaries_list, qa_pairs_lists)
-            metrics_list, scores_lists = self._score_predictions(qa_pairs_lists, all_predictions_lists)
+            # Remove any input summaries that are empty. They mess up the processing otherwise
+            unrolled_summaries, unrolled_references_list, is_empty_list = self._get_empty_summary_mask(unrolled_summaries, unrolled_references_list)
+
+            qa_pairs_lists = self._generate_qa_pairs(unrolled_references_list)
+            predictions_lists = self._answer_questions(unrolled_summaries, qa_pairs_lists)
+            metrics_list, scores_lists = self._score_predictions(qa_pairs_lists, predictions_lists)
 
             if return_qa_pairs:
-                output = self._combine_outputs(metrics_list, qa_pairs_lists, all_predictions_lists, scores_lists)
+                unrolled_output = self._combine_outputs(metrics_list, qa_pairs_lists, predictions_lists, scores_lists)
             else:
-                output = metrics_list
-            return self._insert_empty_outputs(output, is_empty_lists, return_qa_pairs)
+                unrolled_output = metrics_list
+            unrolled_output = self._insert_empty_outputs(unrolled_output, is_empty_list, return_qa_pairs)
+
+            output = self._realign_output(summaries_list, unrolled_output)
+            return output
 
 
 @MetricSetupSubcommand.register('qa-eval')
