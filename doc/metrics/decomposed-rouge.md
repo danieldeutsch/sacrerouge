@@ -7,9 +7,10 @@ We have only included the ROUGE decomposition from [1] and not BERTScore since i
 Please see the paper's experiment repository if you want the BERTScore decomposition.
 
 ## Setting Up
-Decomposed ROUGE has a dependency on ROUGE's dataset, so set up the ROUGE metric:
+Decomposed ROUGE has a dependency on ROUGE's dataset, so set up the ROUGE metric, then the DecomposedRouge metric:
 ```
 sacrerouge setup-metric rouge
+sacrerouge setup-metric decomposed-rouge
 ```
 
 ## Correlations

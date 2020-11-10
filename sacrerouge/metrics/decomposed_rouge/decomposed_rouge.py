@@ -6,6 +6,7 @@ from collections import defaultdict
 from nltk.stem import PorterStemmer
 from overrides import overrides
 from spacy.tokens import Token
+from subprocess import Popen
 from typing import Dict, List, Set, Tuple
 
 from sacrerouge.commands import MetricSetupSubcommand
@@ -238,4 +239,11 @@ class DecomposedRougeSetupSubcommand(MetricSetupSubcommand):
 
     @overrides
     def run(self, args):
-        print('Please run the ROUGE setup code instead.')
+        logger.info(f'Downloading Spacy model en_core_web_sm-2.2.5')
+        command = 'python -m spacy download en_core_web_sm-2.2.5'
+        process = Popen(command, shell=True)
+        process.communicate()
+        if process.returncode != 0:
+            print('DecomposedRouge setup failure')
+        else:
+            print('DecomposedRouge setup success')
