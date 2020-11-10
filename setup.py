@@ -27,7 +27,6 @@ setuptools.setup(
         'pytest',
         'requests',
         'scipy>=1.5.2',
-        'networkx',
-        'https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.5/en_core_web_sm-2.2.5.tar.gz',
+        'networkx'
     ]
 )
