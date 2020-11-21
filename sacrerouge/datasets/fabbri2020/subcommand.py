@@ -12,6 +12,16 @@ class Fabbri2020Subcommand(DatasetSetupSubcommand):
         description = 'Setup the Fabbri 2020 dataset'
         self.parser = parser.add_parser('fabbri2020', description=description, help=description)
         self.parser.add_argument(
+            'cnn_tar',
+            type=str,
+            help='The path to the downloaded tar file from this link: https://drive.google.com/uc?export=download&id=0BwmD_VLjROrfTHk4NFg2SndKcjQ'
+        )
+        self.parser.add_argument(
+            'dailymail_tar',
+            type=str,
+            help='The path to the downloaded tar file from this link: https://drive.google.com/uc?export=download&id=0BwmD_VLjROrfM1BxdkxVaTY2bWs'
+        )
+        self.parser.add_argument(
             'output_dir',
             type=str,
             help='The directory where the data should be written'
@@ -25,4 +35,4 @@ class Fabbri2020Subcommand(DatasetSetupSubcommand):
 
     @overrides
     def run(self, args):
-        setup.setup(args.output_dir, args.force)
+        setup.setup(args.cnn_tar, args.dailymail_tar, args.output_dir, args.force)
