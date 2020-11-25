@@ -19,9 +19,10 @@ logger = logging.getLogger(__name__)
 def add_score_arguments(parser: argparse.ArgumentParser, include_config_arguments: bool) -> None:
     if include_config_arguments:
         parser.add_argument(
-            'config',
+            '--config',
             type=str,
-            help='The config file that specifies the dataset reader and metrics'
+            help='The config file that specifies the dataset reader and metrics',
+            required=True
         )
         parser.add_argument(
             '--overrides',
@@ -30,9 +31,10 @@ def add_score_arguments(parser: argparse.ArgumentParser, include_config_argument
         )
 
     parser.add_argument(
-        'output_jsonl',
+        '--output-jsonl',
         type=str,
-        help='The path to where the input-level metrics should be written'
+        help='The path to where the input-level metrics should be written',
+        required=True
     )
     parser.add_argument(
         '--log-file',
