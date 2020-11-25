@@ -275,12 +275,16 @@ It accepts the `summaries.jsonl` files which are saved by some of the dataset re
 ## Citation
 If you use SacreROUGE for your paper, please cite the following paper:
 ```
-@misc{deutsch2020sacrerouge,
-    title={{SacreROUGE: An Open-Source Library for Using and Developing Summarization Evaluation Metrics}},
-    author={Daniel Deutsch and Dan Roth},
-    year={2020},
-    eprint={2007.05374},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
+@inproceedings{deutsch-roth-2020-sacrerouge,
+    title = "{S}acre{ROUGE}: An Open-Source Library for Using and Developing Summarization Evaluation Metrics",
+    author = "Deutsch, Daniel  and
+      Roth, Dan",
+    booktitle = "Proceedings of Second Workshop for NLP Open Source Software (NLP-OSS)",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.nlposs-1.17",
+    pages = "120--125"
 }
 ```
