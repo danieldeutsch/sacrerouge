@@ -36,7 +36,7 @@ def load_metrics(metrics_files: List[str]) -> List[Metrics]:
     return metrics_list
 
 
-def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str):
+def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str) -> List[Metrics]:
     logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric1}" and "{metric2}"')
 
     filtered = []
@@ -75,7 +75,7 @@ def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, MetricsDict]:
     return key_to_metrics
 
 
-def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
+def compute_summary_level_correlations(metrics_list: List[Metrics],
                                        metric1: str,
                                        metric2: str) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
     pearsons = {}
@@ -127,7 +127,7 @@ def compute_summary_level_correlations(metrics_list: List[Dict[str, Any]],
     return averaged_correlations, individual_correlations
 
 
-def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
+def compute_system_level_correlations(metrics_list: List[Metrics],
                                       metric1: str,
                                       metric2: str) -> Dict[str, float]:
     metrics_list = list(aggregate_metrics(metrics_list).values())
@@ -157,7 +157,7 @@ def compute_system_level_correlations(metrics_list: List[Dict[str, Any]],
     }
 
 
-def compute_global_correlations(metrics_list: List[Dict[str, Any]],
+def compute_global_correlations(metrics_list: List[Metrics],
                                 metric1: str,
                                 metric2: str) -> Dict[str, float]:
     values1 = [metrics.metrics[metric1] for metrics in metrics_list]
