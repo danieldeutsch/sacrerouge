@@ -239,8 +239,8 @@ class DecomposedRougeSetupSubcommand(MetricSetupSubcommand):
 
     @overrides
     def run(self, args):
-        logger.info(f'Downloading Spacy model en_core_web_sm-2.2.5')
-        command = 'python -m spacy download en_core_web_sm-2.2.5'
+        logger.info(f'Downloading Spacy model en_core_web_sm')
+        command = 'python -m spacy download en_core_web_sm'
         process = Popen(command, shell=True)
         process.communicate()
         if process.returncode != 0:
