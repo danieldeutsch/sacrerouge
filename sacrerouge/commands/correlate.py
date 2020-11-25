@@ -189,7 +189,13 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
                         metric1: str,
                         metric2: str,
                         summarizer_type: str,
-                        return_all_summary_level: bool = False):
+                        return_all_summary_level: bool = False,
+                        skip_summary_level: bool = False,
+                        skip_system_level: bool = False,
+                        skip_global: bool = False):
+    if return_all_summary_level:
+        assert not skip_summary_level, 'If `return_all_summary_level` is `True`, `skip_summary_level` must not be `True`'
+
     if isinstance(metrics_jsonl_files, str):
         metrics_jsonl_files = [metrics_jsonl_files]
 
@@ -202,14 +208,17 @@ def compute_correlation(metrics_jsonl_files: Union[str, List[str]],
         metrics.select_metrics([metric1, metric2])
         metrics.average_values()
 
-    summary_level, individual_summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
-    system_level = compute_system_level_correlations(metrics_list, metric1, metric2)
-    global_level = compute_global_correlations(metrics_list, metric1, metric2)
-    results = {
-        'summary_level': summary_level,
-        'system_level': system_level,
-        'global': global_level
-    }
+    results = {}
+    if not skip_summary_level:
+        summary_level, individual_summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
+        results['summary_level'] = summary_level
+
+    if not skip_system_level:
+        results['system_level'] = compute_system_level_correlations(metrics_list, metric1, metric2)
+
+    if not skip_global:
+        results['global'] = compute_global_correlations(metrics_list, metric1, metric2)
+
     if return_all_summary_level:
         results = (results, individual_summary_level)
     return results
@@ -261,6 +270,21 @@ class CorrelateSubcommand(RootSubcommand):
             type=str,
             help='The file where all of the summary-level correlations should be written'
         )
+        self.parser.add_argument(
+            '--skip-summary-level',
+            action='store_true',
+            help='Indicates the summary-level correlations should not be calculated'
+        )
+        self.parser.add_argument(
+            '--skip-system-level',
+            action='store_true',
+            help='Indicates the system-level correlations should not be calculated'
+        )
+        self.parser.add_argument(
+            '--skip-global',
+            action='store_true',
+            help='Indicates the global correlations should not be calculated'
+        )
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
@@ -269,7 +293,10 @@ class CorrelateSubcommand(RootSubcommand):
         metric1, metric2 = args.metrics
         return_all_summary_level = args.summary_level_correlations_output is not None
         results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type,
-                                      return_all_summary_level=return_all_summary_level)
+                                      return_all_summary_level=return_all_summary_level,
+                                      skip_summary_level=args.skip_summary_level,
+                                      skip_system_level=args.skip_system_level,
+                                      skip_global=args.skip_global)
 
         # Strip off the original results from the individual summary correlations
         if return_all_summary_level:
