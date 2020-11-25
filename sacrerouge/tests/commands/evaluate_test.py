@@ -72,9 +72,9 @@ class TestEvaluate(unittest.TestCase):
             micro_file = f'{temp_dir}/micro.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'evaluate',
-                _config_file_path,
-                macro_file,
-                micro_file,
+                '--config', _config_file_path,
+                '--macro-output-json', macro_file,
+                '--micro-output-jsonl', micro_file,
                 '--silent'
             ]
 
@@ -93,9 +93,9 @@ class TestEvaluate(unittest.TestCase):
             micro_file = f'{temp_dir}/micro.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'evaluate',
-                _numeric_config_file_path,
-                macro_file,
-                micro_file,
+                '--config', _numeric_config_file_path,
+                '--macro-output-json', macro_file,
+                '--micro-output-jsonl', micro_file,
                 '--silent'
             ]
 

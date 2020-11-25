@@ -80,9 +80,10 @@ def save_evaluation_results(macro_results: MetricsDict,
 def add_evaluate_arguments(parser: argparse.ArgumentParser, include_config_arguments: bool) -> None:
     if include_config_arguments:
         parser.add_argument(
-            'config',
+            '--config',
             type=str,
-            help='The config file that specifies the dataset reader and metrics'
+            help='The config file that specifies the dataset reader and metrics',
+            required=True
         )
         parser.add_argument(
             '--overrides',
@@ -91,14 +92,16 @@ def add_evaluate_arguments(parser: argparse.ArgumentParser, include_config_argum
         )
 
     parser.add_argument(
-        'macro_output_json',
+        '--macro-output-json',
         type=str,
-        help='The path to where the system-level metrics should be written'
+        help='The path to where the system-level metrics should be written',
+        required=True
     )
     parser.add_argument(
-        'micro_output_jsonl',
+        '--micro-output-jsonl',
         type=str,
-        help='The path to where the input-level metrics should be written'
+        help='The path to where the input-level metrics should be written',
+        required=True
     )
     parser.add_argument(
         '--log-file',

@@ -22,8 +22,8 @@ class TestScore(unittest.TestCase):
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'score',
-                _config_file_path,
-                output_file
+                '--config', _config_file_path,
+                '--output-jsonl', output_file
             ]
 
             process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -94,8 +94,8 @@ class TestScore(unittest.TestCase):
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'score',
-                _numeric_config_file_path,
-                output_file
+                '--config', _numeric_config_file_path,
+                '--output-jsonl', output_file
             ]
 
             process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -141,8 +141,8 @@ class TestScore(unittest.TestCase):
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'score',
-                _config_file_path,
-                output_file,
+                '--config', _config_file_path,
+                '--output-jsonl', output_file,
                 '--disable-peer-jackknifing'
             ]
 
