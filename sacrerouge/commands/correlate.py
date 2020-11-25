@@ -2,6 +2,7 @@ import argparse
 import itertools
 import json
 import logging
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import warnings
@@ -192,6 +193,45 @@ def compute_global_correlations(metrics_list: List[Metrics],
     }
 
 
+def _plot_values(values1: List[float],
+                 values2: List[float],
+                 metric1: str,
+                 metric2: str,
+                 label: str,
+                 output_file: str) -> None:
+    fig = plt.figure()
+    plt.xlabel(metric1)
+    plt.ylabel(metric2)
+    plt.scatter(values1, values2, label=label)
+    plt.legend()
+    plt.tight_layout()
+
+    dirname = os.path.dirname(output_file)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+    fig.savefig(output_file)
+    plt.close()
+
+
+def _plot_system_level_metrics(metrics_list: List[Metrics],
+                               metric1: str,
+                               metric2: str,
+                               output_file: str) -> None:
+    metrics_list = list(aggregate_metrics(metrics_list).values())
+    values1 = [metrics[metric1] for metrics in metrics_list]
+    values2 = [metrics[metric2] for metrics in metrics_list]
+    _plot_values(values1, values2, metric1, metric2, 'Systems', output_file)
+
+
+def _plot_global_metrics(metrics_list: List[Metrics],
+                         metric1: str,
+                         metric2: str,
+                         output_file: str) -> None:
+    values1 = [metrics.metrics[metric1] for metrics in metrics_list]
+    values2 = [metrics.metrics[metric2] for metrics in metrics_list]
+    _plot_values(values1, values2, metric1, metric2, 'Summaries', output_file)
+
+
 def compute_correlation(metrics_jsonl_files_or_metrics_list: Union[str, List[str], List[Metrics]],
                         metric1: str,
                         metric2: str,
@@ -199,9 +239,15 @@ def compute_correlation(metrics_jsonl_files_or_metrics_list: Union[str, List[str
                         return_all_summary_level: bool = False,
                         skip_summary_level: bool = False,
                         skip_system_level: bool = False,
-                        skip_global: bool = False):
+                        skip_global: bool = False,
+                        system_level_output_plot: str = None,
+                        global_output_plot: str = None):
     if return_all_summary_level:
         assert not skip_summary_level, 'If `return_all_summary_level` is `True`, `skip_summary_level` must not be `True`'
+    if system_level_output_plot is not None:
+        assert not skip_system_level, 'If `system_level_output_plot` is not `None`, system-level correlations must be calculated'
+    if global_output_plot is not None:
+        assert not skip_global, 'If `global_output_plot` is not `None`, global correlations must be calculated'
 
     if isinstance(metrics_jsonl_files_or_metrics_list, str):
         # A single file
@@ -232,9 +278,13 @@ def compute_correlation(metrics_jsonl_files_or_metrics_list: Union[str, List[str
 
     if not skip_system_level:
         results['system_level'] = compute_system_level_correlations(metrics_list, metric1, metric2)
+        if system_level_output_plot is not None:
+            _plot_system_level_metrics(metrics_list, metric1, metric2, system_level_output_plot)
 
     if not skip_global:
         results['global'] = compute_global_correlations(metrics_list, metric1, metric2)
+        if global_output_plot is not None:
+            _plot_global_metrics(metrics_list, metric1, metric2, global_output_plot)
 
     if return_all_summary_level:
         results = (results, individual_summary_level)
@@ -302,6 +352,16 @@ class CorrelateSubcommand(RootSubcommand):
             action='store_true',
             help='Indicates the global correlations should not be calculated'
         )
+        self.parser.add_argument(
+            '--system-level-output-plot',
+            type=str,
+            help='If provided, saves a plot of the system-level scores to the corresponding file'
+        )
+        self.parser.add_argument(
+            '--global-output-plot',
+            type=str,
+            help='If provided, saves a plot of the global scores to the corresponding file'
+        )
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
@@ -313,7 +373,9 @@ class CorrelateSubcommand(RootSubcommand):
                                       return_all_summary_level=return_all_summary_level,
                                       skip_summary_level=args.skip_summary_level,
                                       skip_system_level=args.skip_system_level,
-                                      skip_global=args.skip_global)
+                                      skip_global=args.skip_global,
+                                      system_level_output_plot=args.system_level_output_plot,
+                                      global_output_plot=args.global_output_plot)
 
         # Strip off the original results from the individual summary correlations
         if return_all_summary_level:

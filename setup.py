@@ -28,6 +28,7 @@ setuptools.setup(
         'requests',
         'scipy>=1.5.2',
         'networkx',
-        'spacy==2.3.3'
+        'spacy==2.3.3',
+        'matplotlib',
     ]
 )
