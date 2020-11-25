@@ -151,3 +151,45 @@ class TestCorrelate(unittest.TestCase):
             assert summary_level['kendall']['M000'] == pytest.approx(0.3333333333333334, abs=1e-4)
             assert summary_level['kendall']['M001'] == pytest.approx(0.18257418583505539, abs=1e-4)
             assert summary_level['kendall']['M002'] == pytest.approx(0.0, abs=1e-4)
+
+    def test_skip_calculations(self):
+        # Ensures the flags to skip calculating specific correlations work
+        with TemporaryDirectory() as temp_dir:
+            command = [
+                'python', '-m', 'sacrerouge', 'correlate',
+                '--metrics-jsonl-files', MULTILING_METRICS,
+                '--metrics', 'rouge-1_jk_precision', 'grade',
+                '--summarizer-type', 'all',
+                '--output-file', f'{temp_dir}/correlations.json',
+                '--silent',
+                '--skip-summary-level'
+            ]
+            subprocess.run(command, check=True)
+            correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
+            assert 'summary_level' not in correlations
+
+            command = [
+                'python', '-m', 'sacrerouge', 'correlate',
+                '--metrics-jsonl-files', MULTILING_METRICS,
+                '--metrics', 'rouge-1_jk_precision', 'grade',
+                '--summarizer-type', 'all',
+                '--output-file', f'{temp_dir}/correlations.json',
+                '--silent',
+                '--skip-system-level'
+            ]
+            subprocess.run(command, check=True)
+            correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
+            assert 'system_level' not in correlations
+
+            command = [
+                'python', '-m', 'sacrerouge', 'correlate',
+                '--metrics-jsonl-files', MULTILING_METRICS,
+                '--metrics', 'rouge-1_jk_precision', 'grade',
+                '--summarizer-type', 'all',
+                '--output-file', f'{temp_dir}/correlations.json',
+                '--silent',
+                '--skip-global'
+            ]
+            subprocess.run(command, check=True)
+            correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
+            assert 'global' not in correlations
