@@ -7,3 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added ability to skip calculating specific correlation levels (summary, system, and global)
+
+### Changed
+- Changed all positional arguments to commands to non-positional for improved readability of the commands.
