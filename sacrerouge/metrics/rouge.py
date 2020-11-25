@@ -1,7 +1,9 @@
 import argparse
 import logging
+import zipfile
 import os
 import sys
+from pathlib import Path
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -250,19 +252,15 @@ class RougeSetupSubcommand(MetricSetupSubcommand):
             # No idea -- default to Linux
             file_id = '1K4J2wHGjAyr3LoSgaQuWZ_YyjtUGf26m'
 
-        download_file_from_google_drive(file_id, f'{DATA_ROOT}/metrics/ROUGE-1.5.5.zip')
 
-        commands = [
-            f'cd {DATA_ROOT}/metrics',
-            f'unzip ROUGE-1.5.5.zip',
-            f'rm ROUGE-1.5.5.zip'
-        ]
-        command = ' && '.join(commands)
+        output_dir = Path(f'{DATA_ROOT}/metrics')
+        output_file = output_dir / 'ROUGE-1.5.5.zip'
+       
+        if not output_file.exists():
+            download_file_from_google_drive(file_id, output_file)
 
-        process = Popen(command, shell=True)
-        process.communicate()
-        if process.returncode != 0:
-            print('ROUGE setup failure')
+        with zipfile.ZipFile(output_file) as f:
+            f.extractall(output_dir)
 
         # ROUGE has data files which may not successfully load. Therefore, if it fails to run on a simple example,
         # the user needs to run some perl code within the ROUGE directory to correct the data file

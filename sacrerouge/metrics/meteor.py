@@ -1,6 +1,9 @@
 import argparse
 import logging
 import os
+import requests
+import tarfile
+from pathlib import Path
 from collections import defaultdict
 from overrides import overrides
 from subprocess import Popen, PIPE
@@ -36,6 +39,7 @@ class Meteor(ReferenceBasedMetric):
 
     def _parse_meteor_stdout(self, stdout: str) -> Tuple[float, List[float]]:
         lines = stdout.splitlines()
+        print(lines)
         assert lines[11].startswith('Segment 1 score'), 'Unexpected Meteor stdout format'
 
         individual_scores = []
@@ -133,17 +137,20 @@ class MeteorSetupSubcommand(MetricSetupSubcommand):
 
     @overrides
     def run(self, args):
-        commands = [
-            f'mkdir -p {DATA_ROOT}/metrics/METEOR',
-            f'cd {DATA_ROOT}/metrics/METEOR',
-            f'wget https://www.cs.cmu.edu/~alavie/METEOR/download/meteor-1.5.tar.gz',
-            f'tar xzvf meteor-1.5.tar.gz'
-        ]
-        command = ' && '.join(commands)
+        output_dir = Path(f'{DATA_ROOT}/metrics/METEOR')
+        output_dir.mkdir(exist_ok=True, parents=True)
 
-        process = Popen(command, shell=True)
-        process.communicate()
-        if process.returncode == 0:
-            print('METEOR setup success')
-        else:
-            print('METEOR setup failure')
+        output_file = output_dir / 'meteor-1.5.tar.gz'
+
+        if not output_file.exists():
+            r = requests.get('https://www.cs.cmu.edu/~alavie/METEOR/download/meteor-1.5.tar.gz', stream=True)
+
+            if r.status_code != 200:
+                print('METEOR setup failure.')
+                return
+            with open(output_file, 'wb') as f:
+                for chunk in r.iter_content(1024):
+                    f.write(chunk)
+        with tarfile.open(output_file, 'r:gz') as f:
+            f.extractall(path=output_dir)
+        print('METEOR setup success')
