@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import pytest
 import unittest
@@ -193,3 +194,22 @@ class TestCorrelate(unittest.TestCase):
             subprocess.run(command, check=True)
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
             assert 'global' not in correlations
+
+    def test_plots(self):
+        # Tests to ensure plot files exist
+        with TemporaryDirectory() as temp_dir:
+            system_plot_file = f'{temp_dir}/system.pdf'
+            global_plot_file = f'{temp_dir}/global.pdf'
+            command = [
+                'python', '-m', 'sacrerouge', 'correlate',
+                '--metrics-jsonl-files', MULTILING_METRICS,
+                '--metrics', 'rouge-1_jk_precision', 'grade',
+                '--summarizer-type', 'all',
+                '--output-file', f'{temp_dir}/correlations.json',
+                '--silent',
+                '--system-level-output-plot', system_plot_file,
+                '--global-output-plot', global_plot_file
+            ]
+            subprocess.run(command, check=True)
+            assert os.path.exists(system_plot_file)
+            assert os.path.exists(global_plot_file)

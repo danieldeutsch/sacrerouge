@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added ability to skip calculating specific correlation levels (summary, system, and global)
+- Added optionally generating plots of the system-level and global metric values 
 
 ### Changed
 - Updating `spacy` package version to `2.3.3` and model version to `2.3.1`.
