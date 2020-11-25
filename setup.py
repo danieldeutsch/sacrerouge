@@ -27,6 +27,7 @@ setuptools.setup(
         'pytest',
         'requests',
         'scipy>=1.5.2',
-        'networkx'
+        'networkx',
+        'spacy==2.3.3'
     ]
 )

@@ -118,7 +118,8 @@ class TestMetricCommand(unittest.TestCase):
             micro_file = f'{temp_dir}/micro.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'python-rouge', 'evaluate',
-                macro_file, micro_file,
+                '--macro-output-json', macro_file,
+                '--micro-output-jsonl', micro_file,
                 '--dataset-reader', 'reference-based',
                 '--input-files', MULTILING_SUMMARIES,
                 '--silent'
@@ -141,7 +142,8 @@ class TestMetricCommand(unittest.TestCase):
             micro_file = f'{temp_dir}/micro.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'python-rouge', 'evaluate',
-                macro_file, micro_file,
+                '--macro-output-json', macro_file,
+                '--micro-output-jsonl', micro_file,
                 '--ngram_orders', '[3]',
                 '--use_porter_stemmer', 'false',
                 '--remove_stopwords', 'true',
@@ -167,7 +169,7 @@ class TestMetricCommand(unittest.TestCase):
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'python-rouge', 'score',
-                output_file,
+                '--output-jsonl', output_file,
                 '--dataset-reader', 'reference-based',
                 '--input-files', MULTILING_SUMMARIES,
                 '--silent'
@@ -239,7 +241,7 @@ class TestMetricCommand(unittest.TestCase):
             output_file = f'{temp_dir}/metrics.jsonl'
             command = [
                 'python', '-m', 'sacrerouge', 'python-rouge', 'score',
-                output_file,
+                '--output-jsonl', output_file,
                 '--dataset-reader', 'reference-based',
                 '--input-files', MULTILING_SUMMARIES,
                 '--ngram_orders', '[3]',
