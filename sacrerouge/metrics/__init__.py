@@ -10,6 +10,7 @@ from sacrerouge.metrics.pyramid_score import PyramidScore
 from sacrerouge.metrics.pyreval import PyrEval
 from sacrerouge.metrics.python_rouge import PythonRouge
 from sacrerouge.metrics.qaeval import QAEval
+from sacrerouge.metrics.qags import QAGS
 from sacrerouge.metrics.rouge import Rouge
 from sacrerouge.metrics.s3 import S3
 from sacrerouge.metrics.simetrix import SIMetrix
