@@ -134,6 +134,7 @@ class BleurtSetupSubcommand(MetricSetupSubcommand):
     @overrides
     def run(self, args):
         commands = [
+            f'mkdir -p {DATA_ROOT}/metrics',
             f'cd {DATA_ROOT}/metrics',
             f'git clone https://github.com/google-research/bleurt'
         ]
