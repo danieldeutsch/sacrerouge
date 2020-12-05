@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Adding [QAGS](https://www.aclweb.org/anthology/2020.acl-main.450.pdf) and the corresponding faithfulness annotations on the CNN/DailyMail and XSUM datasets.
 
 ## [v0.1.3](https://github.com/danieldeutsch/sacrerouge/releases/tag/v0.1.3) - 2020-11-25
 ### Added
