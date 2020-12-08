@@ -30,6 +30,9 @@ rm WordNet-2.0.exc.db
 ln -s WordNet-2.0-Exceptions/WordNet-2.0.exc.db WordNet-2.0.exc.db
 ```
 
+## Usage
+[Here](https://colab.research.google.com/drive/1t0EZkRTRbthd235XSa1PXUmJI_F0Y_0X?usp=sharing) is a Colab notebook with an example of how to use the ROUGE metric.
+
 ## Correlations
 Here are the correlations of ROUGE as implemented in SacreROUGE to the "overall responsiveness" human judgments on several datasets.
 
