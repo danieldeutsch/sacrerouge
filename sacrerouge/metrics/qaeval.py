@@ -408,4 +408,22 @@ class QAEvalSetupSubcommand(MetricSetupSubcommand):
         if os.path.exists(answering_model_zip_path):
             os.remove(answering_model_zip_path)
 
+        lerc_model_id = '193K7v6pjOtuXdlMenQW-RzF6ft-xY2qd'
+        lerc_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz'
+        if args.force and os.path.exists(lerc_model_path):
+            os.remove(lerc_model_path)
+        if not os.path.exists(lerc_model_path):
+            download_file_from_google_drive(lerc_model_id, lerc_model_path)
+        else:
+            print('Skipping downloading LERC model')
+
+        lerc_pretrained_model_id = '1fWBahDT-O1mpsbND300cuZuF73mfObzH'
+        lerc_pretrained_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz'
+        if args.force and os.path.exists(lerc_pretrained_model_path):
+            os.remove(lerc_pretrained_model_path)
+        if not os.path.exists(lerc_pretrained_model_path):
+            download_file_from_google_drive(lerc_pretrained_model_id, lerc_pretrained_model_path)
+        else:
+            print('Skipping downloading LERC pretrained model')
+
         print('Downloading models complete')
