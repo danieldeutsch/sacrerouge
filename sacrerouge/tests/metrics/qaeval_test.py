@@ -27,6 +27,25 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         ]
         super().assert_expected_output(metric, expected_output)
 
+    def test_qaeval_with_lerc(self):
+        # This is a regression test, not necessarily a test for correctness
+        metric = QAEval(use_lerc=True)
+        expected_output = [
+            {'qa-eval': {'em': 0.03078358208955224, 'f1': 0.05688114487088367, 'lerc': 0.5280342313984585}},
+            {'qa-eval': {'em': 0.08286691542288557, 'f1': 0.11367400349443259, 'lerc': 0.8588525844061404}},
+            {'qa-eval': {'em': 0.05223880597014925, 'f1': 0.10360696517412935, 'lerc': 1.2307390170310861}},
+            {'qa-eval': {'em': 0.04582555970149253, 'f1': 0.05402803689883914, 'lerc': 0.6782244059549116}},
+            {'qa-eval': {'em': 0.025276841598459315, 'f1': 0.04173576561636263, 'lerc': 0.40871678001285994}},
+            {'qa-eval': {'em': 0.029159756771697066, 'f1': 0.0543755246092705, 'lerc': 0.6477515654560587}},
+            {'qa-eval': {'em': 0.05223880597014925, 'f1': 0.09381412591922542, 'lerc': 0.947292007320556}},
+            {'qa-eval': {'em': 0.04537794896485315, 'f1': 0.12145356515842792, 'lerc': 1.2629075305115793}},
+            {'qa-eval': {'em': 0.06434837092731831, 'f1': 0.10272833079850623, 'lerc': 1.1977039740821571}},
+            {'qa-eval': {'em': 0.09642160957950431, 'f1': 0.13482779720666102, 'lerc': 1.2360802221434326}},
+            {'qa-eval': {'em': 0.12349624060150374, 'f1': 0.16393273976257167, 'lerc': 1.5575424717221045}},
+            {'qa-eval': {'em': 0.12678571428571428, 'f1': 0.16151234567901235, 'lerc': 1.4713040575976408}}
+        ]
+        super().assert_expected_output(metric, expected_output)
+
     def test_qaeval_order_invariant(self):
         metric = QAEval()
         self.assert_order_invariant(metric)
