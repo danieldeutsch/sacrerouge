@@ -51,7 +51,7 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         self.assert_order_invariant(metric)
 
     def test_return_qa_pairs(self):
-        metric = QAEval()
+        metric = QAEval(use_lerc=True)
 
         summaries = [
             'Dan walked to the bakery this morning.',
@@ -64,24 +64,38 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         metrics, qa_pairs_list = results_list[0]
         assert metrics['qa-eval']['em'] == 0.5
         assert metrics['qa-eval']['f1'] == 0.5
+        self.assertAlmostEqual(metrics['qa-eval']['lerc'], 3.171376943588257, places=4)
         assert len(qa_pairs_list) == 1
         qa_pairs = qa_pairs_list[0]
         assert len(qa_pairs) == 2
         assert qa_pairs[0]['question']['question'] == 'Who went to buy scones earlier this morning?'
         assert qa_pairs[0]['prediction']['prediction'] == 'Dan'
+        assert qa_pairs[0]['prediction']['em'] == 1.0
+        assert qa_pairs[0]['prediction']['f1'] == 1.0
+        self.assertAlmostEqual(qa_pairs[0]['prediction']['lerc'], 5.035197734832764, places=4)
         assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
         assert qa_pairs[1]['prediction']['prediction'] == 'bakery'
+        assert qa_pairs[1]['prediction']['em'] == 0.0
+        assert qa_pairs[1]['prediction']['f1'] == 0.0
+        self.assertAlmostEqual(qa_pairs[1]['prediction']['lerc'], 1.30755615234375, places=4)
 
         metrics, qa_pairs_list = results_list[1]
         assert metrics['qa-eval']['em'] == 0.5
         assert metrics['qa-eval']['f1'] == 0.5
+        self.assertAlmostEqual(metrics['qa-eval']['lerc'], 2.492440700531006, places=4)
         assert len(qa_pairs_list) == 1
         qa_pairs = qa_pairs_list[0]
         assert len(qa_pairs) == 2
         assert qa_pairs[0]['question']['question'] == 'Who went to buy scones earlier this morning?'
         assert qa_pairs[0]['prediction']['prediction'] == 'He'
+        assert qa_pairs[0]['prediction']['em'] == 0.0
+        assert qa_pairs[0]['prediction']['f1'] == 0.0
+        assert qa_pairs[0]['prediction']['lerc'] == 0.0
         assert qa_pairs[1]['question']['question'] == 'What did Dan go to buy earlier this morning?'
         assert qa_pairs[1]['prediction']['prediction'] == 'scones'
+        assert qa_pairs[1]['prediction']['em'] == 1.0
+        assert qa_pairs[1]['prediction']['f1'] == 1.0
+        self.assertAlmostEqual(qa_pairs[1]['prediction']['lerc'], 4.984881401062012, places=4)
 
     def test_command_exists(self):
         assert sacrerouge_command_exists(['qa-eval'])
