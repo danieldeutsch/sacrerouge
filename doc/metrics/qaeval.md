@@ -391,6 +391,64 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations of the metrics to the expert-based relevance judgments from [Fabbri (2020)](https://arxiv.org/abs/2007.12626)
+
+Summary-level, peers only:
+<table>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>QA-EM</td>
+<td>0.23</td>
+<td>0.23</td>
+<td>0.19</td>
+</tr>
+<tr>
+<td>QA-F1</td>
+<td>0.30</td>
+<td>0.29</td>
+<td>0.22</td>
+</tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.34</td>
+<td>0.31</td>
+<td>0.24</td>
+</tr>
+</table>
+
+System-level, peers only:
+<table>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>QA-EM</td>
+<td>0.80</td>
+<td>0.91</td>
+<td>0.77</td>
+</tr>
+<tr>
+<td>QA-F1</td>
+<td>0.82</td>
+<td>0.91</td>
+<td>0.77</td>
+</tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.80</td>
+<td>0.90</td>
+<td>0.77</td>
+</tr>
+</table>
+
 ## Citation
 If you use this metric, please cite the following work
 ```
