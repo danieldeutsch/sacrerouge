@@ -16,7 +16,7 @@ from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
-MIN_QAEVAL_VERSION = '0.0.1'
+MIN_QAEVAL_VERSION = '0.0.4'
 QAEVAL_INSTALLED = False
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ except ImportError:
 else:
     from qaeval import AnswerSelector, QuestionAnsweringModel, QuestionGenerationModel
     from qaeval.answer_selection import NP_CHUNKS_STRATEGY, AnswerOffsets
-    from qaeval.scoring import score
+    from qaeval.scoring.scorers import ExactMatchF1, LERC, MetaScorer
 
     QAEVAL_INSTALLED = True
 
@@ -54,11 +54,20 @@ else:
                      answering_model_dir: str = f'{DATA_ROOT}/metrics/qaeval/models/answering/model',
                      cuda_device: int = 0,
                      generation_batch_size: int = 8,
-                     answering_batch_size: int = 8) -> None:
+                     answering_batch_size: int = 8,
+                     use_lerc: bool = False,
+                     lerc_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz',
+                     lerc_pretrained_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz',
+                     lerc_batch_size: int = 8) -> None:
             super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
             self.answer_selector = AnswerSelector(answer_selection_strategy)
             self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device, batch_size=generation_batch_size)
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)
+
+            scorers = [ExactMatchF1()]
+            if use_lerc:
+                scorers.append(LERC(lerc_model_path, lerc_pretrained_model_path, cuda_device, lerc_batch_size))
+            self.scorer = MetaScorer(scorers)
 
         def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
             # Flattens all of the summaries so they are `str` instead of `List[str]`
@@ -229,63 +238,39 @@ else:
             return predictions_lists
 
         def _score_predictions(self,
+                               summaries: List[str],
                                qa_pairs_lists: List[List[List[Dict[str, Any]]]],
                                predictions_lists: List[List[List[Dict[str, Any]]]]) -> Tuple[List[MetricsDict], List[List[List[Dict[str, float]]]]]:
-            # Collect all of the (answer, prediction) pairs that need to be scored
-            input_answers = []
-            input_predictions = []
-            input_probabilities = []
-            input_null_probabilities = []
-            for qa_pairs_list, predictions_list in zip(qa_pairs_lists, predictions_lists):
+            metrics_list = []
+            scores_list = []
+
+            for summary, qa_pairs_list, predictions_list in zip(summaries, qa_pairs_lists, predictions_lists):
                 # This is for 1 (summary, references) pair
+                input_questions_list = []
+                input_answers_list = []
+                input_predictions_list = []
+                input_probabilities_list = []
+                input_null_probabilities_list = []
                 for qa_pairs, predictions in zip(qa_pairs_list, predictions_list):
                     # This is the set of QA pairs for 1 reference
+                    input_questions_list.append([])
+                    input_answers_list.append([])
+                    input_predictions_list.append([])
+                    input_probabilities_list.append([])
+                    input_null_probabilities_list.append([])
                     for qa, prediction in zip(qa_pairs, predictions):
-                        input_answers.append(qa['answer'])
-                        input_predictions.append(prediction['prediction'])
-                        input_probabilities.append(prediction['probability'])
-                        input_null_probabilities.append(prediction['null_probability'])
+                        input_questions_list[-1].append(qa['question'])
+                        input_answers_list[-1].append(qa['answer'])
+                        input_predictions_list[-1].append(prediction['prediction'])
+                        input_probabilities_list[-1].append(prediction['probability'])
+                        input_null_probabilities_list[-1].append(prediction['null_probability'])
 
-            # Score all of the pairs
-            _, _, ems, f1s = score(input_answers, input_predictions, input_probabilities, input_null_probabilities, return_all_scores=True)
+                metrics, scores = self.scorer.score_multi_ref(summary, input_questions_list, input_answers_list, input_predictions_list, input_probabilities_list, input_null_probabilities_list)
+                metrics = MetricsDict({'qa-eval': metrics})
+                metrics_list.append(metrics)
+                scores_list.append(scores)
 
-            # Realign the scores with the input questions and calculate the metrics
-            index = 0
-            metrics_lists = []
-            scores_lists = []
-            for qa_pairs_list, predictions_list in zip(qa_pairs_lists, predictions_lists):
-                # This is for 1 (summary, references) pair
-                metrics_lists.append([])
-                scores_lists.append([])
-                for qa_pairs, predictions in zip(qa_pairs_list, predictions_list):
-                    # This is the set of QA pairs for 1 reference
-                    ref_ems = []
-                    ref_f1s = []
-                    scores_lists[-1].append([])
-                    for qa, prediction in zip(qa_pairs, predictions):
-                        em = ems[index]
-                        f1 = f1s[index]
-                        scores_lists[-1][-1].append({'em': em, 'f1': f1})
-
-                        ref_ems.append(em)
-                        ref_f1s.append(f1)
-
-                        index += 1
-
-                    metrics_lists[-1].append(MetricsDict({
-                        'qa-eval': {
-                            'em': sum(ref_ems) / len(ref_ems),
-                            'f1': sum(ref_f1s) / len(ref_f1s)
-                        }
-                    }))
-
-            # Aggregate the metrics across references
-            aggregated_metrics_list = []
-            for metrics_list in metrics_lists:
-                # This is the list of metrics per reference for 1 summary
-                aggregated_metrics_list.append(sum(metrics_list) / len(metrics_list))
-
-            return aggregated_metrics_list, scores_lists
+            return metrics_list, scores_list
 
         def _combine_outputs(self,
                              metrics_list: List[MetricsDict],
@@ -354,8 +339,9 @@ else:
 
             qa_pairs_lists = self._generate_qa_pairs(unrolled_references_list)
             predictions_lists = self._answer_questions(unrolled_summaries, qa_pairs_lists)
-            metrics_list, scores_lists = self._score_predictions(qa_pairs_lists, predictions_lists)
+            metrics_list, scores_lists = self._score_predictions(unrolled_summaries, qa_pairs_lists, predictions_lists)
 
+            self._combine_outputs(metrics_list, qa_pairs_lists, predictions_lists, scores_lists)
             if return_qa_pairs:
                 unrolled_output = self._combine_outputs(metrics_list, qa_pairs_lists, predictions_lists, scores_lists)
             else:
@@ -407,5 +393,23 @@ class QAEvalSetupSubcommand(MetricSetupSubcommand):
                 zip.extractall(answering_model_path)
         if os.path.exists(answering_model_zip_path):
             os.remove(answering_model_zip_path)
+
+        lerc_model_id = '193K7v6pjOtuXdlMenQW-RzF6ft-xY2qd'
+        lerc_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz'
+        if args.force and os.path.exists(lerc_model_path):
+            os.remove(lerc_model_path)
+        if not os.path.exists(lerc_model_path):
+            download_file_from_google_drive(lerc_model_id, lerc_model_path)
+        else:
+            print('Skipping downloading LERC model')
+
+        lerc_pretrained_model_id = '1fWBahDT-O1mpsbND300cuZuF73mfObzH'
+        lerc_pretrained_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz'
+        if args.force and os.path.exists(lerc_pretrained_model_path):
+            os.remove(lerc_pretrained_model_path)
+        if not os.path.exists(lerc_pretrained_model_path):
+            download_file_from_google_drive(lerc_pretrained_model_id, lerc_pretrained_model_path)
+        else:
+            print('Skipping downloading LERC pretrained model')
 
         print('Downloading models complete')
