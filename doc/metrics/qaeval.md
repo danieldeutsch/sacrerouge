@@ -159,6 +159,21 @@ Summary-level, peers only:
 <td>0.46</td>
 <td>0.37</td>
 </tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.50</td>
+<td>0.49</td>
+<td>0.39</td>
+<td>0.53</td>
+<td>0.48</td>
+<td>0.38</td>
+<td>0.60</td>
+<td>0.58</td>
+<td>0.48</td>
+<td>0.44</td>
+<td>0.42</td>
+<td>0.34</td>
+</tr>
 </table>
 
 Summary-level, peers + references:
@@ -214,6 +229,21 @@ Summary-level, peers + references:
 <td>0.56</td>
 <td>0.51</td>
 <td>0.41</td>
+</tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.64</td>
+<td>0.57</td>
+<td>0.46</td>
+<td>0.61</td>
+<td>0.55</td>
+<td>0.44</td>
+<td>0.69</td>
+<td>0.66</td>
+<td>0.54</td>
+<td>0.55</td>
+<td>0.50</td>
+<td>0.40</td>
 </tr>
 </table>
 
@@ -271,6 +301,21 @@ System-level, peers only:
 <td>0.82</td>
 <td>0.64</td>
 </tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.88</td>
+<td>0.85</td>
+<td>0.67</td>
+<td>0.86</td>
+<td>0.87</td>
+<td>0.70</td>
+<td>0.90</td>
+<td>0.88</td>
+<td>0.73</td>
+<td>0.88</td>
+<td>0.84</td>
+<td>0.65</td>
+</tr>
 </table>
 
 System-level, peers + references:
@@ -326,6 +371,21 @@ System-level, peers + references:
 <td>0.89</td>
 <td>0.88</td>
 <td>0.72</td>
+</tr>
+<tr>
+<td>QA-LERC</td>
+<td>0.95</td>
+<td>0.89</td>
+<td>0.73</td>
+<td>0.88</td>
+<td>0.91</td>
+<td>0.75</td>
+<td>0.96</td>
+<td>0.92</td>
+<td>0.80</td>
+<td>0.92</td>
+<td>0.90</td>
+<td>0.74</td>
 </tr>
 </table>
 
