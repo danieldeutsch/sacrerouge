@@ -290,6 +290,7 @@ else:
                         prediction = dict(**prediction)
                         prediction['em'] = score['em']
                         prediction['f1'] = score['f1']
+                        prediction['lerc'] = score['lerc']
                         combined[-1][1][-1].append({'question': qa, 'prediction': prediction})
             return combined
 
@@ -301,7 +302,7 @@ else:
             index = 0
             for is_empty in is_empty_list:
                 if is_empty:
-                    empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}})
+                    empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0, 'lerc': 0.0}})
                     if include_qa_list:
                         full_metrics_list.append((empty_metrics, []))
                     else:
