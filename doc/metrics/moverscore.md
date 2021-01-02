@@ -187,5 +187,47 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations of the metrics to the expert-based relevance judgments from [Fabbri (2020)](https://arxiv.org/abs/2007.12626)
+
+Summary-level, peers only:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Fabbri2020</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>MoverScore</td>
+<td>0.28</td>
+<td>0.24</td>
+<td>0.18</td>
+</tr>
+</table>
+
+System-level, peers only:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Fabbri2020</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>MoverScore</td>
+<td>0.56</td>
+<td>0.54</td>
+<td>0.42</td>
+</tr>
+</table>
+
 ## References
 [1] Wei Zhao, Maxime Peyrard, Fei Liu, Yang Gao, Christian M. Meyer, and Steffen Eger. [MoverScore: Text Generation Evaluating with Contextualized Embeddings and Earth Mover Distance](https://www.aclweb.org/anthology/D19-1053/). EMNLP 2019.
