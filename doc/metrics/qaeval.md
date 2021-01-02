@@ -3,6 +3,8 @@ QAEval is a question-answering based metric for estimating the content quality o
 It generates QA pairs from reference summaries, then uses a QA model to answer the questions against a candidate summary.
 The final score is the portion of questions that were answered correctly.
 
+[Here](https://colab.research.google.com/drive/1IZUZCUQAdCfXAMDDyeF67QFHB72y2svI?usp=sharing) is a demo of using the QAEval metric.
+
 ## Setting Up
 After installing SacreROUGE, then you must install the [`qaeval` package](https://github.com/danieldeutsch/qaeval):
 ```
