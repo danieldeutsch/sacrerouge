@@ -1,0 +1,13 @@
+name: qags
+dependencies:
+  - python=3.6
+  - pip
+  - pip:
+      - ipdb==0.13.4
+      - spacy==2.3.4
+      - transformers==4.0.0
+      - pytorch==1.7.0
+      - scipy==1.5.4
+      - pytorch_pretrained_bert==0.6.2
+      - editdistance==0.5.3
+      - tensorboardX==2.1

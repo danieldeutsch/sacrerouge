@@ -11,6 +11,7 @@ The following metrics have been implemented:
 - [Pyramid Score](pyramid-score.md)
 - [PyrEval](pyreval.md)
 - [QAEval](qaeval.md)
+- [QAGS](qags.md)
 - [ROUGE](rouge.md) and a [Python-based implementation](python-rouge.md)
 - [S3](s3.md)
 - [SIMetrix](simetrix.md)
