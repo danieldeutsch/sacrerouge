@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Added the annotations collected by [Bhandari et al., (2020)](https://www.aclweb.org/anthology/2020.emnlp-main.751/).
+
 ### Fixed
 - Fixed a bug in which QAEval would crash if you don't use LERC
 
