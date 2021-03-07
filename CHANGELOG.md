@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Added the annotations collected by [Bhandari et al., (2020)](https://www.aclweb.org/anthology/2020.emnlp-main.751/).
 - Added [BLANC](https://github.com/PrimerAI/blanc)
+
+### Fixed
+- Fixed a bug in which QAEval would crash if you don't use LERC
 
 ## [v0.1.5](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.1.5) - 2021-01-02
 ### Fixed

@@ -303,6 +303,123 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations to the annotations provided by Bhandari et al., (2020).
+Summary-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>BEwTE-P</td>
+<td>-0.03</td>
+<td>-0.02</td>
+<td>-0.02</td>
+<td>-0.04</td>
+<td>-0.05</td>
+<td>-0.04</td>
+<td>-0.04</td>
+<td>-0.03</td>
+<td>-0.02</td>
+</tr>
+<tr>
+<td>BEwTE-R</td>
+<td>0.60</td>
+<td>0.56</td>
+<td>0.46</td>
+<td>0.22</td>
+<td>0.18</td>
+<td>0.16</td>
+<td>0.48</td>
+<td>0.45</td>
+<td>0.36</td>
+</tr>
+<tr>
+<td>BEwTE-F1</td>
+<td>0.60</td>
+<td>0.57</td>
+<td>0.46</td>
+<td>0.22</td>
+<td>0.18</td>
+<td>0.16</td>
+<td>0.49</td>
+<td>0.44</td>
+<td>0.35</td>
+</tr>
+</table>
+
+System-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>BEwTE-P</td>
+<td>0.12</td>
+<td>0.10</td>
+<td>0.14</td>
+<td>-0.23</td>
+<td>-0.16</td>
+<td>-0.11</td>
+<td>-0.14</td>
+<td>-0.18</td>
+<td>-0.09</td>
+</tr>
+<tr>
+<td>BEwTE-R</td>
+<td>0.90</td>
+<td>0.76</td>
+<td>0.63</td>
+<td>0.49</td>
+<td>0.37</td>
+<td>0.29</td>
+<td>0.91</td>
+<td>0.91</td>
+<td>0.75</td>
+</tr>
+<tr>
+<td>BEwTE-F1</td>
+<td>0.90</td>
+<td>0.76</td>
+<td>0.63</td>
+<td>0.51</td>
+<td>0.30</td>
+<td>0.20</td>
+<td>0.91</td>
+<td>0.90</td>
+<td>0.74</td>
+</tr>
+</table>
+
 ## References
 [1] Stephen Tratz and Eduard Hovy. [BEwT­E: Basic Elements with Transformations for Evaluation](http://www.cs.cmu.edu/~./hovy/papers/08MetricsMATR-BEwT-E.pdf).
 

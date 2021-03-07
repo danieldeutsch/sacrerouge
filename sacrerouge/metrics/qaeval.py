@@ -65,7 +65,8 @@ else:
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)
 
             scorers = [ExactMatchF1()]
-            if use_lerc:
+            self.use_lerc = use_lerc
+            if self.use_lerc:
                 scorers.append(LERC(lerc_model_path, lerc_pretrained_model_path, cuda_device, lerc_batch_size))
             self.scorer = MetaScorer(scorers)
 
@@ -290,7 +291,8 @@ else:
                         prediction = dict(**prediction)
                         prediction['em'] = score['em']
                         prediction['f1'] = score['f1']
-                        prediction['lerc'] = score['lerc']
+                        if self.use_lerc:
+                            prediction['lerc'] = score['lerc']
                         combined[-1][1][-1].append({'question': qa, 'prediction': prediction})
             return combined
 
@@ -302,7 +304,10 @@ else:
             index = 0
             for is_empty in is_empty_list:
                 if is_empty:
-                    empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0, 'lerc': 0.0}})
+                    if self.use_lerc:
+                        empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0, 'lerc': 0.0}})
+                    else:
+                        empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}})
                     if include_qa_list:
                         full_metrics_list.append((empty_metrics, []))
                     else:
@@ -342,7 +347,6 @@ else:
             predictions_lists = self._answer_questions(unrolled_summaries, qa_pairs_lists)
             metrics_list, scores_lists = self._score_predictions(unrolled_summaries, qa_pairs_lists, predictions_lists)
 
-            self._combine_outputs(metrics_list, qa_pairs_lists, predictions_lists, scores_lists)
             if return_qa_pairs:
                 unrolled_output = self._combine_outputs(metrics_list, qa_pairs_lists, predictions_lists, scores_lists)
             else:

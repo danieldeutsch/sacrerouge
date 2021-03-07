@@ -186,5 +186,74 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations to the annotations provided by Bhandari et al., (2020).
+Summary-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>SUPERT</td>
+<td>0.12</td>
+<td>0.23</td>
+<td>0.18</td>
+<td>0.14</td>
+<td>0.12</td>
+<td>0.11</td>
+<td>0.18</td>
+<td>0.24</td>
+<td>0.19</td>
+</tr>
+</table>
+
+System-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>SUPERT</td>
+<td>0.06</td>
+<td>0.31</td>
+<td>0.19</td>
+<td>0.64</td>
+<td>0.42</td>
+<td>0.33</td>
+<td>0.31</td>
+<td>0.61</td>
+<td>0.41</td>
+</tr>
+</table>
+
 ## References
 [1] Yang Gao, Wei Zhao, and Steffen Eger. [SUPERT: Towards New Frontiers in Unsupervised Evaluation Metrics for Multi-Document Summarization](https://arxiv.org/abs/2005.03724). ACL, 2020.

@@ -302,6 +302,123 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations to the annotations provided by Bhandari et al., (2020)
+Summary-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>AutoSummENG</td>
+<td>0.47</td>
+<td>0.45</td>
+<td>0.35</td>
+<td>0.15</td>
+<td>0.15</td>
+<td>0.13</td>
+<td>0.32</td>
+<td>0.30</td>
+<td>0.24</td>
+</tr>
+<tr>
+<td>MeMoG</td>
+<td>0.47</td>
+<td>0.45</td>
+<td>0.35</td>
+<td>0.15</td>
+<td>0.15</td>
+<td>0.13</td>
+<td>0.32</td>
+<td>0.30</td>
+<td>0.24</td>
+</tr>
+<tr>
+<td>NPowER</td>
+<td>0.47</td>
+<td>0.45</td>
+<td>0.35</td>
+<td>0.15</td>
+<td>0.15</td>
+<td>0.13</td>
+<td>0.32</td>
+<td>0.30</td>
+<td>0.24</td>
+</tr>
+</table>
+
+System-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>AutoSummENG</td>
+<td>0.66</td>
+<td>0.67</td>
+<td>0.49</td>
+<td>-0.45</td>
+<td>-0.25</td>
+<td>-0.20</td>
+<td>0.24</td>
+<td>0.21</td>
+<td>0.13</td>
+</tr>
+<tr>
+<td>MeMoG</td>
+<td>0.66</td>
+<td>0.67</td>
+<td>0.49</td>
+<td>-0.45</td>
+<td>-0.25</td>
+<td>-0.20</td>
+<td>0.24</td>
+<td>0.21</td>
+<td>0.13</td>
+</tr>
+<tr>
+<td>NPowER</td>
+<td>0.66</td>
+<td>0.67</td>
+<td>0.49</td>
+<td>-0.45</td>
+<td>-0.25</td>
+<td>-0.20</td>
+<td>0.24</td>
+<td>0.21</td>
+<td>0.13</td>
+</tr>
+</table>
+
 ## References
 [1] Giannakopoulos, George, and Vangelis Karkaletsis. "[AutoSummENG and MeMoG in Evaluating Guided Summaries.](https://tac.nist.gov/publications/2011/participant.papers/DemokritosGR.proceedings.pdf)" TAC. 2011.
 

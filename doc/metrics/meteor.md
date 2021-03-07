@@ -182,5 +182,74 @@ System-level, peers + references:
 </tr>
 </table>
 
+Here are the correlations to the annotations provided by Bhandari et al., (2020).
+System-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>METEOR</td>
+<td>0.67</td>
+<td>0.64</td>
+<td>0.52</td>
+<td>0.25</td>
+<td>0.22</td>
+<td>0.18</td>
+<td>0.53</td>
+<td>0.50</td>
+<td>0.40</td>
+</tr>
+</table>
+
+System-level:
+<table>
+<tr>
+<th></th>
+<th colspan="3">Bhandari2020-Abs</th>
+<th colspan="3">Bhandari2020-Ext</th>
+<th colspan="3">Bhandari2020-Mix</th>
+</tr>
+<tr>
+<th></th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+<th>r</th>
+<th>p</th>
+<th>k</th>
+</tr>
+<tr>
+<td>METEOR</td>
+<td>0.96</td>
+<td>0.93</td>
+<td>0.82</td>
+<td>0.66</td>
+<td>0.60</td>
+<td>0.47</td>
+<td>0.95</td>
+<td>0.95</td>
+<td>0.84</td>
+</tr>
+</table>
+
 ## References
 [1] Michael Denkowski and Alon Lavie. "[Meteor Universal: Language Specific Translation Evaluation for Any Target Language.](https://www.cs.cmu.edu/~alavie/METEOR/pdf/meteor-1.5.pdf)" WMT 2014.
