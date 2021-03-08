@@ -5,7 +5,7 @@ from sacrerouge.datasets.vasilyev2020 import setup
 from sacrerouge.commands import DatasetSetupSubcommand
 
 
-@DatasetSetupSubcommand.register('-')
+@DatasetSetupSubcommand.register('vasilyev2020')
 class Vasilyev2020Subcommand(DatasetSetupSubcommand):
     @overrides
     def add_subparser(self, parser: argparse._SubParsersAction):
