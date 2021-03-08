@@ -1,7 +1,6 @@
 import argparse
 import numpy as np
 import random
-import torch
 from overrides import overrides
 from typing import List, Union
 
@@ -24,6 +23,8 @@ except ImportError:
             raise NotImplementedError('Please install the "blanc" python library library to use Blanc')
 else:
     BLANC_INSTALLED = True
+
+    import torch
 
     @Metric.register('blanc')
     class Blanc(DocumentBasedMetric):
