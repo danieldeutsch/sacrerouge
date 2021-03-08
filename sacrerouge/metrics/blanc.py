@@ -67,7 +67,7 @@ else:
             # For now, the implementation of the BLANC library looks like it only allows for single-document summaries
             documents = []
             for docs in documents_list:
-                assert len(docs) == 1
+                assert len(docs) == 1, 'BLANC only supports evaluating single-document summaries'
                 documents.append(self._flatten(docs[0]))
 
             summaries_list = [[self._flatten(summary) for summary in summaries] for summaries in summaries_list]
