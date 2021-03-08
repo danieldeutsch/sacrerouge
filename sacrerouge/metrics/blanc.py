@@ -29,7 +29,7 @@ else:
     @Metric.register('blanc')
     class Blanc(DocumentBasedMetric):
         def __init__(self,
-                     blanc_type: str = 'tune',
+                     blanc_type: str = 'blanc_tune',
                      device: str = 'cuda',
                      gap: int = 2,
                      inference_batch_size: int = 24,
