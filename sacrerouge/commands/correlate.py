@@ -20,7 +20,7 @@ from sacrerouge.stats import convert_to_matrices, corr_ci, global_corr, summary_
 logger = logging.getLogger(__name__)
 
 
-def _load_metrics(metrics_files: List[str]) -> List[Metrics]:
+def load_metrics(metrics_files: List[str]) -> List[Metrics]:
     logger.info(f'Loading metrics from {metrics_files}')
     metrics_list = []
     for metrics_file in metrics_files:
@@ -29,7 +29,7 @@ def _load_metrics(metrics_files: List[str]) -> List[Metrics]:
     return metrics_list
 
 
-def _merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
+def merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
     logger.info(f'Merging multiple metrics objects for the same (instance, summary) into a single object')
     metrics_dicts = defaultdict(dict)
     for metrics in metrics_list:
@@ -45,30 +45,29 @@ def _merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
     return merged_metrics_list
 
 
-def _filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str) -> List[Metrics]:
-    logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric1}" and "{metric2}"')
+def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, *metric_names: Union[str, List[str]]) -> List[Metrics]:
+    logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric_names}"')
 
     filtered = []
     incorrect_type = 0
-    missing_metric1 = 0
-    missing_metric2 = 0
+    missing_counts = [0] * len(metric_names)
     for metrics in metrics_list:
         if summarizer_type == 'all' or summarizer_type == metrics.summarizer_type:
-            if metric1 not in metrics.metrics:
-                missing_metric1 += 1
-            elif metric2 not in metrics.metrics:
-                missing_metric2 += 1
-            else:
+            keep = True
+            for i, name in enumerate(metric_names):
+                if name not in metrics.metrics:
+                    keep = False
+                    missing_counts[i] += 1
+            if keep:
                 filtered.append(metrics)
         else:
             incorrect_type += 1
 
     if incorrect_type > 0:
         logger.info(f'Filtered {incorrect_type} instances that were not summarizer type "{summarizer_type}"')
-    if missing_metric1 > 0:
-        logger.info(f'Filtered {missing_metric1} instances that did not have metric "{metric1}"')
-    if missing_metric2 > 0:
-        logger.info(f'Filtered {missing_metric2} instances that did not have metric "{metric2}"')
+    for name, missing in zip(metric_names, missing_counts):
+        if missing > 0:
+            logger.info(f'Filtered {missing} instances that did not have metric "{name}"')
     logger.info(f'{len(filtered)} instances remain after filtering')
 
     return filtered
@@ -308,22 +307,22 @@ def compute_correlation(metrics_jsonl_files_or_metrics_list: Union[str, List[str
 
     if isinstance(metrics_jsonl_files_or_metrics_list, str):
         # A single file
-        metrics_list = _load_metrics([metrics_jsonl_files_or_metrics_list])
+        metrics_list = load_metrics([metrics_jsonl_files_or_metrics_list])
     elif isinstance(metrics_jsonl_files_or_metrics_list, list) and all(isinstance(item, str) for item in metrics_jsonl_files_or_metrics_list):
         # A list of files
-        metrics_list = _load_metrics(metrics_jsonl_files_or_metrics_list)
+        metrics_list = load_metrics(metrics_jsonl_files_or_metrics_list)
     else:
         # A list of metrics
         assert isinstance(metrics_jsonl_files_or_metrics_list, list) and all(isinstance(item, Metrics) for item in metrics_jsonl_files_or_metrics_list)
         metrics_list = metrics_jsonl_files_or_metrics_list
 
     # Merge duplicate metrics objects into one
-    metrics_list = _merge_metrics(metrics_list)
+    metrics_list = merge_metrics(metrics_list)
 
     for metrics in metrics_list:
         metrics.flatten_keys()
 
-    metrics_list = _filter_metrics(metrics_list, summarizer_type, metric1, metric2)
+    metrics_list = filter_metrics(metrics_list, summarizer_type, metric1, metric2)
     for metrics in metrics_list:
         metrics.select_metrics([metric1, metric2])
         metrics.average_values()
