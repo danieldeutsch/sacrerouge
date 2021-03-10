@@ -9,7 +9,7 @@ import os
 from collections import defaultdict
 from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from sacrerouge.commands import RootSubcommand
 from sacrerouge.common.logging import prepare_global_logging
