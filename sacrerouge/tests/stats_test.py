@@ -7,7 +7,7 @@ from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
     bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci, \
     random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test, permutation_diff_test, \
-    williams_diff_test, corr_diff_test
+    williams_diff_test, corr_diff_test, bonferroni_partial_conjunction_pvalue_test
 
 
 class TestStats(unittest.TestCase):
@@ -632,3 +632,10 @@ class TestStats(unittest.TestCase):
 
         with self.assertRaises(Exception):
             corr_diff_test(corr_func, X, Y, Z, 'does-not-exist', False)
+
+    def test_bonferroni_partial_conjunction_pvalue_test(self):
+        # Tests against https://github.com/rtmdrr/replicability-analysis-NLP/blob/master/Replicability_Analysis.py
+        pvalues = [0.168, 0.297, 0.357, 0.019, 0.218, 0.001]
+        assert bonferroni_partial_conjunction_pvalue_test(pvalues, alpha=0.05) == (1, [5])
+        assert bonferroni_partial_conjunction_pvalue_test(pvalues, alpha=0.10) == (2, [5, 3])
+        assert bonferroni_partial_conjunction_pvalue_test(pvalues, alpha=0.70) == (6, [5, 3, 0, 4, 1, 2])

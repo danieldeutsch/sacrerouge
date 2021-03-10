@@ -549,3 +549,33 @@ def corr_diff_test(corr_func: SummaryCorrFunc,
         return williams_diff_test(corr_func, X, Y, Z, two_tailed)
     else:
         raise Exception(f'Unknown hypothesis test method: {method}')
+
+
+def bonferroni_partial_conjunction_pvalue_test(pvalues: List[float], alpha: float = 0.05) -> Tuple[int, List[int]]:
+    N = len(pvalues)
+
+    pvalues_with_indices = [(p, i) for i, p in enumerate(pvalues)]
+    pvalues_with_indices = sorted(pvalues_with_indices)
+    pvalues = [p for p, _ in pvalues_with_indices]
+    indices = [i for _, i in pvalues_with_indices]
+
+    p_u = [(N - (u + 1) + 1) * pvalues[u] for u in range(N)]  # (u + 1) because this is 0-indexed
+    p_star = []
+    k_hat = 0
+    for u in range(N):
+        if u == 0:
+            p_star.append(p_u[u])
+        else:
+            p_star.append(max(p_star[-1], p_u[u]))
+        if p_star[-1] <= alpha:
+            k_hat += 1
+
+    # The Holm procedure will always reject the lowest p-values
+    significant_datasets = indices[:k_hat]
+    return k_hat, significant_datasets
+
+
+def partial_conjunction_pvalue_test(method: str, pvalues: List[float], alpha: float = 0.05) -> Tuple[int, List[int]]:
+    if method == 'bonferroni':
+        return bonferroni_partial_conjunction_pvalue_test(pvalues, alpha=alpha)
+    raise Exception(f'Unknown partial conjunction p-value test: {method}')
