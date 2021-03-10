@@ -3,7 +3,7 @@ import numpy as np
 import scipy.stats
 import warnings
 from scipy.stats import kendalltau, pearsonr, spearmanr
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from sacrerouge.data import Metrics
 
@@ -288,3 +288,34 @@ def fisher_ci(corr_func: SummaryCorrFunc,
     else:
         r_l, r_u = None, None
     return r_l, r_u
+
+
+def corr_ci(corr_func: SummaryCorrFunc,
+            X: np.ndarray,
+            Y: np.ndarray,
+            method: Optional[str],
+            alpha: float = 0.05,
+            two_tailed: bool = True,
+            kwargs: Dict = None) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Calculates a (1-alpha) * 100% confidence interval
+    """
+    kwargs = kwargs or {}
+
+    # If we are doing a single-tailed test, we need to double the alpha value because the CI methods will
+    # always be run for two-tailed with alpha / 2 in each tail.
+    if not two_tailed:
+        alpha = alpha * 2
+
+    if method is None or method == 'none':
+        return None, None
+    elif method == 'bootstrap-system':
+        return bootstrap_ci(corr_func, X, Y, bootstrap_system_sample, alpha=alpha, **kwargs)
+    elif method == 'bootstrap-input':
+        return bootstrap_ci(corr_func, X, Y, bootstrap_input_sample, alpha=alpha, **kwargs)
+    elif method == 'bootstrap-both':
+        return bootstrap_ci(corr_func, X, Y, bootstrap_both_sample, alpha=alpha, **kwargs)
+    elif method == 'fisher':
+        return fisher_ci(corr_func, X, Y, alpha=alpha, **kwargs)
+    else:
+        raise Exception(f'Unknown confidence interval method: {method}')

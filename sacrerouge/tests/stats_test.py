@@ -5,7 +5,7 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
-    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci
+    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci
 
 
 class TestStats(unittest.TestCase):
@@ -345,3 +345,47 @@ class TestStats(unittest.TestCase):
         self.assertAlmostEqual(fisher_ci(pearson_summary, X, Y), (-0.808376631595968, 0.9287863878043723), places=4)
         self.assertAlmostEqual(fisher_ci(spearman_summary, X, Y), (-0.7262127280589684, 0.9653646507719408), places=4)
         self.assertAlmostEqual(fisher_ci(kendall_summary, X, Y), (-0.684486849088761, 0.9418063314024349), places=4)
+
+    def test_corr_ci(self):
+        # Regression test
+        np.random.seed(3)
+        X = np.array([
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]
+        ])
+        Y = np.array([
+            [5, 2, 7],
+            [1, 7, 3],
+            [4, 2, 2]
+        ])
+        corr_func = functools.partial(global_corr, pearsonr)
+
+        # Make sure we get the same result going through bootstrap_ci and corr_ci
+        expected_lower, expected_upper = bootstrap_ci(corr_func, X, Y, bootstrap_system_sample)
+        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-system')
+        self.assertAlmostEqual(lower, expected_lower, places=4)
+        self.assertAlmostEqual(upper, expected_upper, places=4)
+
+        expected_lower, expected_upper = bootstrap_ci(corr_func, X, Y, bootstrap_input_sample)
+        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-input')
+        self.assertAlmostEqual(lower, expected_lower, places=4)
+        self.assertAlmostEqual(upper, expected_upper, places=4)
+
+        expected_lower, expected_upper = bootstrap_ci(corr_func, X, Y, bootstrap_both_sample)
+        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-joint')
+        self.assertAlmostEqual(lower, expected_lower, places=4)
+        self.assertAlmostEqual(upper, expected_upper, places=4)
+
+        # If we do a single tail, the result should be the same with alpha / 2
+        expected_lower, expected_upper = bootstrap_ci(corr_func, X, Y, bootstrap_system_sample)
+        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-system', alpha=0.025, two_tailed=False)
+        self.assertAlmostEqual(lower, expected_lower, places=4)
+        self.assertAlmostEqual(upper, expected_upper, places=4)
+
+        # None cases
+        assert corr_ci(corr_func, X, Y, None) == (None, None)
+        assert corr_ci(corr_func, X, Y, 'none') == (None, None)
+
+        with self.assertRaises(Exception):
+            corr_ci(corr_func, X, Y, 'does-not-exist')
