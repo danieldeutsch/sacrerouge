@@ -3,7 +3,8 @@ import unittest
 from scipy.stats import pearsonr
 
 from sacrerouge.data import Metrics
-from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr
+from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
+    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample
 
 
 class TestStats(unittest.TestCase):
@@ -207,3 +208,79 @@ class TestStats(unittest.TestCase):
         ])
         with self.assertRaises(Exception):
             global_corr(pearsonr, X, Y)
+
+    def test_bootstrap_system_sample(self):
+        A = np.array([
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12]
+        ])
+        B = np.array([
+            [13, 14, 15, 16],
+            [17, 18, 19, 20],
+            [21, 22, 23, 24]
+        ])
+
+        # We check what sample should be taken with this random seed
+        np.random.seed(4)
+        np.testing.assert_array_equal(np.random.choice(3, 3, replace=True), [2, 2, 1])
+
+        np.random.seed(4)
+        A_s = bootstrap_system_sample(A)
+        np.testing.assert_array_equal(A_s, [[9, 10, 11, 12], [9, 10, 11, 12], [5, 6, 7, 8]])
+
+        np.random.seed(4)
+        A_s, B_s = bootstrap_system_sample(A, B)
+        np.testing.assert_array_equal(A_s, [[9, 10, 11, 12], [9, 10, 11, 12], [5, 6, 7, 8]])
+        np.testing.assert_array_equal(B_s, [[21, 22, 23, 24], [21, 22, 23, 24], [17, 18, 19, 20]])
+
+    def test_bootstrap_input_sample(self):
+        A = np.array([
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12]
+        ])
+        B = np.array([
+            [13, 14, 15, 16],
+            [17, 18, 19, 20],
+            [21, 22, 23, 24]
+        ])
+
+        # We check what sample should be taken with this random seed
+        np.random.seed(4)
+        np.testing.assert_array_equal(np.random.choice(4, 4, replace=True), [2, 2, 3, 1])
+
+        np.random.seed(4)
+        A_s = bootstrap_input_sample(A)
+        np.testing.assert_array_equal(A_s, [[3, 3, 4, 2], [7, 7, 8, 6], [11, 11, 12, 10]])
+
+        np.random.seed(4)
+        A_s, B_s = bootstrap_input_sample(A, B)
+        np.testing.assert_array_equal(A_s, [[3, 3, 4, 2], [7, 7, 8, 6], [11, 11, 12, 10]])
+        np.testing.assert_array_equal(B_s, [[15, 15, 16, 14], [19, 19, 20, 18], [23, 23, 24, 22]])
+
+    def test_bootstrap_both_sample(self):
+        A = np.array([
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12]
+        ])
+        B = np.array([
+            [13, 14, 15, 16],
+            [17, 18, 19, 20],
+            [21, 22, 23, 24]
+        ])
+
+        # We check what sample should be taken with this random seed
+        np.random.seed(4)
+        np.testing.assert_array_equal(np.random.choice(3, 3, replace=True), [2, 2, 1])
+        np.testing.assert_array_equal(np.random.choice(4, 4, replace=True), [1, 0, 3, 0])
+
+        np.random.seed(4)
+        A_s = bootstrap_both_sample(A)
+        np.testing.assert_array_equal(A_s, [[10, 9, 12, 9], [10, 9, 12, 9], [6, 5, 8, 5]])
+
+        np.random.seed(4)
+        A_s, B_s = bootstrap_both_sample(A, B)
+        np.testing.assert_array_equal(A_s, [[10, 9, 12, 9], [10, 9, 12, 9], [6, 5, 8, 5]])
+        np.testing.assert_array_equal(B_s, [[22, 21, 24, 21], [22, 21, 24, 21], [18, 17, 20, 17]])

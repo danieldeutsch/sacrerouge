@@ -159,3 +159,49 @@ def global_corr(corr_func: CorrFunc, X: np.ndarray, Y: np.ndarray,
         if return_pvalue:
             return r, pvalue
         return r
+
+
+def bootstrap_system_sample(*matrices: np.ndarray) -> Union[np.ndarray, List[np.ndarray]]:
+    """
+    Resamples new matrices by sampling systems with replacement. The sample will be taken in parallel for all of
+    the input matrices.
+    """
+    N, M = matrices[0].shape
+    for matrix in matrices:
+        assert matrix.shape == (N, M)
+    rows = np.random.choice(N, N, replace=True)
+    samples = [matrix[rows] for matrix in matrices]
+    if len(samples) == 1:
+        return samples[0]
+    return samples
+
+
+def bootstrap_input_sample(*matrices: np.ndarray) -> Union[np.ndarray, List[np.ndarray]]:
+    """
+    Resamples new matrices by sampling inputs with replacement. The sample will be taken in parallel for all of
+    the input matrices.
+    """
+    N, M = matrices[0].shape
+    for matrix in matrices:
+        assert matrix.shape == (N, M)
+    cols = np.random.choice(M, M, replace=True)
+    samples = [matrix[:, cols] for matrix in matrices]
+    if len(samples) == 1:
+        return samples[0]
+    return samples
+
+
+def bootstrap_both_sample(*matrices: np.ndarray) -> Union[np.ndarray, List[np.ndarray]]:
+    """
+    Resamples new matrices by sampling both systems and inputs with replacement. The sample will be the intersection of
+    the sampled systems and inputs. The sample will be taken in parallel for all of the input matrices.
+    """
+    N, M = matrices[0].shape
+    for matrix in matrices:
+        assert matrix.shape == (N, M)
+    rows = np.random.choice(N, N, replace=True)
+    cols = np.random.choice(M, M, replace=True)
+    samples = [matrix[rows][:, cols] for matrix in matrices]
+    if len(samples) == 1:
+        return samples[0]
+    return samples
