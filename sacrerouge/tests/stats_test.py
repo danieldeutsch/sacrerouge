@@ -5,7 +5,8 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
-    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci
+    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci, \
+    random_bool_mask, permute_systems, permute_inputs, permute_both
 
 
 class TestStats(unittest.TestCase):
@@ -373,7 +374,7 @@ class TestStats(unittest.TestCase):
         self.assertAlmostEqual(upper, expected_upper, places=4)
 
         expected_lower, expected_upper = bootstrap_ci(corr_func, X, Y, bootstrap_both_sample)
-        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-joint')
+        lower, upper = corr_ci(corr_func, X, Y, 'bootstrap-both')
         self.assertAlmostEqual(lower, expected_lower, places=4)
         self.assertAlmostEqual(upper, expected_upper, places=4)
 
@@ -389,3 +390,104 @@ class TestStats(unittest.TestCase):
 
         with self.assertRaises(Exception):
             corr_ci(corr_func, X, Y, 'does-not-exist')
+
+    def test_random_bool_mask(self):
+        np.random.seed(7)
+        expected_rand = [
+            [0.07630829, 0.77991879, 0.43840923, 0.72346518],
+            [0.97798951, 0.53849587, 0.50112046, 0.07205113],
+            [0.26843898, 0.4998825,  0.67923,    0.80373904]
+        ]
+        np.testing.assert_array_almost_equal(np.random.rand(3, 4), expected_rand)
+
+        np.random.seed(7)
+        expected_mask = [
+            [False, True, False, True],
+            [True, True, True, False],
+            [False, False, True, True]
+        ]
+        mask = random_bool_mask(3, 4)
+        np.testing.assert_array_equal(mask, expected_mask)
+
+    def test_permute_systems(self):
+        X = np.arange(1, 13).reshape(3, 4)
+        Y = -np.arange(1, 13).reshape(3, 4)
+
+        np.random.seed(7)
+        expected_mask = [[False], [True], [False]]
+        mask = random_bool_mask(3, 1)
+        np.testing.assert_array_equal(mask, expected_mask)
+
+        np.random.seed(7)
+        expected_X = [
+            [1, 2, 3, 4],
+            [-5, -6, -7, -8],
+            [9, 10, 11, 12]
+        ]
+        expected_Y = [
+            [-1, -2, -3, -4],
+            [5, 6, 7, 8],
+            [-9, -10, -11, -12]
+        ]
+        X_p, Y_p = permute_systems(X, Y)
+        np.testing.assert_array_equal(X_p, expected_X)
+        np.testing.assert_array_equal(Y_p, expected_Y)
+        np.testing.assert_array_equal(X, np.arange(1, 13).reshape(3, 4))
+        np.testing.assert_array_equal(Y, -np.arange(1, 13).reshape(3, 4))
+
+    def test_permute_inputs(self):
+        X = np.arange(1, 13).reshape(3, 4)
+        Y = -np.arange(1, 13).reshape(3, 4)
+
+        np.random.seed(7)
+        expected_mask = [[False, True, False, True]]
+        mask = random_bool_mask(1, 4)
+        np.testing.assert_array_equal(mask, expected_mask)
+
+        np.random.seed(7)
+        expected_X = [
+            [1, -2, 3, -4],
+            [5, -6, 7, -8],
+            [9, -10, 11, -12]
+        ]
+        expected_Y = [
+            [-1, 2, -3, 4],
+            [-5, 6, -7, 8],
+            [-9, 10, -11, 12]
+        ]
+        X_p, Y_p = permute_inputs(X, Y)
+        np.testing.assert_array_equal(X_p, expected_X)
+        np.testing.assert_array_equal(Y_p, expected_Y)
+        np.testing.assert_array_equal(X, np.arange(1, 13).reshape(3, 4))
+        np.testing.assert_array_equal(Y, -np.arange(1, 13).reshape(3, 4))
+
+    def test_permute_both(self):
+        X = np.arange(1, 13).reshape(3, 4)
+        Y = -np.arange(1, 13).reshape(3, 4)
+
+        np.random.seed(7)
+        expected_mask = [
+            [False, True, False, True],
+            [True, True, True, False],
+            [False, False, True, True]
+        ]
+        mask = random_bool_mask(3, 4)
+        np.testing.assert_array_equal(mask, expected_mask)
+
+        # The True values should swap and the original matrices should be unchanged
+        np.random.seed(7)
+        expected_X = [
+            [1, -2, 3, -4],
+            [-5, -6, -7, 8],
+            [9, 10, -11, -12]
+        ]
+        expected_Y = [
+            [-1, 2, -3, 4],
+            [5, 6, 7, -8],
+            [-9, -10, 11, 12]
+        ]
+        X_p, Y_p = permute_both(X, Y)
+        np.testing.assert_array_equal(X_p, expected_X)
+        np.testing.assert_array_equal(Y_p, expected_Y)
+        np.testing.assert_array_equal(X, np.arange(1, 13).reshape(3, 4))
+        np.testing.assert_array_equal(Y, -np.arange(1, 13).reshape(3, 4))

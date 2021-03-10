@@ -319,3 +319,55 @@ def corr_ci(corr_func: SummaryCorrFunc,
         return fisher_ci(corr_func, X, Y, alpha=alpha, **kwargs)
     else:
         raise Exception(f'Unknown confidence interval method: {method}')
+
+
+def random_bool_mask(*dims: int) -> np.ndarray:
+    return np.random.rand(*dims) > 0.5
+
+
+def permute_systems(X: np.ndarray, Y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Samples new matrices by randomly permuting the systems between X and Y. The original matrices
+    will not be changed.
+    """
+    assert X.shape == Y.shape
+    # Do not modify the original matrices
+    X_p = X.copy()
+    Y_p = Y.copy()
+
+    mask = random_bool_mask(X.shape[0], 1).reshape((X.shape[0],))
+    X_p[mask] = Y[mask]
+    Y_p[mask] = X[mask]
+    return X_p, Y_p
+
+
+def permute_inputs(X: np.ndarray, Y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Samples new matrices by randomly permuting the inputs between X and Y. The original matrices
+    will not be changed.
+    """
+    assert X.shape == Y.shape
+    # Do not modify the original matrices
+    X_p = X.copy()
+    Y_p = Y.copy()
+
+    mask = random_bool_mask(1, X.shape[1]).reshape((X.shape[1],))
+    X_p[:, mask] = Y[:, mask]
+    Y_p[:, mask] = X[:, mask]
+    return X_p, Y_p
+
+
+def permute_both(X: np.ndarray, Y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Samples new matrices by randomly permuting the systems and inputs between X and Y. The original matrices
+    will not be changed.
+    """
+    assert X.shape == Y.shape
+    # Do not modify the original matrices
+    X_p = X.copy()
+    Y_p = Y.copy()
+
+    mask = random_bool_mask(X.shape[0], X.shape[1])
+    np.putmask(X_p, mask, Y)
+    np.putmask(Y_p, mask, X)
+    return X_p, Y_p
