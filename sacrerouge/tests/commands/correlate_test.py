@@ -29,6 +29,10 @@ class TestCorrelate(unittest.TestCase):
             subprocess.run(command, check=True)
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
 
+            assert correlations['metric1'] == 'rouge-1_jk_precision'
+            assert correlations['metric2'] == 'grade'
+            assert correlations['summarizer_type'] == 'reference'
+
             assert correlations['summary_level']['pearson']['r'] == pytest.approx(0.3333, abs=1e-4)
             assert correlations['summary_level']['spearman']['rho'] == pytest.approx(0.3333, abs=1e-4)
             assert correlations['summary_level']['kendall']['tau'] == pytest.approx(0.3333, abs=1e-4)
@@ -60,6 +64,10 @@ class TestCorrelate(unittest.TestCase):
             subprocess.run(command, check=True)
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
 
+            assert correlations['metric1'] == 'rouge-1_precision'
+            assert correlations['metric2'] == 'grade'
+            assert correlations['summarizer_type'] == 'peer'
+
             assert correlations['summary_level']['pearson']['r'] == pytest.approx(-0.3333, abs=1e-4)
             assert correlations['summary_level']['spearman']['rho'] == pytest.approx(-0.3333, abs=1e-4)
             assert correlations['summary_level']['kendall']['tau'] == pytest.approx(-0.3333, abs=1e-4)
@@ -89,6 +97,10 @@ class TestCorrelate(unittest.TestCase):
             subprocess.run(command, check=True)
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
 
+            assert correlations['metric1'] == 'rouge-1_jk_precision'
+            assert correlations['metric2'] == 'grade'
+            assert correlations['summarizer_type'] == 'all'
+
             assert correlations['summary_level']['pearson']['r'] == pytest.approx(0.4365526945989437, abs=1e-4)
             assert correlations['summary_level']['spearman']['rho'] == pytest.approx(0.3720759220056127, abs=1e-4)
             assert correlations['summary_level']['kendall']['tau'] == pytest.approx(0.1719691730561296, abs=1e-4)
@@ -113,13 +125,16 @@ class TestCorrelate(unittest.TestCase):
                 '--metrics', 'rouge-1_jk_precision', 'grade',
                 '--summarizer-type', 'all',
                 '--output-file', f'{temp_dir}/correlations.json',
-                '--silent',
-                '--summary-level-correlations-output', f'{temp_dir}/summary-level.json'
+                '--silent'
             ]
             subprocess.run(command, check=True)
 
             # Check the original correlations
             correlations = json.load(open(f'{temp_dir}/correlations.json', 'r'))
+
+            assert correlations['metric1'] == 'rouge-1_jk_precision'
+            assert correlations['metric2'] == 'grade'
+            assert correlations['summarizer_type'] == 'all'
 
             assert correlations['summary_level']['pearson']['r'] == pytest.approx(0.4365526945989437, abs=1e-4)
             assert correlations['summary_level']['spearman']['rho'] == pytest.approx(0.3720759220056127, abs=1e-4)
@@ -135,23 +150,6 @@ class TestCorrelate(unittest.TestCase):
             assert correlations['global']['spearman']['rho'] == pytest.approx(0.4035707976004214, abs=1e-4)
             assert correlations['global']['kendall']['tau'] == pytest.approx(0.28603877677367767, abs=1e-4)
             assert correlations['global']['num_summaries'] == 12
-
-            # Check the individual summary-level correlations
-            summary_level = json.load(open(f'{temp_dir}/summary-level.json', 'r'))
-            assert len(summary_level['pearson']) == 3
-            assert summary_level['pearson']['M000'] == pytest.approx(0.3216337604513384, abs=1e-4)
-            assert summary_level['pearson']['M001'] == pytest.approx(0.38969747442783453, abs=1e-4)
-            assert summary_level['pearson']['M002'] == pytest.approx(0.598326848917658, abs=1e-4)
-
-            assert len(summary_level['spearman']) == 3
-            assert summary_level['spearman']['M000'] == pytest.approx(0.6000000000000001, abs=1e-4)
-            assert summary_level['spearman']['M001'] == pytest.approx(0.316227766016838, abs=1e-4)
-            assert summary_level['spearman']['M002'] == pytest.approx(0.19999999999999998, abs=1e-4)
-
-            assert len(summary_level['kendall']) == 3
-            assert summary_level['kendall']['M000'] == pytest.approx(0.3333333333333334, abs=1e-4)
-            assert summary_level['kendall']['M001'] == pytest.approx(0.18257418583505539, abs=1e-4)
-            assert summary_level['kendall']['M002'] == pytest.approx(0.0, abs=1e-4)
 
     def test_skip_calculations(self):
         # Ensures the flags to skip calculating specific correlations work
