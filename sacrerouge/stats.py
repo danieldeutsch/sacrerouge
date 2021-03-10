@@ -8,6 +8,7 @@ from sacrerouge.data import Metrics
 ArrayLike = Union[List, np.ndarray]
 Corr = Optional[float]
 CorrFunc = Callable[[ArrayLike, ArrayLike], Tuple[float, float]]
+PValue = Optional[float]
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +107,55 @@ def summary_level_corr(corr_func: CorrFunc,
     if len(output) == 1:
         return output[0]
     return output
+
+
+def system_level_corr(corr_func: CorrFunc,
+                      X: np.ndarray,
+                      Y: np.ndarray,
+                      return_pvalue: bool = False) -> Union[Corr, Tuple[Corr, PValue]]:
+    """
+    Calculates the system-level correlation between X and Y, where the system-level score is equal to the
+    average over the inputs, ignoring NaNs.
+    """
+    # The entries must be the same shape and any nan in one must correspond to a nan in the other
+    assert X.shape == Y.shape
+    np.testing.assert_array_equal(np.isnan(X), np.isnan(Y))
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore')
+
+        # Take the system score by averaging over inputs, ignoring nans
+        x = np.nanmean(X, axis=1)
+        y = np.nanmean(Y, axis=1)
+
+        r, pvalue = corr_func(x, y)
+        if np.isnan(r):
+            r, pvalue = None, None
+        if return_pvalue:
+            return r, pvalue
+        return r
+
+
+def global_corr(corr_func: CorrFunc, X: np.ndarray, Y: np.ndarray,
+                return_pvalue: bool = False) -> Union[Corr, Tuple[Corr, PValue]]:
+    """
+    Calculates the global correlation between X and Y, which is simply the correlation of
+    all of the values in the matrices.
+    """
+    # The entries must be the same shape and any nan in one must correspond to a nan in the other
+    assert X.shape == Y.shape
+    np.testing.assert_array_equal(np.isnan(X), np.isnan(Y))
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore')
+
+        x, y = X.flatten(), Y.flatten()
+        # Remove any possible nans. Because X and Y have nans in the same positions,
+        # this will still leave comparable parallel data
+        x = x[~np.isnan(x)]
+        y = y[~np.isnan(y)]
+
+        r, pvalue = corr_func(x, y)
+        if np.isnan(r):
+            r, pvalue = None, None
+        if return_pvalue:
+            return r, pvalue
+        return r
