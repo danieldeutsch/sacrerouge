@@ -1,8 +1,15 @@
+import logging
 import numpy as np
-from collections import defaultdict
-from typing import List, Union
+import warnings
+from typing import Callable, List, Optional, Tuple, Union
 
 from sacrerouge.data import Metrics
+
+ArrayLike = Union[List, np.ndarray]
+Corr = Optional[float]
+CorrFunc = Callable[[ArrayLike, ArrayLike], Tuple[float, float]]
+
+logger = logging.getLogger(__name__)
 
 
 def convert_to_matrices(metrics_list: List[Metrics], *metric_names: str) -> Union[np.ndarray, List[np.ndarray]]:
@@ -38,3 +45,64 @@ def convert_to_matrices(metrics_list: List[Metrics], *metric_names: str) -> Unio
     if len(matrices) == 1:
         return matrices[0]
     return matrices
+
+
+def summary_level_corr(corr_func: CorrFunc,
+                       X: np.ndarray,
+                       Y: np.ndarray,
+                       return_num_instances: bool = False,
+                       return_individual_correlations: bool = False,
+                       return_correlations_num_inputs: bool = False,
+                       silent: bool = False) -> Corr:
+    """
+    Calculates the summary-level correlation between the matrices X and Y. If `return_num_instances` is True,
+    the number of non-NaN individual correlations is returned. If `return_individual_correlations` is True,
+    the individual correlations will be returned. If `return_correlations_num_inputs is True, the number of
+    non-NaN inputs for each individual correlation will be returned. If `silent` is True, no warning message
+    will be logged if there is a NaN correlation.
+    """
+    # The entries must be the same shape and any nan in one must correspond to a nan in the other
+    assert X.shape == Y.shape
+    np.testing.assert_array_equal(np.isnan(X), np.isnan(Y))
+
+    M = X.shape[1]
+    correlations = []
+    num_inputs = []
+    num_nan = 0
+    for j in range(M):
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore')
+
+            # Pick the column that corresponds to input j
+            x, y = X[:, j], Y[:, j]
+            # Remove any possible nans. Because X and Y have nans in the same positions,
+            # this will still leave comparable parallel data
+            x = x[~np.isnan(x)]
+            y = y[~np.isnan(y)]
+            r, _ = corr_func(x, y)
+            if np.isnan(r):
+                num_nan += 1
+            else:
+                correlations.append(r)
+                num_inputs.append(len(x))
+
+    if not silent and num_nan > 0:
+        logger.warning(f'Skipped {num_nan} summary-level correlations because they were NaN')
+
+    if len(correlations) > 0:
+        r = sum(correlations) / len(correlations)
+        num_instances = len(correlations)
+    else:
+        r, num_instances = None, 0
+
+    output = (r,)
+    if return_num_instances:
+        output = output + (num_instances,)
+    if return_individual_correlations:
+        output = output + (correlations,)
+    if return_correlations_num_inputs:
+        output = output + (num_inputs,)
+
+    if len(output) == 1:
+        return output[0]
+    return output
