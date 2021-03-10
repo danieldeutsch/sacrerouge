@@ -298,7 +298,8 @@ def corr_ci(corr_func: SummaryCorrFunc,
             two_tailed: bool = True,
             kwargs: Dict = None) -> Tuple[Optional[float], Optional[float]]:
     """
-    Calculates a (1-alpha) * 100% confidence interval
+    Calculates a (1-alpha) * 100% confidence interval. The kwargs argument will be passed as **kwargs to the
+    confidence interval method
     """
     kwargs = kwargs or {}
 
@@ -384,7 +385,8 @@ def bootstrap_diff_test(corr_func: SummaryCorrFunc,
                         return_deltas: bool = False) -> float:
     """
     Calculates a p-value using a paired bootstrap test. If `return_test_statistic` is True, the original delta
-    is returned. If `return_deltas` is True, all of the non-NaN bootstrap sample deltas are returned.
+    is returned. If `return_deltas` is True, all of the non-NaN bootstrap sample deltas are returned. A one-tailed
+    test will calculate a p-value for corr(X, Z) > corr(Y, Z)
     """
     delta_orig = corr_func(X, Z) - corr_func(Y, Z)
     if two_tailed:
@@ -416,6 +418,61 @@ def bootstrap_diff_test(corr_func: SummaryCorrFunc,
         except TypeError:
             pass
     pvalue = count / successful_trials
+
+    output = (pvalue,)
+    if return_test_statistic:
+        output = output + (delta_orig,)
+    if return_deltas:
+        output = output + (deltas,)
+
+    if len(output) == 1:
+        return output[0]
+    return output
+
+
+def standardize(X: np.ndarray) -> np.ndarray:
+    return (X - np.nanmean(X)) / np.nanstd(X)
+
+
+def permutation_diff_test(corr_func: SummaryCorrFunc,
+                          X: np.ndarray,
+                          Y: np.ndarray,
+                          Z: np.ndarray,
+                          permute_func: Callable,
+                          two_tailed: bool,
+                          num_permutations: int = 1000,
+                          return_test_statistic: bool = False,
+                          return_deltas: bool = False) -> float:
+    """
+    Calculates a p-value based on a permutation test. If `return_test_statistic` is True, the original detal will
+    be returned. If `return_deltas` is True, all of the resampled deltas will be returned. A one-tailed test will
+    calculate a p-value for corr(X, Z) > corr(Y, Z)
+    """
+    # The data needs to be standardized so the metrics are on the same scale. It doesn't matter
+    # if we standardize Z because Pearson will first standardize it, Spearman/Kendall will rank it
+    # (standardization invariant)
+    X = standardize(X)
+    Y = standardize(Y)
+    delta_orig = corr_func(X, Z) - corr_func(Y, Z)
+    if two_tailed:
+        # If the test is two tailed, then we count how often we see any difference between delta and delta_orig
+        # with an absolute value larger than 2 * delta_org. We do this by always taking the absolute value of each
+        # of the deltas
+        delta_orig = abs(delta_orig)
+
+    deltas = []
+    count = 0
+    for _ in range(num_permutations):
+        X_p, Y_p = permute_func(X, Y)
+        delta = corr_func(X_p, Z) - corr_func(Y_p, Z)
+        if two_tailed:
+            delta = abs(delta)
+
+        # See note about >= versus > in bootstrap_diff_test
+        if delta >= delta_orig:
+            count += 1
+        deltas.append(delta)
+    pvalue = (count + 1) / (num_permutations + 1)  # +1 for the original delta
 
     output = (pvalue,)
     if return_test_statistic:

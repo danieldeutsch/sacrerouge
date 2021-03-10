@@ -6,7 +6,7 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
     bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci, \
-    random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test
+    random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test, permutation_diff_test
 
 
 class TestStats(unittest.TestCase):
@@ -504,3 +504,16 @@ class TestStats(unittest.TestCase):
         assert bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_system_sample, False) == 0.958
         np.random.seed(2)
         assert bootstrap_diff_test(corr_func, Y, X, Z, bootstrap_system_sample, False) == 0.042
+
+    def test_permutation_diff_test(self):
+        # Regression test
+        np.random.seed(12)
+        X = np.random.random((9, 5))
+        Y = np.random.random((9, 5))
+        Z = np.random.random((9, 5))
+        corr_func = functools.partial(global_corr, pearsonr)
+
+        np.random.seed(2)
+        self.assertAlmostEqual(permutation_diff_test(corr_func, X, Y, Z, permute_both, False), 0.97002997002997, places=4)
+        np.random.seed(2)
+        self.assertAlmostEqual(permutation_diff_test(corr_func, Y, X, Z, permute_both, False), 0.030969030969030968, places=4)
