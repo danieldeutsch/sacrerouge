@@ -1,10 +1,11 @@
+import functools
 import numpy as np
 import unittest
 from scipy.stats import pearsonr
 
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
-    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample
+    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci
 
 
 class TestStats(unittest.TestCase):
@@ -284,3 +285,34 @@ class TestStats(unittest.TestCase):
         A_s, B_s = bootstrap_both_sample(A, B)
         np.testing.assert_array_equal(A_s, [[10, 9, 12, 9], [10, 9, 12, 9], [6, 5, 8, 5]])
         np.testing.assert_array_equal(B_s, [[22, 21, 24, 21], [22, 21, 24, 21], [18, 17, 20, 17]])
+
+    def test_bootstrap_ci(self):
+        # Regression test
+        np.random.seed(3)
+        X = np.array([
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]
+        ])
+        Y = np.array([
+            [5, 2, 7],
+            [1, 7, 3],
+            [4, 2, 2]
+        ])
+        corr_func = functools.partial(global_corr, pearsonr)
+
+        lower, upper = bootstrap_ci(corr_func, X, Y, bootstrap_system_sample)
+        self.assertAlmostEqual(lower, -0.8660254037844388, places=4)
+        self.assertAlmostEqual(upper, 0.39735970711951324, places=4)
+
+        lower, upper = bootstrap_ci(corr_func, X, Y, bootstrap_system_sample, alpha=0.1)
+        self.assertAlmostEqual(lower, -0.5773502691896258, places=4)
+        self.assertAlmostEqual(upper, 0.32732683535398865, places=4)
+
+        lower, upper = bootstrap_ci(corr_func, X, Y, bootstrap_input_sample)
+        self.assertAlmostEqual(lower, -0.9449111825230679, places=4)
+        self.assertAlmostEqual(upper, 0.0, places=4)
+
+        lower, upper = bootstrap_ci(corr_func, X, Y, bootstrap_both_sample)
+        self.assertAlmostEqual(lower, -1.0, places=4)
+        self.assertAlmostEqual(upper, 1.0, places=4)

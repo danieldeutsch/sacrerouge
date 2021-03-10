@@ -9,6 +9,7 @@ ArrayLike = Union[List, np.ndarray]
 Corr = Optional[float]
 CorrFunc = Callable[[ArrayLike, ArrayLike], Tuple[float, float]]
 PValue = Optional[float]
+SummaryCorrFunc = Callable[[ArrayLike, ArrayLike], Union[float, Tuple[float, float]]]
 
 logger = logging.getLogger(__name__)
 
@@ -205,3 +206,28 @@ def bootstrap_both_sample(*matrices: np.ndarray) -> Union[np.ndarray, List[np.nd
     if len(samples) == 1:
         return samples[0]
     return samples
+
+
+def bootstrap_ci(corr_func: SummaryCorrFunc,
+                 X: np.ndarray,
+                 Y: np.ndarray,
+                 sample_func: Callable,
+                 alpha: float = 0.05,
+                 num_samples: int = 1000) -> Tuple[float, float]:
+    """
+    Calculates a bootstrap-based confidence interval using the correlation function and X and Y. The `corr_func` should
+    be the system-, summary- or global level correlations with a Pearson, Spearman, or Kendall function passed as its
+    first argument. `sample_func` is the bootstrapping sample function that should be used to take the subsamples.
+    The lower and upper bounds for the (1-alpha)*100% confidence interval will be returned (i.e., alpha / 2 in each tail).
+    """
+    assert X.shape == Y.shape
+    samples = []
+    for _ in range(num_samples):
+        x, y = sample_func(X, Y)
+        r = corr_func(x, y)
+        if r is not None:
+            # Value is ignored if it is NaN
+            samples.append(r)
+    lower = np.percentile(samples, alpha / 2 * 100)
+    upper = np.percentile(samples, (1.0 - alpha / 2) * 100)
+    return lower, upper
