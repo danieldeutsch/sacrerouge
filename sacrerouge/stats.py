@@ -371,3 +371,58 @@ def permute_both(X: np.ndarray, Y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     np.putmask(X_p, mask, Y)
     np.putmask(Y_p, mask, X)
     return X_p, Y_p
+
+
+def bootstrap_diff_test(corr_func: SummaryCorrFunc,
+                        X: np.ndarray,
+                        Y: np.ndarray,
+                        Z: np.ndarray,
+                        sample_func: Callable,
+                        two_tailed: bool,
+                        num_samples: int = 1000,
+                        return_test_statistic: bool = False,
+                        return_deltas: bool = False) -> float:
+    """
+    Calculates a p-value using a paired bootstrap test. If `return_test_statistic` is True, the original delta
+    is returned. If `return_deltas` is True, all of the non-NaN bootstrap sample deltas are returned.
+    """
+    delta_orig = corr_func(X, Z) - corr_func(Y, Z)
+    if two_tailed:
+        # If the test is two tailed, then we count how often we see any difference between delta and delta_orig
+        # with an absolute value larger than 2 * delta_org. We do this by always taking the absolute value of each
+        # of the deltas
+        delta_orig = abs(delta_orig)
+
+    deltas = []
+    count = 0
+    successful_trials = 0
+    for _ in range(num_samples):
+        X_i, Y_i, Z_i = sample_func(X, Y, Z)
+        try:
+            delta = corr_func(X_i, Z_i) - corr_func(Y_i, Z_i)
+            if two_tailed:
+                delta = abs(delta)
+
+            # The pseudocode for this in "An Empirical Investigation of Statistical Significance in NLP" in
+            # Berg-Kirkpatrick et al. (2012) shows delta > 2 * delta_orig. I think the only time it really matters
+            # if it's > or >= is if the two score matrices are identical. If they are the same, delta_orig is 0
+            # and every delta would be 0. Using > would mean the count never gets incremented, resulting in a p-value
+            # of 0, which is not correct. Using >= would mean the count gets incremented every time, resulting in a
+            # p-value of 1, which is correct.
+            if delta >= 2 * delta_orig:
+                count += 1
+            successful_trials += 1
+            deltas.append(delta)
+        except TypeError:
+            pass
+    pvalue = count / successful_trials
+
+    output = (pvalue,)
+    if return_test_statistic:
+        output = output + (delta_orig,)
+    if return_deltas:
+        output = output + (deltas,)
+
+    if len(output) == 1:
+        return output[0]
+    return output
