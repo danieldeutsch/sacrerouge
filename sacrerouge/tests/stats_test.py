@@ -6,7 +6,8 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
     bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci, \
-    random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test, permutation_diff_test
+    random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test, permutation_diff_test, \
+    williams_diff_test
 
 
 class TestStats(unittest.TestCase):
@@ -517,3 +518,70 @@ class TestStats(unittest.TestCase):
         self.assertAlmostEqual(permutation_diff_test(corr_func, X, Y, Z, permute_both, False), 0.97002997002997, places=4)
         np.random.seed(2)
         self.assertAlmostEqual(permutation_diff_test(corr_func, Y, X, Z, permute_both, False), 0.030969030969030968, places=4)
+
+    def test_williams_diff_test(self):
+        # This test verifies that the output is the same as the psych package for
+        # several different randomly generated inputs
+        N, M = 9, 5
+        corr_func = functools.partial(global_corr, pearsonr)
+
+        np.random.seed(12)
+        X = np.random.random((N, M))
+        Y = np.random.random((N, M))
+        Z = np.random.random((N, M))
+
+        # These are used as input to r.test
+        # effective_N = N * M
+        # r12 = corr_func(X, Z)
+        # r13 = corr_func(Y, Z)
+        # r23 = corr_func(X, Y)
+
+        # One tail
+        expected_pvalue = 0.2716978
+        actual_pvalue = williams_diff_test(corr_func, X, Y, Z, False)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+        # The opposite order should produce 1-0.2716978. r.test does not do this and
+        # will return 0.2716978 because it assumes that r12 > r13.
+        actual_pvalue = williams_diff_test(corr_func, Y, X, Z, False)
+        self.assertAlmostEqual(1.0 - expected_pvalue, actual_pvalue, places=5)
+
+        # Two tails
+        expected_pvalue = 0.5433956
+        actual_pvalue = williams_diff_test(corr_func, X, Y, Z, True)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+        # Should not matter the order for two tails
+        actual_pvalue = williams_diff_test(corr_func, Y, X, Z, True)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+        X = np.random.random((N, M))
+        Y = np.random.random((N, M))
+        Z = np.random.random((N, M))
+
+        corr_func = functools.partial(system_level_corr, spearmanr)
+
+        # These are used as input to r.test
+        # effective_N = N
+        # r12 = corr_func(X, Z)
+        # r13 = corr_func(Y, Z)
+        # r23 = corr_func(X, Y)
+
+        # One tail
+        # Since r12 < r13, r.test will only replicate this result with the reversed input order
+        expected_pvalue = 0.4658712
+        actual_pvalue = williams_diff_test(corr_func, Y, X, Z, False)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+        # r.test would return the same result here, but we return 1.0 - expected
+        actual_pvalue = williams_diff_test(corr_func, X, Y, Z, False)
+        self.assertAlmostEqual(1.0 - expected_pvalue, actual_pvalue, places=5)
+
+        # Two tails
+        expected_pvalue = 0.9317423
+        actual_pvalue = williams_diff_test(corr_func, X, Y, Z, True)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+        # Order doesn't matter
+        actual_pvalue = williams_diff_test(corr_func, Y, X, Z, True)
+        self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)

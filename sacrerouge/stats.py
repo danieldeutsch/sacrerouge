@@ -483,3 +483,35 @@ def permutation_diff_test(corr_func: SummaryCorrFunc,
     if len(output) == 1:
         return output[0]
     return output
+
+
+def williams_diff_test(corr_func: SummaryCorrFunc,
+                       X: np.ndarray,
+                       Y: np.ndarray,
+                       Z: np.ndarray,
+                       two_tailed: bool) -> float:
+    """
+    Calculates the p-value for the difference in correlations using Williams' Test.
+    """
+    # In the math, Z is metric 1. We take the absolute value of the correlations because
+    # it does not matter whether they are positively or negatively correlated with each other. The WMT scripts
+    # do the same before calling r.test
+    r12 = abs(corr_func(X, Z))
+    r13 = abs(corr_func(Y, Z))
+    r23 = abs(corr_func(X, Y))
+    n = _get_n(corr_func, X)
+
+    # Implementation based on https://github.com/cran/psych/blob/master/R/r.test.R
+    diff = r12 - r13
+    det = 1 - (r12 ** 2) - (r23 ** 2) - (r13 ** 2) + (2 * r12 * r23 * r13)
+    av = (r12 + r13) / 2
+    cube = (1 - r23) ** 3
+    t2 = diff * np.sqrt((n - 1) * (1 + r23) / (((2 * (n - 1) / (n - 3)) * det + av ** 2 * cube)))
+
+    # r.test implicitly assumes that r12 > r13 because it takes the absolute value of the t statistic. Since we don't,
+    # we have to have special handling for one-tailed tests so we don't map a negative t statistic to a positive one.
+    if two_tailed:
+        pvalue = scipy.stats.t.sf(abs(t2), n - 3) * 2
+    else:
+        pvalue = scipy.stats.t.sf(t2, n - 3)
+    return pvalue
