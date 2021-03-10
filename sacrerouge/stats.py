@@ -515,3 +515,37 @@ def williams_diff_test(corr_func: SummaryCorrFunc,
     else:
         pvalue = scipy.stats.t.sf(t2, n - 3)
     return pvalue
+
+
+def corr_diff_test(corr_func: SummaryCorrFunc,
+                   X: np.ndarray,
+                   Y: np.ndarray,
+                   Z: np.ndarray,
+                   method: str,
+                   two_tailed: bool,
+                   kwargs: Dict = None) -> Optional[float]:
+    """
+    Runs a hypothesis test to calculate a p-value for the difference between corr(X, Z) and corr(Y, Z). If `two_tailed`
+    is False, H0 is corr(X, Z) <= corr(Y, Z) and H1 is corr(X, Z) > corr(Y, Z). The kwargs argument will be passed
+    as **kwargs to the hypothesis test method.
+    """
+    kwargs = kwargs or {}
+
+    if method is None or method == 'none':
+        return None
+    elif method == 'bootstrap-system':
+        return bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_system_sample, two_tailed, **kwargs)
+    elif method == 'bootstrap-input':
+        return bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_input_sample, two_tailed, **kwargs)
+    elif method == 'bootstrap-both':
+        return bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_both_sample, two_tailed, **kwargs)
+    elif method == 'permutation-both':
+        return permutation_diff_test(corr_func, X, Y, Z, permute_both, two_tailed, **kwargs)
+    elif method == 'permutation-system':
+        return permutation_diff_test(corr_func, X, Y, Z, permute_systems, two_tailed, **kwargs)
+    elif method == 'permutation-input':
+        return permutation_diff_test(corr_func, X, Y, Z, permute_inputs, two_tailed, **kwargs)
+    elif method == 'williams':
+        return williams_diff_test(corr_func, X, Y, Z, two_tailed)
+    else:
+        raise Exception(f'Unknown hypothesis test method: {method}')

@@ -7,7 +7,7 @@ from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
     bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci, corr_ci, \
     random_bool_mask, permute_systems, permute_inputs, permute_both, bootstrap_diff_test, permutation_diff_test, \
-    williams_diff_test
+    williams_diff_test, corr_diff_test
 
 
 class TestStats(unittest.TestCase):
@@ -585,3 +585,50 @@ class TestStats(unittest.TestCase):
         # Order doesn't matter
         actual_pvalue = williams_diff_test(corr_func, Y, X, Z, True)
         self.assertAlmostEqual(expected_pvalue, actual_pvalue, places=5)
+
+    def test_corr_diff_test(self):
+        # Regression test
+        np.random.seed(12)
+        X = np.random.random((20, 10))
+        Y = np.random.random((20, 10))
+        Z = np.random.random((20, 10))
+        corr_func = functools.partial(global_corr, pearsonr)
+
+        # Ensure it's the same result going through bootstrap_diff_test and corr_diff_test
+        np.random.seed(2)
+        expected = bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_system_sample, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'bootstrap-system', False) == expected
+
+        np.random.seed(2)
+        expected = bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_input_sample, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'bootstrap-input', False) == expected
+
+        np.random.seed(2)
+        expected = bootstrap_diff_test(corr_func, X, Y, Z, bootstrap_both_sample, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'bootstrap-both', False) == expected
+
+        # Ensure it's the same result going through permutation_diff_test and corr_diff_test
+        np.random.seed(2)
+        expected = permutation_diff_test(corr_func, X, Y, Z, permute_systems, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'permutation-system', False) == expected
+
+        np.random.seed(2)
+        expected = permutation_diff_test(corr_func, X, Y, Z, permute_inputs, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'permutation-input', False) == expected
+
+        np.random.seed(2)
+        expected = permutation_diff_test(corr_func, X, Y, Z, permute_both, False)
+        np.random.seed(2)
+        assert corr_diff_test(corr_func, X, Y, Z, 'permutation-both', False) == expected
+
+        # None cases
+        assert corr_diff_test(corr_func, X, Y, Z, 'none', False) is None
+        assert corr_diff_test(corr_func, X, Y, Z, None, False) is None
+
+        with self.assertRaises(Exception):
+            corr_diff_test(corr_func, X, Y, Z, 'does-not-exist', False)
