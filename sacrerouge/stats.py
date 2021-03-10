@@ -1,6 +1,8 @@
 import logging
 import numpy as np
+import scipy.stats
 import warnings
+from scipy.stats import kendalltau, pearsonr, spearmanr
 from typing import Callable, List, Optional, Tuple, Union
 
 from sacrerouge.data import Metrics
@@ -231,3 +233,58 @@ def bootstrap_ci(corr_func: SummaryCorrFunc,
     lower = np.percentile(samples, alpha / 2 * 100)
     upper = np.percentile(samples, (1.0 - alpha / 2) * 100)
     return lower, upper
+
+
+def _get_n(corr_func: SummaryCorrFunc, X: np.ndarray) -> int:
+    """
+    Calculates the number of observations that would be used to calculate the correlation.
+    """
+    if corr_func.func == summary_level_corr:
+        # Assume n is the summary-correlation with the largest n. We find that by counting how many non-nans
+        # are in each column, then taking the max
+        return (~np.isnan(X)).sum(axis=0).max()
+    elif corr_func.func == system_level_corr:
+        # Count the number of systems with at least 1 score. We can probably safely just take X.shape[0], but
+        # this is extra careful
+        return ((~np.isnan(X)).sum(axis=1) > 0).sum()
+    elif corr_func.func == global_corr:
+        # The number of non-nan elements
+        return (~np.isnan(X)).sum()
+    else:
+        raise Exception(f'Unknown summary correlation function {corr_func.func}')
+
+
+def fisher_ci(corr_func: SummaryCorrFunc,
+              X: np.ndarray,
+              Y: np.ndarray,
+              alpha: float = 0.05,
+              **kwargs) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Calculates a confidence interval via the Fisher transformation. See Bonett and Wright (200) for details.
+    """
+    # The Fisher transformation has constants that depend on the correlation coefficient being used. Inspecting
+    # the correlation function is kind of hacky, but it works.
+    assert len(corr_func.args) == 1
+    assert corr_func.args[0] in [pearsonr, spearmanr, kendalltau]
+
+    r = corr_func(X, Y)
+    if corr_func.args[0] == pearsonr:
+        b, c = 3, 1
+    elif corr_func.args[0] == spearmanr:
+        b, c = 3, np.sqrt(1 + r ** 2 / 2)
+    elif corr_func.args[0] == kendalltau:
+        b, c = 4, np.sqrt(.437)
+    else:
+        raise Exception(f'Unexpected correlation function: {corr_func.args[0]}')
+
+    n = _get_n(corr_func, X)
+    if n > b:
+        z_r = np.arctanh(r)
+        z = scipy.stats.norm.ppf(1.0 - alpha / 2)
+        z_l = z_r - z * c / np.sqrt(n - b)
+        z_u = z_r + z * c / np.sqrt(n - b)
+        r_l = np.tanh(z_l)
+        r_u = np.tanh(z_u)
+    else:
+        r_l, r_u = None, None
+    return r_l, r_u

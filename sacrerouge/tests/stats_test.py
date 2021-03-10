@@ -1,11 +1,11 @@
 import functools
 import numpy as np
 import unittest
-from scipy.stats import pearsonr
+from scipy.stats import kendalltau, pearsonr, spearmanr
 
 from sacrerouge.data import Metrics
 from sacrerouge.stats import convert_to_matrices, summary_level_corr, system_level_corr, global_corr, \
-    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci
+    bootstrap_system_sample, bootstrap_input_sample, bootstrap_both_sample, bootstrap_ci, fisher_ci
 
 
 class TestStats(unittest.TestCase):
@@ -316,3 +316,32 @@ class TestStats(unittest.TestCase):
         lower, upper = bootstrap_ci(corr_func, X, Y, bootstrap_both_sample)
         self.assertAlmostEqual(lower, -1.0, places=4)
         self.assertAlmostEqual(upper, 1.0, places=4)
+
+    def test_fisher_ci(self):
+        pearson_global = functools.partial(global_corr, pearsonr)
+        spearman_global = functools.partial(global_corr, spearmanr)
+        kendall_global = functools.partial(global_corr, kendalltau)
+
+        pearson_system = functools.partial(system_level_corr, pearsonr)
+        spearman_system = functools.partial(system_level_corr, spearmanr)
+        kendall_system = functools.partial(system_level_corr, kendalltau)
+
+        pearson_summary = functools.partial(summary_level_corr, pearsonr)
+        spearman_summary = functools.partial(summary_level_corr, spearmanr)
+        kendall_summary = functools.partial(summary_level_corr, kendalltau)
+
+        np.random.seed(12)
+        X = np.random.rand(5, 7)
+        Y = np.random.rand(5, 7)
+
+        self.assertAlmostEqual(fisher_ci(pearson_global, X, Y), (-0.02763744135012373, 0.5818846438651135), places=4)
+        self.assertAlmostEqual(fisher_ci(spearman_global, X, Y), (-0.06733469087453943, 0.5640758668009686), places=4)
+        self.assertAlmostEqual(fisher_ci(kendall_global, X, Y), (-0.029964677270600665, 0.4098565164085108), places=4)
+
+        self.assertAlmostEqual(fisher_ci(pearson_system, X, Y), (-0.6445648014599665, 0.9644395142168088), places=4)
+        self.assertAlmostEqual(fisher_ci(spearman_system, X, Y), (-0.6708734441360908, 0.9756771001362685), places=4)
+        self.assertAlmostEqual(fisher_ci(kendall_system, X, Y), (-0.7023910748254728, 0.9377789575997956), places=4)
+
+        self.assertAlmostEqual(fisher_ci(pearson_summary, X, Y), (-0.808376631595968, 0.9287863878043723), places=4)
+        self.assertAlmostEqual(fisher_ci(spearman_summary, X, Y), (-0.7262127280589684, 0.9653646507719408), places=4)
+        self.assertAlmostEqual(fisher_ci(kendall_summary, X, Y), (-0.684486849088761, 0.9418063314024349), places=4)
