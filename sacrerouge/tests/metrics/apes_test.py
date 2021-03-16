@@ -10,20 +10,20 @@ from sacrerouge.metrics import APES
 class TestQAEval(ReferenceBasedMetricTestCase):
     def test_apes(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = APES(environment_name=os.environ['APES_ENV'])
+        metric = APES(environment_name=os.environ['APES_ENV'], verbose=True)
         expected_output = [
-            {'APES': 10.256410256403332},
-            {'APES': 30.448717948703335},
-            {'APES': 21.6346153846},
-            {'APES': 23.0769230769},
-            {'APES': 34.25925925923334},
-            {'APES': 24.074074074066668},
-            {'APES': 30.55555555555},
-            {'APES': 33.3333333333},
-            {'APES': 36.108813528166667},
-            {'APES': 40.979689366800004},
-            {'APES': 41.3082437276},
-            {'APES': 27.6674937965}
+            {'APES': 10.256410256410257},
+            {'APES': 30.448717948717952},
+            {'APES': 27.884615384615387},
+            {'APES': 26.923076923076923},
+            {'APES': 27.777777777777782},
+            {'APES': 24.074074074074076},
+            {'APES': 34.72222222222222},
+            {'APES': 36.111111111111114},
+            {'APES': 38.05256869772999},
+            {'APES': 38.62236926753056},
+            {'APES': 39.69534050179212},
+            {'APES': 26.054590570719604}
         ]
         super().assert_expected_output(metric, expected_output)
 

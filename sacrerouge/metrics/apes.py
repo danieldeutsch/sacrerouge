@@ -40,46 +40,41 @@ class APES(ReferenceBasedMetric):
     def _save_summaries(self,
                         output_file: str,
                         summaries_list: List[List[SummaryType]],
-                        references_list: List[List[ReferenceType]]) -> Dict[Tuple[int, int], str]:
-        # The code requires the summaries have filenames which match the TAC format, so we artificially create filenames
-        # accordingly. Reference summaries are capital letters, and the code requires they can only be A-H. It should
-        # not matter that we might have duplicate references (due to jackknifing) since they will be given different
-        # instance ids here.
-        indices_to_filename = {}
+                        references_list: List[List[ReferenceType]]) -> Dict[str, List[str]]:
+        instance_id_to_reference_ids = {}
         output_data = {}
 
         logger.info(f'Writing summaries to {output_file}')
         for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
-            # Must be "DXXXX-A"
-            instance_id = f'D{i:04}-A'
+            instance_id = str(i)
             output_data[instance_id] = {'man': {}, 'machine': {}}
 
             for j, summary in enumerate(summaries):
-                # Peers must end with a number
-                filename = f'{instance_id}.M.100.A.{j}'
-                indices_to_filename[(i, j)] = filename
+                summarizer_id = f'{instance_id}_{j}'
                 if isinstance(summary, list):
                     text = ' '.join(summary)
                 else:
                     text = summary
-                output_data[instance_id]['machine'][filename] = text
+                output_data[instance_id]['machine'][summarizer_id] = text
 
-            # References must end with a letter
-            assert len(references) <= 8
+            # We identify references with a letter
+            assert len(references) <= 26
+            reference_ids = []
             for j, reference in enumerate(references):
-                letter = string.ascii_uppercase[j]
-                filename = f'{instance_id}.M.100.A.{letter}'
+                reference_id = f'{instance_id}_{string.ascii_uppercase[j]}'
+                reference_ids.append(reference_id)
                 if isinstance(reference, list):
                     text = ' '.join(reference)
                 else:
                     text = reference
-                output_data[instance_id]['man'][filename] = text
+                output_data[instance_id]['man'][reference_id] = text
+            instance_id_to_reference_ids[instance_id] = reference_ids
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w') as out:
             out.write(json.dumps(output_data))
 
-        return indices_to_filename
+        return instance_id_to_reference_ids
 
     def _run_preprocess(self, input_file: str, output_file: str, metadata_file: str) -> Dict:
         logger.info('Running preprocessing')
@@ -95,15 +90,14 @@ class APES(ReferenceBasedMetric):
         process.communicate()
 
         metadata = json.load(open(metadata_file, 'r'))
-        print(json.dumps(metadata, indent=2))
         return metadata
 
-    def _run_answer_questions(self, input_file: str, output_file: str) -> Dict[str, List[float]]:
+    def _run_answer_questions(self, input_file: str, output_file: str) -> Dict[Tuple[str, str], float]:
         logger.info('Running answering questions')
         commands = [f'cd {self.apes_root}/rc-cnn-dailymail']
         commands.append(f'source {os.environ["CONDA_INIT"]}')
         commands.append(f'conda activate {self.environment_name}')
-        commands.append(f'python2.7 code/run_qa_model.py --input_file {input_file} --output_file {output_file} --train_path cnn_training.txt --dev_path cnn_test.txt --glove_path glove.6B.100d.txt')
+        commands.append(f'python2.7 code/run_qa_model.py --input_file {input_file} --output_file {output_file} --train_path cnn_train.txt.gz --dev_path cnn_dev.txt.gz --glove_path glove.6B.100d.txt')
         command = ' && '.join(commands)
 
         logger.info(f'Running command: "{command}"')
@@ -111,33 +105,45 @@ class APES(ReferenceBasedMetric):
         process = Popen(command, stdout=redirect, stderr=redirect, shell=True)
         process.communicate()
 
-        filename_to_scores = {}
+        ids_to_scores = {}
         with JsonlReader(output_file) as f:
             for data in f:
-                answering_doc = data['answering_doc']
+                summarizer_id = data['answering_doc']
+                reference_id = data['questioning_doc']
                 score = data['reward']
-                if answering_doc not in filename_to_scores:
-                    filename_to_scores[answering_doc] = []
-                filename_to_scores[answering_doc].append(score)
-        return filename_to_scores
+                ids_to_scores[(summarizer_id, reference_id)] = score
+        return ids_to_scores
 
     def _get_metrics(self,
                      summaries_list: List[List[SummaryType]],
                      references_list: List[List[ReferenceType]],
-                     indices_to_filename: Dict[Tuple[int, int], str],
-                     filename_to_scores: Dict[str, List[float]],
+                     instance_id_to_reference_ids: Dict[str, List[str]],
+                     ids_to_scores: Dict[Tuple[str, str], float],
                      metadata: Dict) -> List[List[MetricsDict]]:
         metrics_lists = []
+        missing_entities = metadata['missing_entities']
         for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
             metrics_lists.append([])
             for j, summary in enumerate(summaries):
-                filename = indices_to_filename[(i, j)]
-                if filename not in filename_to_scores:
+                instance_id = str(i)
+                summarizer_id = f'{i}_{j}'
+                reference_ids = instance_id_to_reference_ids[instance_id]
+
+                scores = []
+                for reference_id in reference_ids:
+                    if (summarizer_id, reference_id) in ids_to_scores:
+                        scores.append(ids_to_scores[(summarizer_id, reference_id)])
+
+                if len(scores) != len(reference_ids):
+                    num_missing = len(missing_entities[instance_id]) if instance_id in missing_entities else 0
+                    if len(scores) + num_missing != len(reference_ids):
+                        print('ERROR', i, j, len(scores), num_missing, len(reference_ids))
+                    # assert len(scores) + num_missing == len(reference_ids)
+
+                if len(scores) == 0:
                     scores = [0]
-                else:
-                    scores = filename_to_scores[filename]
-                # assert len(scores) == len(references)
-                metrics_lists[-1].append(MetricsDict({'APES': sum(scores) / len(scores)}))
+                final_score = sum(scores) / len(scores)
+                metrics_lists[-1].append(MetricsDict({'APES': final_score}))
         return metrics_lists
 
     def score_multi_all(self,
@@ -153,10 +159,10 @@ class APES(ReferenceBasedMetric):
             metadata_file = f'{temp_dir}/metadata.json'
             answers_file = f'{temp_dir}/answers.jsonl'
 
-            indices_to_filename = self._save_summaries(summaries_file, summaries_list, references_list)
+            instance_id_to_reference_ids = self._save_summaries(summaries_file, summaries_list, references_list)
             metadata = self._run_preprocess(summaries_file, questions_file, metadata_file)
-            filename_to_scores = self._run_answer_questions(questions_file, answers_file)
-            metrics_lists = self._get_metrics(summaries_list, references_list, indices_to_filename, filename_to_scores, metadata)
+            ids_to_scores = self._run_answer_questions(questions_file, answers_file)
+            metrics_lists = self._get_metrics(summaries_list, references_list, instance_id_to_reference_ids, ids_to_scores, metadata)
 
             return metrics_lists
 
@@ -176,6 +182,12 @@ class APESSetupSubcommand(MetricSetupSubcommand):
             f'cd {DATA_ROOT}/metrics/apes',
             f'git clone https://github.com/mataney/APES-on-TAC2011',
             f'git clone https://github.com/theblackcat102/rc-cnn-dailymail'
+            f'cd rc-cnn-dailymail',
+            f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_train.txt.gz',
+            f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_dev.txt.gz',
+            f'wget http://nlp.stanford.edu/data/glove.6B.zip',
+            f'unzip glove.6B.zip'
+            f'rm glove.6B.50d.txt glove.6B.200d.txt glove.6B.300d.txt'
         ]
         command = ' && '.join(commands)
 

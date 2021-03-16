@@ -2,6 +2,7 @@
 SacreROUGE wraps the original implementations of many different evaluation metrics.
 The following metrics have been implemented:
 
+- [APES](apes.md)
 - [AutoSummENG, MeMoG, and NPoWER](autosummeng.md)
 - [BERTScore](bertscore.md)
 - [BEwT-E](bewte.md)
