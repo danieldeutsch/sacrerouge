@@ -12,18 +12,18 @@ class TestQAEval(ReferenceBasedMetricTestCase):
         # This is a regression test, not necessarily a test for correctness
         metric = APES(environment_name=os.environ['APES_ENV'], verbose=True)
         expected_output = [
-            {'APES': 10.256410256410257},
-            {'APES': 30.448717948717952},
-            {'APES': 27.884615384615387},
-            {'APES': 26.923076923076923},
-            {'APES': 27.777777777777782},
-            {'APES': 24.074074074074076},
-            {'APES': 34.72222222222222},
-            {'APES': 36.111111111111114},
-            {'APES': 38.05256869772999},
-            {'APES': 38.62236926753056},
-            {'APES': 39.69534050179212},
-            {'APES': 26.054590570719604}
+            {'APES': {'accuracy': 10.256410256410257, 'num_correct': 4}},
+            {'APES': {'accuracy': 30.448717948717952, 'num_correct': 10}},
+            {'APES': {'accuracy': 21.634615384615387, 'num_correct': 5}},
+            {'APES': {'accuracy': 23.076923076923077, 'num_correct': 6}},
+            {'APES': {'accuracy': 36.11111111111111, 'num_correct': 14}},
+            {'APES': {'accuracy': 24.074074074074076, 'num_correct': 10}},
+            {'APES': {'accuracy': 34.72222222222222, 'num_correct': 10}},
+            {'APES': {'accuracy': 36.111111111111114, 'num_correct': 10}},
+            {'APES': {'accuracy': 35.90203106332139, 'num_correct': 28}},
+            {'APES': {'accuracy': 40.47422111938241, 'num_correct': 31}},
+            {'APES': {'accuracy': 41.308243727598565, 'num_correct': 22}},
+            {'APES': {'accuracy': 32.81637717121588, 'num_correct': 19}}
         ]
         super().assert_expected_output(metric, expected_output)
 
