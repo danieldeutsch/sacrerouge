@@ -81,7 +81,7 @@ class APES(ReferenceBasedMetric):
         commands = [f'cd {self.apes_root}/APES-on-TAC2011']
         commands.append(f'source {os.environ["CONDA_INIT"]}')
         commands.append(f'conda activate {self.environment_name}')
-        commands.append(f'python2.7 apes_on_tac2011.py --mode preprocess --input_file {input_file} --output_file {output_file} --metadata_file {metadata_file}')
+        commands.append(f'python2.7 apes_on_tac2011.py --input-file {input_file} --output-file {output_file} --metadata-file {metadata_file}')
         command = ' && '.join(commands)
 
         logger.info(f'Running command: "{command}"')
@@ -92,12 +92,12 @@ class APES(ReferenceBasedMetric):
         metadata = json.load(open(metadata_file, 'r'))
         return metadata
 
-    def _run_answer_questions(self, input_file: str, output_file: str) -> Dict[Tuple[str, str], float]:
+    def _run_answer_questions(self, input_file: str, output_file: str) -> Dict[Tuple[str, str], Dict[str, float]]:
         logger.info('Running answering questions')
         commands = [f'cd {self.apes_root}/rc-cnn-dailymail']
         commands.append(f'source {os.environ["CONDA_INIT"]}')
         commands.append(f'conda activate {self.environment_name}')
-        commands.append(f'python2.7 code/run_qa_model.py --input_file {input_file} --output_file {output_file} --train_path cnn_train.txt.gz --dev_path cnn_dev.txt.gz --glove_path glove.6B.100d.txt')
+        commands.append(f'python2.7 code/run_qa_model.py --input_file {input_file} --output_file {output_file} --train_path cnn_train.txt --dev_path cnn_dev.txt --glove_path glove.6B.100d.txt')
         command = ' && '.join(commands)
 
         logger.info(f'Running command: "{command}"')
@@ -110,47 +110,56 @@ class APES(ReferenceBasedMetric):
             for data in f:
                 summarizer_id = data['answering_doc']
                 reference_id = data['questioning_doc']
-                score = data['reward']
-                ids_to_scores[(summarizer_id, reference_id)] = score
+                accuracy = data['acc']
+                num_correct = data['num_correct']
+                ids_to_scores[(summarizer_id, reference_id)] = {'accuracy': accuracy, 'num_correct': num_correct}
         return ids_to_scores
 
     def _get_metrics(self,
                      summaries_list: List[List[SummaryType]],
                      references_list: List[List[ReferenceType]],
                      instance_id_to_reference_ids: Dict[str, List[str]],
-                     ids_to_scores: Dict[Tuple[str, str], float],
+                     ids_to_scores: Dict[Tuple[str, str], Dict[str, float]],
                      metadata: Dict) -> List[List[MetricsDict]]:
         metrics_lists = []
         missing_entities = metadata['missing_entities']
+        missing_questions = metadata['missing_questions']
         for i, (summaries, references) in enumerate(zip(summaries_list, references_list)):
             metrics_lists.append([])
-            for j, summary in enumerate(summaries):
-                instance_id = str(i)
-                summarizer_id = f'{i}_{j}'
-                reference_ids = instance_id_to_reference_ids[instance_id]
+            instance_id = str(i)
+            reference_ids = instance_id_to_reference_ids[instance_id]
 
+            num_missing_entities = len(missing_entities[instance_id]) if instance_id in missing_entities else 0
+            if num_missing_entities > 0:
+                logger.warning(f'{num_missing_entities} reference(s) for instance index {i} are missing entities. No questions were generated')
+
+            num_missing_questions = len(missing_questions[instance_id]) if instance_id in missing_questions else 0
+            if num_missing_questions > 0:
+                logger.warning(f'{num_missing_questions} reference(s) for instance index {i} are missing questions')
+
+            for j, summary in enumerate(summaries):
+                summarizer_id = f'{i}_{j}'
                 scores = []
                 for reference_id in reference_ids:
                     if (summarizer_id, reference_id) in ids_to_scores:
                         scores.append(ids_to_scores[(summarizer_id, reference_id)])
 
-                if len(scores) != len(reference_ids):
-                    num_missing = len(missing_entities[instance_id]) if instance_id in missing_entities else 0
-                    if len(scores) + num_missing != len(reference_ids):
-                        print('ERROR', i, j, len(scores), num_missing, len(reference_ids))
-                    # assert len(scores) + num_missing == len(reference_ids)
+                if len(scores) + num_missing_entities + num_missing_questions != len(reference_ids):
+                    logger.warning(f'Summary {j} for instance {i} does not have a score for every reference. '
+                                   f'#Score: {len(scores)}, #Missing Entities: {num_missing_entities}, #Missing Qs: {num_missing_questions} #Ref: {len(reference_ids)}')
 
                 if len(scores) == 0:
-                    scores = [0]
-                final_score = sum(scores) / len(scores)
-                metrics_lists[-1].append(MetricsDict({'APES': final_score}))
+                    # All references were missing entities
+                    scores = [{'accuracy': 0.0, 'num_correct': 0}]
+
+                final_accuracy = sum([s['accuracy'] for s in scores]) / len(scores)
+                final_num_correct = sum([s['num_correct'] for s in scores])
+                metrics_lists[-1].append(MetricsDict({'APES': {'accuracy': final_accuracy, 'num_correct': final_num_correct}}))
         return metrics_lists
 
     def score_multi_all(self,
                         summaries_list: List[List[SummaryType]],
                         references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
-        # The APES code expects the input and output to be directories relative to the repo root, so we clear
-        # those directories to be sure there is no contamination across runs
         with TemporaryDirectory() as temp_dir:
             temp_dir = os.path.abspath(temp_dir)
 
@@ -181,13 +190,16 @@ class APESSetupSubcommand(MetricSetupSubcommand):
             f'mkdir -p {DATA_ROOT}/metrics/apes',
             f'cd {DATA_ROOT}/metrics/apes',
             f'git clone https://github.com/mataney/APES-on-TAC2011',
-            f'git clone https://github.com/theblackcat102/rc-cnn-dailymail'
+            f'git clone https://github.com/theblackcat102/rc-cnn-dailymail',
             f'cd rc-cnn-dailymail',
             f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_train.txt.gz',
             f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_dev.txt.gz',
+            f'zcat cnn_train.txt.gz > cnn_train.txt',
+            f'zcat cnn_dev.txt.gz > cnn_dev.txt',
+            f'rm cnn_train.txt.gz cnn_dev.txt.gz',
             f'wget http://nlp.stanford.edu/data/glove.6B.zip',
-            f'unzip glove.6B.zip'
-            f'rm glove.6B.50d.txt glove.6B.200d.txt glove.6B.300d.txt'
+            f'unzip glove.6B.zip',
+            f'rm glove.6B.50d.txt glove.6B.200d.txt glove.6B.300d.txt glove.6B.zip',
         ]
         command = ' && '.join(commands)
 
