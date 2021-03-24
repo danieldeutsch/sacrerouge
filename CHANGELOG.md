@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the annotations collected by the [BLANC paper](https://www.aclweb.org/anthology/2020.eval4nlp-1.2.pdf).
 - Added a wrapper around the implementation of APES.
 - Added the [Multi-News dataset](https://www.aclweb.org/anthology/P19-1102/).
+- Added the [WCEP dataset](https://arxiv.org/pdf/2005.10070.pdf)
 
 ### Fixed
 - Fixed a bug in which QAEval would crash if you don't use LERC
