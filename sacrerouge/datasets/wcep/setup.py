@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.io import JsonlReader, JsonlWriter
@@ -10,8 +10,9 @@ def _download_data(output_dir: str, force: bool) -> None:
     download_file_from_google_drive('1qsd5pOCpeSXsaqNobXCrcAzhcjtG1wA1', f'{output_dir}/test.jsonl.gz', force=force)
 
 
-def _load_instances(input_file: str) -> List:
+def _load_instances(input_file: str) -> Tuple[List, int]:
     instances = []
+    num_empty = 0
     with JsonlReader(input_file) as f:
         for instance in f:
             instance_id = str(instance['id'])
@@ -22,10 +23,14 @@ def _load_instances(input_file: str) -> List:
             for article in instance['articles']:
                 document_id = article['id']
                 title = article['title']
-                text = article['text']
+                text = article['text'].strip()
                 url = article['url']
                 origin = article['origin']
                 time = article['time']
+
+                if len(text) == 0:
+                    num_empty += 1
+                    continue
 
                 if origin == 'WCEP':
                     assert url in reference_urls
@@ -46,7 +51,7 @@ def _load_instances(input_file: str) -> List:
                 'documents': documents,
                 'summary': {'text': summary}
             })
-    return instances
+    return instances, num_empty
 
 
 def _count_num_documents(instances: List) -> int:
@@ -89,13 +94,19 @@ def _save(instances: List, output_file: str) -> None:
 def setup(output_dir: str, force: bool) -> None:
     _download_data(f'{output_dir}/raw', force)
 
-    train = _load_instances(f'{output_dir}/raw/train.jsonl.gz')
-    valid = _load_instances(f'{output_dir}/raw/val.jsonl.gz')
-    test = _load_instances(f'{output_dir}/raw/test.jsonl.gz')
+    train, train_num_empty = _load_instances(f'{output_dir}/raw/train.jsonl.gz')
+    valid, valid_num_empty = _load_instances(f'{output_dir}/raw/val.jsonl.gz')
+    test, test_num_empty = _load_instances(f'{output_dir}/raw/test.jsonl.gz')
 
     train_num_duplicates = _remove_duplicates(train)
     valid_num_duplicates = _remove_duplicates(valid)
     test_num_duplicates = _remove_duplicates(test)
+
+    print('Number of empty documents removed')
+    print('Train', train_num_empty)
+    print('Valid', valid_num_empty)
+    print('Test', test_num_empty)
+    print()
 
     print('Number of duplicate source documents removed')
     print('Train', train_num_duplicates)
