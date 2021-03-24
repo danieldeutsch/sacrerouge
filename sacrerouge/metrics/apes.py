@@ -189,8 +189,8 @@ class APESSetupSubcommand(MetricSetupSubcommand):
         commands = [
             f'mkdir -p {DATA_ROOT}/metrics/apes',
             f'cd {DATA_ROOT}/metrics/apes',
-            f'git clone https://github.com/mataney/APES-on-TAC2011',
-            f'git clone https://github.com/theblackcat102/rc-cnn-dailymail',
+            f'git clone https://github.com/danieldeutsch/APES-on-TAC2011',
+            f'git clone https://github.com/danieldeutsch/rc-cnn-dailymail',
             f'cd rc-cnn-dailymail',
             f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_train.txt.gz',
             f'wget https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/APES/cnn_dev.txt.gz',

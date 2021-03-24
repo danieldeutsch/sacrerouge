@@ -5,7 +5,7 @@ A score is calculated based on the number of correctly predicted entities.
 
 Our implementation is a wrapper around the original code, which does not assume entities are already tagged.
 The [preprocessing code is a fork](https://github.com/danieldeutsch/APES-on-TAC2011) of the [original repo](https://github.com/mataney/APES-on-TAC2011).
-The reading [comprehension component is also a fork](https://github.com/danieldeutsch/rc-cnn-dailymail) of [this fork](https://github.com/theblackcat102/rc-cnn-dailymail) of the [original repo](https://github.com/mataney/rc-cnn-dailymail).
+The reading [comprehension component is also a fork](https://github.com/danieldeutsch/rc-cnn-dailymail) of the [original repo](https://github.com/mataney/rc-cnn-dailymail).
 
 The name of the Python2.7 environment is required to run this metric.
 See "Environment" below.
@@ -27,6 +27,12 @@ python -m spacy download en
 These commands were taken from [here](https://github.com/theblackcat102/rc-cnn-dailymail/blob/master/setup.sh).
 See [here](../../environments/apes.yml) for the output of our `conda env export` command.
 The name of your conda environment with this setup should be passed as the `environment_name` parameter to the `APES` constructor.
+
+## Notes
+There are some weird character encoding issues that seem to happen between Python3 and Python2, which is used by APES.
+Sometimes there are weird characters read in by the Python2 code.
+I think it may have something to do with the code reading the files in as "cp1252".
+It seems like this sometimes messes up the NER, however I do not think it causes a significant difference in the scores.
 
 ## References
 [1]: Matan Eyal, Tal Baumel, and Michael Elhadad. [Question Answering as an Automatic Evaluation Metric for News Article Summarization](https://www.aclweb.org/anthology/N19-1395/). NAACL, 2019
