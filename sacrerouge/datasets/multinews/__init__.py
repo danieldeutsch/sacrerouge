@@ -1,0 +1,1 @@
+from sacrerouge.datasets.multinews.subcommand import MultiNewsSubcommand
