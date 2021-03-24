@@ -35,7 +35,7 @@ def _load_documents(input_file: str) -> Tuple[List[List[Dict]], int]:
             raw_documents = line.strip().split('|||||')
             documents = []
             for raw in raw_documents:
-                text = raw.replace('NEWLINE_CHAR', '\n')
+                text = raw.split('NEWLINE_CHAR')
                 text = [s.strip() for s in text if len(s.strip()) > 0]
                 if len(text) > 0:
                     documents.append({'text': text})
