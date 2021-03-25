@@ -163,7 +163,7 @@ class StatisticalSignificanceTestSubcommand(RootSubcommand):
         )
         self.parser.add_argument(
             '--hypothesis-test',
-            choices=['bootstrap-system', 'bootstrap-input', 'bootstrap-both', 'bootstrap-summary', 'permutation-both',
+            choices=['bootstrap-system', 'bootstrap-input', 'bootstrap-both', 'permutation-both',
                      'permutation-input', 'permutation-system', 'williams'],
             default='permutation-both',
             help='The hypothesis test to use'
