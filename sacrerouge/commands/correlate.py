@@ -1,25 +1,26 @@
 import argparse
+import functools
 import itertools
 import json
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import warnings
 from collections import defaultdict
 from overrides import overrides
 from scipy.stats import kendalltau, pearsonr, spearmanr
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from sacrerouge.commands import RootSubcommand
 from sacrerouge.common.logging import prepare_global_logging
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.io import JsonlReader
+from sacrerouge.stats import convert_to_matrices, corr_ci, global_corr, summary_level_corr, system_level_corr
 
 logger = logging.getLogger(__name__)
 
 
-def _load_metrics(metrics_files: List[str]) -> List[Metrics]:
+def load_metrics(metrics_files: List[str]) -> List[Metrics]:
     logger.info(f'Loading metrics from {metrics_files}')
     metrics_list = []
     for metrics_file in metrics_files:
@@ -28,7 +29,7 @@ def _load_metrics(metrics_files: List[str]) -> List[Metrics]:
     return metrics_list
 
 
-def _merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
+def merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
     logger.info(f'Merging multiple metrics objects for the same (instance, summary) into a single object')
     metrics_dicts = defaultdict(dict)
     for metrics in metrics_list:
@@ -44,30 +45,29 @@ def _merge_metrics(metrics_list: List[Metrics]) -> List[Metrics]:
     return merged_metrics_list
 
 
-def _filter_metrics(metrics_list: List[Metrics], summarizer_type: str, metric1: str, metric2: str) -> List[Metrics]:
-    logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric1}" and "{metric2}"')
+def filter_metrics(metrics_list: List[Metrics], summarizer_type: str, *metric_names: Union[str, List[str]]) -> List[Metrics]:
+    logger.info(f'Filtering instances to summarizer type "{summarizer_type}" and metrics "{metric_names}"')
 
     filtered = []
     incorrect_type = 0
-    missing_metric1 = 0
-    missing_metric2 = 0
+    missing_counts = [0] * len(metric_names)
     for metrics in metrics_list:
         if summarizer_type == 'all' or summarizer_type == metrics.summarizer_type:
-            if metric1 not in metrics.metrics:
-                missing_metric1 += 1
-            elif metric2 not in metrics.metrics:
-                missing_metric2 += 1
-            else:
+            keep = True
+            for i, name in enumerate(metric_names):
+                if name not in metrics.metrics:
+                    keep = False
+                    missing_counts[i] += 1
+            if keep:
                 filtered.append(metrics)
         else:
             incorrect_type += 1
 
     if incorrect_type > 0:
         logger.info(f'Filtered {incorrect_type} instances that were not summarizer type "{summarizer_type}"')
-    if missing_metric1 > 0:
-        logger.info(f'Filtered {missing_metric1} instances that did not have metric "{metric1}"')
-    if missing_metric2 > 0:
-        logger.info(f'Filtered {missing_metric2} instances that did not have metric "{metric2}"')
+    for name, missing in zip(metric_names, missing_counts):
+        if missing > 0:
+            logger.info(f'Filtered {missing} instances that did not have metric "{name}"')
     logger.info(f'{len(filtered)} instances remain after filtering')
 
     return filtered
@@ -83,113 +83,165 @@ def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, MetricsDict]:
     return key_to_metrics
 
 
-def compute_summary_level_correlations(metrics_list: List[Metrics],
-                                       metric1: str,
-                                       metric2: str) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
-    pearsons = {}
-    spearmans = {}
-    kendalls = {}
-    num_nan = 0
-    metrics_list = sorted(metrics_list, key=lambda metrics: metrics.instance_id)
-    for instance_id, group in itertools.groupby(metrics_list, key=lambda metrics: metrics.instance_id):
-        group = list(group)
-        values1 = [member.metrics[metric1] for member in group]
-        values2 = [member.metrics[metric2] for member in group]
+def _split_level_kwargs(kwargs: Dict) -> Tuple[Dict, Dict, Dict]:
+    summary_kwargs = kwargs.pop('summary_level', {})
+    system_kwargs = kwargs.pop('system_level', {})
+    global_kwargs = kwargs.pop('global', {})
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore')
-            r, _ = pearsonr(values1, values2)
-            rho, _ = spearmanr(values1, values2)
-            tau, _ = kendalltau(values1, values2)
-
-            if any(np.isnan([r, rho, tau])):
-                num_nan += 1
-            else:
-                pearsons[instance_id] = r
-                spearmans[instance_id] = rho
-                kendalls[instance_id] = tau
-
-    if num_nan > 0:
-        logger.warning(f'Skipped {num_nan} summary-level correlations because they were NaN')
-
-    num_valid = len(pearsons)
-    if num_valid > 0:
-        pearson = sum(pearsons.values()) / len(pearsons)
-        spearman = sum(spearmans.values()) / len(spearmans)
-        kendall = sum(kendalls.values()) / len(kendalls)
-    else:
-        pearson, spearman, kendall = 0, 0, 0
-
-    averaged_correlations = {
-        'pearson': {'r': pearson},
-        'spearman': {'rho': spearman},
-        'kendall': {'tau': kendall},
-        'num_summary_groups': num_valid
-    }
-    individual_correlations = {
-        'pearson': pearsons,
-        'spearman': spearmans,
-        'kendall': kendalls
-    }
-
-    return averaged_correlations, individual_correlations
+    summary_kwargs = dict(**kwargs, **summary_kwargs)
+    system_kwargs = dict(**kwargs, **system_kwargs)
+    global_kwargs = dict(**kwargs, **global_kwargs)
+    return summary_kwargs, system_kwargs, global_kwargs
 
 
-def compute_system_level_correlations(metrics_list: List[Metrics],
-                                      metric1: str,
-                                      metric2: str) -> Dict[str, float]:
-    metrics_list = list(aggregate_metrics(metrics_list).values())
+def _split_correlation_kwargs(kwargs: Dict) -> Tuple[Dict, Dict, Dict]:
+    pearson_kwargs = kwargs.pop('pearson', {})
+    spearman_kwargs = kwargs.pop('spearman', {})
+    kendall_kwargs = kwargs.pop('kendall', {})
 
-    values1 = [metrics[metric1] for metrics in metrics_list]
-    values2 = [metrics[metric2] for metrics in metrics_list]
+    pearson_kwargs = dict(**kwargs, **pearson_kwargs)
+    spearman_kwargs = dict(**kwargs, **spearman_kwargs)
+    kendall_kwargs = dict(**kwargs, **kendall_kwargs)
+    return pearson_kwargs, spearman_kwargs, kendall_kwargs
 
-    r, r_pvalue = pearsonr(values1, values2)
-    rho, rho_pvalue = spearmanr(values1, values2)
-    tau, tau_pvalue = kendalltau(values1, values2)
-    num_summarizers = len(metrics_list)
+
+def compute_summary_level_correlations(X: np.ndarray,
+                                       Y: np.ndarray,
+                                       ci_method: str,
+                                       alpha: float,
+                                       two_tailed: bool,
+                                       ci_kwargs: Dict = None) -> Dict:
+    ci_kwargs = ci_kwargs or {}
+    pearson_kwargs, spearman_kwargs, kendall_kwargs = _split_correlation_kwargs(ci_kwargs)
+
+    pearson = functools.partial(summary_level_corr, pearsonr)
+    spearman = functools.partial(summary_level_corr, spearmanr)
+    kendall = functools.partial(summary_level_corr, kendalltau)
+
+    r, r_groups = pearson(X, Y, return_num_instances=True)
+    r_lower, r_upper = corr_ci(pearson, X, Y, ci_method, alpha, two_tailed, kwargs=pearson_kwargs)
+
+    rho, rho_groups = spearman(X, Y, return_num_instances=True)
+    rho_lower, rho_upper = corr_ci(spearman, X, Y, ci_method, alpha, two_tailed, kwargs=spearman_kwargs)
+
+    tau, tau_groups = kendall(X, Y, return_num_instances=True)
+    tau_lower, tau_upper = corr_ci(kendall, X, Y, ci_method, alpha, two_tailed, kwargs=kendall_kwargs)
+
+    assert r_groups == rho_groups == tau_groups
 
     return {
+        'num_summary_groups': r_groups,
+        'ci_method': ci_method,
+        'alpha': alpha,
+        'two_tailed': two_tailed,
         'pearson': {
             'r': r,
-            'p_value': r_pvalue
+            'lower': r_lower,
+            'upper': r_upper,
         },
         'spearman': {
             'rho': rho,
-            'p_value': rho_pvalue
+            'lower': rho_lower,
+            'upper': rho_upper,
         },
         'kendall': {
             'tau': tau,
-            'p_value': tau_pvalue
-        },
-        'num_summarizers': num_summarizers
+            'lower': tau_lower,
+            'upper': tau_upper,
+        }
     }
 
 
-def compute_global_correlations(metrics_list: List[Metrics],
-                                metric1: str,
-                                metric2: str) -> Dict[str, float]:
-    values1 = [metrics.metrics[metric1] for metrics in metrics_list]
-    values2 = [metrics.metrics[metric2] for metrics in metrics_list]
+def compute_system_level_correlations(X: np.ndarray, Y: np.ndarray, ci_method: str, alpha: float, two_tailed: bool,
+                                      ci_kwargs: Dict = None) -> Dict:
+    ci_kwargs = ci_kwargs or {}
+    pearson_kwargs, spearman_kwargs, kendall_kwargs = _split_correlation_kwargs(ci_kwargs)
 
-    r, r_pvalue = pearsonr(values1, values2)
-    rho, rho_pvalue = spearmanr(values1, values2)
-    tau, tau_pvalue = kendalltau(values1, values2)
-    num_summaries = len(metrics_list)
+    pearson = functools.partial(system_level_corr, pearsonr)
+    spearman = functools.partial(system_level_corr, spearmanr)
+    kendall = functools.partial(system_level_corr, kendalltau)
+
+    r, r_pvalue = pearson(X, Y, return_pvalue=True)
+    r_lower, r_upper = corr_ci(pearson, X, Y, ci_method, alpha, two_tailed, kwargs=pearson_kwargs)
+
+    rho, rho_pvalue = spearman(X, Y, return_pvalue=True)
+    rho_lower, rho_upper = corr_ci(spearman, X, Y, ci_method, alpha, two_tailed, kwargs=spearman_kwargs)
+
+    tau, tau_pvalue = kendall(X, Y, return_pvalue=True)
+    tau_lower, tau_upper = corr_ci(kendall, X, Y, ci_method, alpha, two_tailed, kwargs=kendall_kwargs)
+
+    num_summarizers, num_instances = X.shape
 
     return {
+        'num_summarizers': num_summarizers,
+        'num_instances': num_instances,
+        'ci_method': ci_method,
+        'alpha': alpha,
+        'two_tailed': two_tailed,
         'pearson': {
             'r': r,
-            'p_value': r_pvalue
+            'p_value': r_pvalue,
+            'lower': r_lower,
+            'upper': r_upper
         },
         'spearman': {
             'rho': rho,
-            'p_value': rho_pvalue
+            'p_value': rho_pvalue,
+            'lower': rho_lower,
+            'upper': rho_upper
         },
         'kendall': {
             'tau': tau,
-            'p_value': tau_pvalue
+            'p_value': tau_pvalue,
+            'lower': tau_lower,
+            'upper': tau_upper
         },
-        'num_summaries': num_summaries
+    }
+
+
+def compute_global_correlations(X: np.ndarray, Y: np.ndarray, ci_method: str, alpha: float, two_tailed: bool,
+                                ci_kwargs: Dict = None) -> Dict:
+    ci_kwargs = ci_kwargs or {}
+    pearson_kwargs, spearman_kwargs, kendall_kwargs = _split_correlation_kwargs(ci_kwargs)
+
+    pearson = functools.partial(global_corr, pearsonr)
+    spearman = functools.partial(global_corr, spearmanr)
+    kendall = functools.partial(global_corr, kendalltau)
+
+    r, r_pvalue = pearson(X, Y, return_pvalue=True)
+    r_lower, r_upper = corr_ci(pearson, X, Y, ci_method, alpha, two_tailed, kwargs=pearson_kwargs)
+
+    rho, rho_pvalue = spearman(X, Y, return_pvalue=True)
+    rho_lower, rho_upper = corr_ci(spearman, X, Y, ci_method, alpha, two_tailed, kwargs=spearman_kwargs)
+
+    tau, tau_pvalue = kendall(X, Y, return_pvalue=True)
+    tau_lower, tau_upper = corr_ci(kendall, X, Y, ci_method, alpha, two_tailed, kwargs=kendall_kwargs)
+
+    num_summaries = int((~np.isnan(X)).sum())  # number of non-NaN scores
+
+    return {
+        'num_summaries': num_summaries,
+        'ci_method': ci_method,
+        'alpha': alpha,
+        'two_tailed': two_tailed,
+        'pearson': {
+            'r': r,
+            'p_value': r_pvalue,
+            'lower': r_lower,
+            'upper': r_upper
+        },
+        'spearman': {
+            'rho': rho,
+            'p_value': rho_pvalue,
+            'lower': rho_lower,
+            'upper': rho_upper
+        },
+        'kendall': {
+            'tau': tau,
+            'p_value': tau_pvalue,
+            'lower': tau_lower,
+            'upper': tau_upper
+        },
     }
 
 
@@ -236,58 +288,68 @@ def compute_correlation(metrics_jsonl_files_or_metrics_list: Union[str, List[str
                         metric1: str,
                         metric2: str,
                         summarizer_type: str,
-                        return_all_summary_level: bool = False,
                         skip_summary_level: bool = False,
                         skip_system_level: bool = False,
                         skip_global: bool = False,
                         system_level_output_plot: str = None,
-                        global_output_plot: str = None):
-    if return_all_summary_level:
-        assert not skip_summary_level, 'If `return_all_summary_level` is `True`, `skip_summary_level` must not be `True`'
+                        global_output_plot: str = None,
+                        ci_method: str = None,
+                        alpha: float = 0.05,
+                        two_tailed: bool = True,
+                        ci_kwargs: Dict = None):
     if system_level_output_plot is not None:
         assert not skip_system_level, 'If `system_level_output_plot` is not `None`, system-level correlations must be calculated'
     if global_output_plot is not None:
         assert not skip_global, 'If `global_output_plot` is not `None`, global correlations must be calculated'
 
+    ci_kwargs = ci_kwargs or {}
+    summary_kwargs, system_kwargs, global_kwargs = _split_level_kwargs(ci_kwargs)
+
     if isinstance(metrics_jsonl_files_or_metrics_list, str):
         # A single file
-        metrics_list = _load_metrics([metrics_jsonl_files_or_metrics_list])
+        metrics_list = load_metrics([metrics_jsonl_files_or_metrics_list])
     elif isinstance(metrics_jsonl_files_or_metrics_list, list) and all(isinstance(item, str) for item in metrics_jsonl_files_or_metrics_list):
         # A list of files
-        metrics_list = _load_metrics(metrics_jsonl_files_or_metrics_list)
+        metrics_list = load_metrics(metrics_jsonl_files_or_metrics_list)
     else:
         # A list of metrics
         assert isinstance(metrics_jsonl_files_or_metrics_list, list) and all(isinstance(item, Metrics) for item in metrics_jsonl_files_or_metrics_list)
         metrics_list = metrics_jsonl_files_or_metrics_list
 
     # Merge duplicate metrics objects into one
-    metrics_list = _merge_metrics(metrics_list)
+    metrics_list = merge_metrics(metrics_list)
 
     for metrics in metrics_list:
         metrics.flatten_keys()
 
-    metrics_list = _filter_metrics(metrics_list, summarizer_type, metric1, metric2)
+    metrics_list = filter_metrics(metrics_list, summarizer_type, metric1, metric2)
     for metrics in metrics_list:
         metrics.select_metrics([metric1, metric2])
         metrics.average_values()
 
-    results = {}
+    X, Y = convert_to_matrices(metrics_list, metric1, metric2)
+
+    results = {
+        'metric1': metric1,
+        'metric2': metric2,
+        'summarizer_type': summarizer_type
+    }
     if not skip_summary_level:
-        summary_level, individual_summary_level = compute_summary_level_correlations(metrics_list, metric1, metric2)
-        results['summary_level'] = summary_level
+        results['summary_level'] = compute_summary_level_correlations(X, Y, ci_method=ci_method, alpha=alpha,
+                                                                      two_tailed=two_tailed, ci_kwargs=summary_kwargs)
 
     if not skip_system_level:
-        results['system_level'] = compute_system_level_correlations(metrics_list, metric1, metric2)
+        results['system_level'] = compute_system_level_correlations(X, Y, ci_method=ci_method, alpha=alpha,
+                                                                    two_tailed=two_tailed, ci_kwargs=system_kwargs)
         if system_level_output_plot is not None:
             _plot_system_level_metrics(metrics_list, metric1, metric2, system_level_output_plot)
 
     if not skip_global:
-        results['global'] = compute_global_correlations(metrics_list, metric1, metric2)
+        results['global'] = compute_global_correlations(X, Y, ci_method=ci_method, alpha=alpha, two_tailed=two_tailed,
+                                                        ci_kwargs=global_kwargs)
         if global_output_plot is not None:
             _plot_global_metrics(metrics_list, metric1, metric2, global_output_plot)
 
-    if return_all_summary_level:
-        results = (results, individual_summary_level)
     return results
 
 
@@ -318,6 +380,30 @@ class CorrelateSubcommand(RootSubcommand):
             required=True
         )
         self.parser.add_argument(
+            '--confidence-interval-method',
+            choices=['none', 'bootstrap-system', 'bootstrap-input', 'bootstrap-both', 'fisher'],
+            default='bootstrap-both',
+            help='The method to use to calculate the confidence intervals on the correlation coefficients'
+        )
+        self.parser.add_argument(
+            '--confidence',
+            type=float,
+            default=95,
+            help='The confidence level of the confidence intervals'
+        )
+        self.parser.add_argument(
+            '--num-tails',
+            type=int,
+            choices=[1, 2],
+            default=2,
+            help='The number of tails to use in the confidence interval calculation'
+        )
+        self.parser.add_argument(
+            '--confidence-interval-kwargs',
+            default='{}',
+            help='A serialized JSON string that will be parsed and passed as kwargs to the confidence interval calculation'
+        )
+        self.parser.add_argument(
             '--output-file',
             type=str,
             help='The json output file which will contain the final correlations'
@@ -331,11 +417,6 @@ class CorrelateSubcommand(RootSubcommand):
             '--silent',
             action='store_true',
             help='Controls whether the log should be written to stdout'
-        )
-        self.parser.add_argument(
-            '--summary-level-correlations-output',
-            type=str,
-            help='The file where all of the summary-level correlations should be written'
         )
         self.parser.add_argument(
             '--skip-summary-level',
@@ -368,18 +449,19 @@ class CorrelateSubcommand(RootSubcommand):
         prepare_global_logging(file_path=args.log_file, silent=args.silent)
 
         metric1, metric2 = args.metrics
-        return_all_summary_level = args.summary_level_correlations_output is not None
+        two_tailed = args.num_tails == 2
+        alpha = 1.0 - args.confidence / 100
+        ci_kwargs = json.loads(args.confidence_interval_kwargs)
         results = compute_correlation(args.metrics_jsonl_files, metric1, metric2, args.summarizer_type,
-                                      return_all_summary_level=return_all_summary_level,
                                       skip_summary_level=args.skip_summary_level,
                                       skip_system_level=args.skip_system_level,
                                       skip_global=args.skip_global,
                                       system_level_output_plot=args.system_level_output_plot,
-                                      global_output_plot=args.global_output_plot)
-
-        # Strip off the original results from the individual summary correlations
-        if return_all_summary_level:
-            results, all_summary_level = results
+                                      global_output_plot=args.global_output_plot,
+                                      ci_method=args.confidence_interval_method,
+                                      alpha=alpha,
+                                      two_tailed=two_tailed,
+                                      ci_kwargs=ci_kwargs)
 
         if args.output_file:
             dirname = os.path.dirname(args.output_file)
@@ -390,9 +472,3 @@ class CorrelateSubcommand(RootSubcommand):
 
         if not args.silent:
             logger.info(json.dumps(results, indent=2))
-
-        # Save the individual summary-level correlations if the output file is provided. `all_summary_level`
-        # should only be defined if `return_all_summary_level` is true
-        if return_all_summary_level:
-            with open(args.summary_level_correlations_output, 'w') as out:
-                out.write(json.dumps(all_summary_level, indent=2))
