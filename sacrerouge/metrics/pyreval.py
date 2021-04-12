@@ -91,6 +91,13 @@ class PyrEval(ReferenceBasedMetric):
         if os.path.exists(results_file):
             os.remove(results_file)
 
+    def _assert_has_multiple_references(self, references_list: List[List[ReferenceType]]) -> None:
+        # PyrEval cannot handle summaries with single references. See https://github.com/serenayj/PyrEval/issues/11
+        for references in references_list:
+            if len(references) == 1:
+                raise Exception(f'PyrEval cannot be run with one reference summary. '
+                                f'See https://github.com/serenayj/PyrEval/issues/11 for more details')
+
     def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
         flat_list = []
         for summaries in summaries_list:
@@ -291,6 +298,8 @@ class PyrEval(ReferenceBasedMetric):
     def score_multi_all(self,
                         summaries_list: List[List[SummaryType]],
                         references_list: List[List[ReferenceType]]) -> List[List[MetricsDict]]:
+        self._assert_has_multiple_references(references_list)
+
         # The original code for PyrEval processes exactly 1 pyramid at a time. Therefore, the whole pipeline needs
         # to be run once per item in `references_list`. Each execution of the pipeline will load the Stanford CoreNLP
         # models and run them over the text. Loading the models takes a lot of time, and the preprocessing of
