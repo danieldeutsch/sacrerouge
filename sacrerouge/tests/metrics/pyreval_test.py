@@ -31,6 +31,11 @@ class TestPyrEval(ReferenceBasedMetricTestCase):
         metric = PyrEval(environment_name=os.environ['PYREVAL_ENV'])
         self.assert_order_invariant(metric)
 
+    def test_single_reference(self):
+        metric = PyrEval(environment_name=os.environ['PYREVAL_ENV'])
+        with self.assertRaises(Exception):
+            metric.score('The summary', ['The single reference summary'])
+
     def test_command_exists(self):
         assert sacrerouge_command_exists(['pyreval'])
 

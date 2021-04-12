@@ -6,6 +6,9 @@ Currently, the score from the original code [depends on the order of the referen
 To mitigate this, we sort all of the reference summaries alphabetically before passing them to PyrEval, so the results should be deterministic.
 However, because the PyrEval uses `glob` to load files and whether or not they are sorted by default is system-specific, we have seen differences in scores across platforms.
 
+PyrEval cannot be run if you only have a single reference summary.
+See [here](https://github.com/serenayj/PyrEval/issues/11) for more details.
+
 Since the intermediate processing files in PyrEval are saved in the original code directory, only one PyrEval process can be running on a machine at a time.
 
 The name for this metric is `PyrEval`.
