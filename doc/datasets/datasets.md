@@ -6,6 +6,7 @@ SacreROUGE provides dataset readers for the following datasets:
 - [Chaganty 2018](chaganty2018.md)
 - [Fabbri 2020](fabbri2020.md)
 - [Multi-News](multinews.md)
+- [New York Times](nytimes.md)
 - [Vasilyev 2020](vasilyev2020.md)
 - [WCEP](wcep.md)
 
