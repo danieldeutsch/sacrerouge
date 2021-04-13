@@ -1,0 +1,1 @@
+from sacrerouge.datasets.nytimes.subcommand import NYTimesSubcommand
