@@ -10,7 +10,6 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -27,7 +26,7 @@ class AutoSummENG(ReferenceBasedMetric):
                  max_score: float = 1.0,
                  autosummeng_root: str = f'{DATA_ROOT}/metrics/AutoSummENG',
                  verbose: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.min_n = min_n
         self.max_n = max_n
         self.d_window = d_window

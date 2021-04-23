@@ -12,7 +12,6 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -31,7 +30,7 @@ except ImportError:
     @Metric.register('qa-eval')
     class QAEval(ReferenceBasedMetric):
         def __init__(self) -> None:
-            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+            super().__init__()
 
         def score_multi_all(self,
                             summaries_list: List[List[SummaryType]],
@@ -59,7 +58,7 @@ else:
                      lerc_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz',
                      lerc_pretrained_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz',
                      lerc_batch_size: int = 8) -> None:
-            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+            super().__init__()
             self.answer_selector = AnswerSelector(answer_selection_strategy)
             self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device, batch_size=generation_batch_size)
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)

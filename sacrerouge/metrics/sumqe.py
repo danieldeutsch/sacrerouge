@@ -23,7 +23,7 @@ class SumQE(ReferenceFreeMetric):
                  sum_qe_root: str = f'{DATA_ROOT}/metrics/SumQE',
                  python_binary: str = 'python',
                  verbose: bool = False):
-        super().__init__(['summary'], [])
+        super().__init__()
         self.model_file = os.path.abspath(model_file)
         self.sum_qe_root = sum_qe_root
         self.python_binary = python_binary

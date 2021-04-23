@@ -2,7 +2,6 @@ from overrides import overrides
 from typing import List
 
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -10,7 +9,7 @@ from sacrerouge.metrics import Metric, ReferenceBasedMetric
 @Metric.register('testing')
 class TestingMetric(ReferenceBasedMetric):
     def __init__(self) -> None:
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
 
     @overrides
     def score_multi_all(self,

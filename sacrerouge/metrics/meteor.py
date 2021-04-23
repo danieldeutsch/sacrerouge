@@ -9,7 +9,6 @@ from typing import List, Dict, Tuple
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 @Metric.register('meteor')
 class Meteor(ReferenceBasedMetric):
     def __init__(self, meteor_root: str = f'{DATA_ROOT}/metrics/METEOR'):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.meteor_root = meteor_root
         if not os.path.exists(meteor_root):
             raise Exception(f'Path "{meteor_root}" does not exist. Have you setup METEOR?')

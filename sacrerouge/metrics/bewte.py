@@ -11,7 +11,6 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import command_exists, download_file_from_google_drive
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -23,7 +22,7 @@ class BEwTE(ReferenceBasedMetric):
     def __init__(self,
                  bewte_root: str = f'{DATA_ROOT}/metrics/ROUGE-BEwTE',
                  verbose: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.bewte_root = bewte_root
         if not os.path.exists(bewte_root):
             raise Exception('BEwTE directory does not exist. Please run the setup code')

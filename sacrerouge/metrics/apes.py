@@ -11,7 +11,6 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import SummaryType
 from sacrerouge.io import JsonlReader
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
@@ -25,7 +24,7 @@ class APES(ReferenceBasedMetric):
                  environment_name: str = 'apes',
                  apes_root: str = f'{DATA_ROOT}/metrics/apes',
                  verbose: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.environment_name = environment_name
         if 'CONDA_INIT' not in os.environ:
             raise Exception('Environment variable "CONDA_INIT" must be set to the path to "conda.sh" since APES uses conda '

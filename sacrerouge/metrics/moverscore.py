@@ -9,7 +9,6 @@ from typing import List
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -23,7 +22,7 @@ try:
     @Metric.register('moverscore')
     class MoverScore(ReferenceBasedMetric):
         def __init__(self, moverscore_root: str = f'{DATA_ROOT}/metrics/MoverScore'):
-            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+            super().__init__()
             if not os.path.exists(moverscore_root):
                 raise Exception(f'Path "{moverscore_root}" does not exist. Have you setup MoverScore?')
             self.stopwords = set(open(f'{moverscore_root}/stopwords.txt', 'r').read().strip().split())

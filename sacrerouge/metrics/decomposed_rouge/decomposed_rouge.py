@@ -12,7 +12,6 @@ from typing import Dict, List, Set, Tuple
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 from sacrerouge.metrics.decomposed_rouge.categorizers import DependencyCategorizer, DependencyVerbRelationsCategorizer, \
@@ -42,7 +41,7 @@ class DecomposedRouge(ReferenceBasedMetric):
                  remove_stopwords: bool = False,
                  use_porter_stemmer: bool = True,
                  pretokenized_text: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.rouge_data_dir = rouge_data_dir
         self.remove_stopwords = remove_stopwords
         self.use_porter_stemmer = use_porter_stemmer

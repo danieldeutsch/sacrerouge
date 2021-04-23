@@ -2,6 +2,7 @@ from typing import Any, List, Optional, Tuple
 
 from sacrerouge.common import Registrable
 from sacrerouge.data import Jackknifer, MetricsDict
+from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import DocumentType, ReferenceType, SummaryType
 
 
@@ -69,6 +70,9 @@ class ReferenceBasedMetric(SummaryBasedMetric):
     This is a dummy class that was created to explicitly define the method arguments. It makes the autocomplete
     in some libraries more helpful by supplying argument names like "references" instead of "*args".
     """
+    def __init__(self):
+        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+
     def score(self, summary: SummaryType, references: List[ReferenceType], **kwargs) -> MetricsDict:
         return super().score(summary, references, **kwargs)
 
@@ -90,6 +94,9 @@ class DocumentBasedMetric(SummaryBasedMetric):
     This is a dummy class that was created to explicitly define the method arguments. It makes the autocomplete
     in some libraries more helpful by supplying argument names like "documents" instead of "*args".
     """
+    def __init__(self):
+        super().__init__(['summary'], ['documents'])
+
     def score(self, summary: SummaryType, documents: List[DocumentType], **kwargs) -> MetricsDict:
         return super().score(summary, documents, **kwargs)
 
@@ -111,6 +118,9 @@ class ReferenceFreeMetric(SummaryBasedMetric):
     This is a dummy class that was created to explicitly define the method arguments. It makes the autocomplete
     in some libraries more helpful by not supplying the "*args" argument.
     """
+    def __init__(self):
+        super().__init__(['summary'], [])
+
     def score(self, summary: SummaryType, **kwargs) -> MetricsDict:
         return super().score(summary, **kwargs)
 
