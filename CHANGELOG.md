@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added the New York Times dataset. See [here](doc/datasets/nytimes.md).
+- Added better tutorials for using the library.
 
 ### Changed
 - Added an exception with an error message if PyrEval is used with a single reference summary.
