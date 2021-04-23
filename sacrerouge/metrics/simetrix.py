@@ -21,7 +21,7 @@ class SIMetrix(DocumentBasedMetric):
                  use_stemmer: bool = True,
                  remove_stopwords: bool = True,
                  simetrix_root: str = f'{DATA_ROOT}/metrics/simetrix'):
-        super().__init__(['summary'], ['documents'])
+        super().__init__()
         self.use_stemmer = use_stemmer
         self.remove_stopwords = remove_stopwords
         if not os.path.exists(simetrix_root):

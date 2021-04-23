@@ -8,7 +8,6 @@ from typing import List
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -23,7 +22,7 @@ class Bleurt(ReferenceBasedMetric):
                  bleurt_root: str = f'{DATA_ROOT}/metrics/bleurt',
                  batch_size: int = 100,
                  verbose: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.environment_name = environment_name
         self.checkpoint = checkpoint.lower()
         self.bleurt_root = bleurt_root

@@ -21,7 +21,7 @@ class SUPERT(DocumentBasedMetric):
                  environment_name: str = None,
                  supert_root: str = f'{DATA_ROOT}/metrics/SUPERT',
                  verbose: bool = False):
-        super().__init__(['summary'], ['documents'])
+        super().__init__()
         self.environment_name = environment_name
         self.supert_root = supert_root
         self.verbose = verbose

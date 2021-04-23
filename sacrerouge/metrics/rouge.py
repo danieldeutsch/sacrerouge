@@ -11,8 +11,7 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.types import ReferenceType, SummaryType
-from sacrerouge.data.jackknifers import ReferencesJackknifer
+from sacrerouge.data.types import ReferenceType
 from sacrerouge.data.types import SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -32,7 +31,7 @@ class Rouge(ReferenceBasedMetric):
                  wlcs_weight: Optional[float] = None,
                  rouge_root: str = f'{DATA_ROOT}/metrics/ROUGE-1.5.5',
                  scoring_function: str = 'average'):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.max_ngram = max_ngram
         self.use_porter_stemmer = use_porter_stemmer
         self.remove_stopwords = remove_stopwords

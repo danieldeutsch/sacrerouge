@@ -9,7 +9,6 @@ from typing import List
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT, TemporaryDirectory
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 from sacrerouge.io import JsonlReader, JsonlWriter
@@ -25,7 +24,7 @@ class S3(ReferenceBasedMetric):
                  embeddings_file: str = f'{DATA_ROOT}/metrics/S3/deps.words.bz2',
                  model_dir: str = f'{DATA_ROOT}/metrics/S3/models/en',
                  verbose: bool = False):
-        super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+        super().__init__()
         self.environment_name = environment_name
         self.s3_root = s3_root
         self.embeddings_file = embeddings_file

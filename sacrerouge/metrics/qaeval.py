@@ -12,7 +12,6 @@ from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
 from sacrerouge.common.util import download_file_from_google_drive
 from sacrerouge.data import MetricsDict
-from sacrerouge.data.jackknifers import ReferencesJackknifer
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
@@ -31,7 +30,7 @@ except ImportError:
     @Metric.register('qa-eval')
     class QAEval(ReferenceBasedMetric):
         def __init__(self) -> None:
-            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+            super().__init__()
 
         def score_multi_all(self,
                             summaries_list: List[List[SummaryType]],

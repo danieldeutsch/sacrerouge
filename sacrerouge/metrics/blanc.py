@@ -16,7 +16,7 @@ except ImportError:
     BLANC_INSTALLED = False
 
     class Blanc(DocumentBasedMetric):
-        def __init(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs):
             pass
 
         def score_multi_all(self, *args, **kwargs):
@@ -37,7 +37,7 @@ else:
                      finetune_batch_size: int = 24,
                      show_progress_bar: bool = False,
                      random_seed: int = 1) -> None:
-            super().__init__(['summary'], ['documents'])
+            super().__init__()
             self.name = blanc_type
 
             # The blanc main class sets the random seed. It is not done in BlancTune/BlancHelp,
