@@ -58,7 +58,7 @@ else:
                      lerc_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz',
                      lerc_pretrained_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz',
                      lerc_batch_size: int = 8) -> None:
-            super().__init__(['summary'], ['references'], jackknifer=ReferencesJackknifer())
+            super().__init__()
             self.answer_selector = AnswerSelector(answer_selection_strategy)
             self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device, batch_size=generation_batch_size)
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)
