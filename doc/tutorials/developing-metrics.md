@@ -112,7 +112,7 @@ In order to evaluate a metric, you first need to score a set of summaries with y
 If you already have these scores, you can skip to the next part.
 
 The summaries should be stored in a `jsonl` file, where each line is a flattened JSON object with the following format:
-```json
+```
 {
     "instance_id": "2",        // the unique ID for the input document(s)
     "summarizer_id": "7",      // the unique ID for the system which produced this summary
@@ -225,4 +225,5 @@ You should run the `stat-sig-test` command against those three metrics, then pas
 
 ## References
 [1] Daniel Deutsch, Rotem Dror, and Dan Roth. [A Statistical Analysis of Summarization Evaluation Metrics using Resampling Methods](https://arxiv.org/abs/2104.00054)
+
 [2] Rotem Dror, Gili Baumer, Marina Bogomolov, Roi Reichart. [Replicability Analysis for Natural Language Processing: Testing Significance with Multiple Datasets](https://www.aclweb.org/anthology/Q17-1033.pdf). TACL, 2017.

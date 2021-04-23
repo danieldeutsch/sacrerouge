@@ -71,7 +71,7 @@ Here is an example for ROUGE:
 
 ## Scoring a System with the CommandLine
 The summaries from a system must be in a file in which each line is a serialized JSON object.
-```json
+```
 {
     "instance_id": "2",        // the unique ID for the input document(s)
     "summarizer_id": "7",      // the unique ID for the system which produced this summary
