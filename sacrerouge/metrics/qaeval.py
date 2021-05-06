@@ -15,7 +15,7 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
-MIN_QAEVAL_VERSION = '0.0.4'
+MIN_QAEVAL_VERSION = '0.0.6'
 QAEVAL_INSTALLED = False
 
 logger = logging.getLogger(__name__)
@@ -57,11 +57,14 @@ else:
                      use_lerc: bool = False,
                      lerc_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz',
                      lerc_pretrained_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz',
-                     lerc_batch_size: int = 8) -> None:
+                     lerc_batch_size: int = 8,
+                     silent: bool = True) -> None:
             super().__init__()
             self.answer_selector = AnswerSelector(answer_selection_strategy)
-            self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device, batch_size=generation_batch_size)
-            self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device, batch_size=answering_batch_size)
+            self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device,
+                                                              batch_size=generation_batch_size, silent=silent)
+            self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device,
+                                                            batch_size=answering_batch_size, silent=silent)
 
             scorers = [ExactMatchF1()]
             self.use_lerc = use_lerc
