@@ -23,7 +23,7 @@ setuptools.setup(
         'lxml',
         'nltk',
         'numpy',
-        'overrides',
+        'overrides==3.1.0',
         'pytest',
         'requests',
         'scipy>=1.5.2',
