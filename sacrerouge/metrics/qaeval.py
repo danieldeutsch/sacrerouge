@@ -58,13 +58,13 @@ else:
                      lerc_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz',
                      lerc_pretrained_model_path: str = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz',
                      lerc_batch_size: int = 8,
-                     silent: bool = True) -> None:
+                     verbose: bool = False) -> None:
             super().__init__()
             self.answer_selector = AnswerSelector(answer_selection_strategy)
             self.question_generator = QuestionGenerationModel(generation_model_path, cuda_device=cuda_device,
-                                                              batch_size=generation_batch_size, silent=silent)
+                                                              batch_size=generation_batch_size, silent=not verbose)
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device,
-                                                            batch_size=answering_batch_size, silent=silent)
+                                                            batch_size=answering_batch_size, silent=not verbose)
 
             scorers = [ExactMatchF1()]
             self.use_lerc = use_lerc
