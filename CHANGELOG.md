@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added a `silent` option to QAEval
 
+### Changed
+- Changed QAEval to use the updated `qaeval` interface with version 0.0.8.
+The QA results will now include the answer offsets.
+
 ## [v0.2.1](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.1) - 2021-05-06
 ### Added
 - Added the New York Times dataset. See [here](doc/datasets/nytimes.md).

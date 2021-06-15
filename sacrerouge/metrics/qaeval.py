@@ -15,7 +15,7 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
-MIN_QAEVAL_VERSION = '0.0.6'
+MIN_QAEVAL_VERSION = '0.0.8'
 QAEVAL_INSTALLED = False
 
 logger = logging.getLogger(__name__)
