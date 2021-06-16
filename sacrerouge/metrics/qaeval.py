@@ -6,6 +6,7 @@ import shutil
 import zipfile
 from overrides import overrides
 from packaging import version
+from tqdm import tqdm
 from typing import Any, Dict, List, Tuple
 
 from sacrerouge.commands import MetricSetupSubcommand
@@ -65,6 +66,7 @@ else:
                                                               batch_size=generation_batch_size, silent=not verbose)
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device,
                                                             batch_size=answering_batch_size, silent=not verbose)
+            self.verbose = verbose
 
             scorers = [IsAnsweredScorer(), ExactMatchScorer(), F1Scorer()]
             if use_lerc:
@@ -154,9 +156,9 @@ else:
                     end = answer.end - answer.sent_start
                     generation_inputs.append((sentence, start, end))
 
-            logging.info(f'Generating questions for {len(generation_inputs)} answers')
+            logger.info(f'Generating questions for {len(generation_inputs)} answers')
             question_list = self.question_generator.generate_all(generation_inputs)
-            logging.info('Finished generating questions')
+            logger.info('Finished generating questions')
 
             # Remap the questions to align with the answers
             index = 0
@@ -245,10 +247,16 @@ else:
                                summaries: List[str],
                                qa_pairs_lists: List[List[List[Dict[str, Any]]]],
                                predictions_lists: List[List[List[Dict[str, Any]]]]) -> Tuple[List[MetricsDict], List[List[List[Dict[str, float]]]]]:
+            logger.info('Scoring predictions')
             metrics_list = []
             scores_list = []
 
-            for summary, qa_pairs_list, predictions_list in zip(summaries, qa_pairs_lists, predictions_lists):
+            generator = tqdm(
+                zip(summaries, qa_pairs_lists, predictions_lists),
+                total=len(summaries),
+                disable=not self.verbose
+            )
+            for summary, qa_pairs_list, predictions_list in generator:
                 # This is for 1 (summary, references) pair
                 input_questions_list = []
                 input_answers_list = []
@@ -269,11 +277,19 @@ else:
                         input_probabilities_list[-1].append(prediction['probability'])
                         input_null_probabilities_list[-1].append(prediction['null_probability'])
 
-                metrics, scores = self.scorer.score_multi_ref(summary, input_questions_list, input_answers_list, input_predictions_list, input_probabilities_list, input_null_probabilities_list)
+                metrics, scores = self.scorer.score_multi_ref(
+                    summary,
+                    input_questions_list,
+                    input_answers_list,
+                    input_predictions_list,
+                    input_probabilities_list,
+                    input_null_probabilities_list
+                )
                 metrics = MetricsDict({'qa-eval': metrics})
                 metrics_list.append(metrics)
                 scores_list.append(scores)
 
+            logger.info('Finished scoring predictions')
             return metrics_list, scores_list
 
         def _combine_outputs(self,
@@ -305,7 +321,7 @@ else:
             index = 0
             for is_empty in is_empty_list:
                 if is_empty:
-                    empty_metrics = self.scorer.default_scores()
+                    empty_metrics = MetricsDict({'qa-eval': self.scorer.default_scores()})
                     if include_qa_list:
                         full_metrics_list.append((empty_metrics, []))
                     else:
