@@ -14,9 +14,9 @@ FILE_IDS = {
         'out': '17rkbNRMZYQuBFnExsiciBeWbHVJsP0Yy'
     },
     'bart_out': {
-        'src': '134EN0BEhKHp46dKGeTUpczB_NnLKFV1j',
-        'ref': '1CogutmtJ7IKSgFWVjhTJNU0y3fZNj7Bi',
-        'out': '1S5292pDBZnBh_tyNW4aCe5o9yhq_bTlm'
+        'src': '1B4fo64Jc_rdrpTIuK_LqWdXpHv8T546l',
+        'ref': '11DrHN4mI5w3eXdSh_scvrHVdO61d5E0O',
+        'out': '1LiIVX-cqk4_Bf7Sw9gFw6SBZgyrF8foX'
     },
     'bottom_up_out': {
         'src': '1E14VYv3XzXp5d7ISefEFbR2v65RnW5TJ',
@@ -131,12 +131,12 @@ FILE_IDS = {
 }
 
 ABSTRACTIVE = {
-    'bart_out', 'bottom_up_out', 'fast_abs_rl_out_rerank', 'presumm_out_abs', 'presumm_out_ext_abs',
+    'bottom_up_out', 'fast_abs_rl_out_rerank', 'presumm_out_abs', 'presumm_out_ext_abs',
     'presumm_out_trans_abs', 'ptr_generator_out_pointer_gen_cov', 'semsim_out', 't5_out_11B', 't5_out_base',
     't5_out_large', 'two_stage_rl_out', 'unilm_out_v1', 'unilm_out_v2'
 }
 EXTRACTIVE = {
-    'banditsumm_out', 'heter_graph_out', 'matchsumm_out', 'neusumm_out', 'pnbert_out_bert_lstm_pn',
+    'banditsumm_out', 'bart_out', 'heter_graph_out', 'matchsumm_out', 'neusumm_out', 'pnbert_out_bert_lstm_pn',
     'pnbert_out_bert_lstm_pn_rl', 'pnbert_out_bert_tf_pn', 'pnbert_out_bert_tf_sl', 'pnbert_out_lstm_pn_rl', 'refresh_out',
 }
 
@@ -219,8 +219,9 @@ def convert_to_sacrerouge_instances_and_metrics(annotated_data: Dict, filtered_d
 
         for summarizer_id, summarizer_dict in instance_dict['system_summaries'].items():
             summarizer_id = summarizer_id[:-4]  # strip .txt
-            if split == 'ext' and summarizer_id == 'bart_out':
-                # This should not be included in the extractive models
+            if split == 'abs' and summarizer_id == 'bart_out':
+                # This should not be included in the abstractive models. See the Readme about
+                # this dataset
                 continue
 
             document_text = filtered_data[summarizer_id][instance_id]['src']
