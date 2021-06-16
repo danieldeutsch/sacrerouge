@@ -1,8 +1,11 @@
 # Bhandari 2020
 This dataset contains the Lightweight Pyramid annotations for the CNN/DailyMail dataset collected in [1].
 It contains judgments for 100 summaries across 25 systems.
-However, the BART system in the [official repository](https://github.com/neulab/REALSumm) is included in both the abstractive and extractive systems (identical outputs, different judgments).
-Our setup script only includes it in the abstractive models, making the total 24 systems instead of 25.
+However, there is an error with the BART system in the [official repository](https://github.com/neulab/REALSumm).
+BART is included in both the extractive and abstractive system.
+The files for both of them have different summaries.
+The key "bart_out" is included in both of the corresponding extractive and abstractive judgment files, however, both have the extractive summaries judged, but they have different scores.
+Our setup script includes the "bart_out" summaries in the extractive models and their corresponding scores only, making the total number of systems 24 instead of 25. 
 See [this issue](https://github.com/neulab/REALSumm/issues/3).
 
 ```bash
