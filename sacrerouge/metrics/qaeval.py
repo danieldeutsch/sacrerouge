@@ -15,7 +15,7 @@ from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
-MIN_QAEVAL_VERSION = '0.0.6'
+MIN_QAEVAL_VERSION = '0.0.8'
 QAEVAL_INSTALLED = False
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ except ImportError:
 else:
     from qaeval import AnswerSelector, QuestionAnsweringModel, QuestionGenerationModel
     from qaeval.answer_selection import NP_CHUNKS_STRATEGY, AnswerOffsets
-    from qaeval.scoring.scorers import ExactMatchF1, LERC, MetaScorer
+    from qaeval.scoring.scorers import ExactMatchScorer, F1Scorer, IsAnsweredScorer, LERCScorer, MetaScorer
 
     QAEVAL_INSTALLED = True
 
@@ -66,10 +66,9 @@ else:
             self.question_answerer = QuestionAnsweringModel(answering_model_dir, cuda_device=cuda_device,
                                                             batch_size=answering_batch_size, silent=not verbose)
 
-            scorers = [ExactMatchF1()]
-            self.use_lerc = use_lerc
-            if self.use_lerc:
-                scorers.append(LERC(lerc_model_path, lerc_pretrained_model_path, cuda_device, lerc_batch_size))
+            scorers = [IsAnsweredScorer(), ExactMatchScorer(), F1Scorer()]
+            if use_lerc:
+                scorers.append(LERCScorer(lerc_model_path, lerc_pretrained_model_path, cuda_device, lerc_batch_size))
             self.scorer = MetaScorer(scorers)
 
         def _flatten_summaries(self, summaries_list: List[List[SummaryType]]) -> List[List[str]]:
@@ -220,7 +219,7 @@ else:
                         mapping[(i, j, k)] = context_to_input_index[key]
 
             logger.info(f'Answering {len(qa_inputs)} distinct (question, context) pairs')
-            predictions = self.question_answerer.answer_all(qa_inputs)
+            predictions = self.question_answerer.answer_all(qa_inputs, return_offsets=True)
             logger.info('Finished answering questions')
 
             # Remap from the distinct answers back to the original QA lists
@@ -231,12 +230,14 @@ else:
                     predictions_lists[-1].append([])
                     for k, qa in enumerate(qa_pairs):
                         index = mapping[(i, j, k)]
-                        prediction, probability, null_probability = predictions[index]
+                        prediction, probability, null_probability, offsets = predictions[index]
                         predictions_lists[-1][-1].append({
                             'prediction_id': self._get_prediction_id(index),
                             'prediction': prediction,
                             'probability': probability,
-                            'null_probability': null_probability
+                            'null_probability': null_probability,
+                            'start': offsets[0],
+                            'end': offsets[1],
                         })
             return predictions_lists
 
@@ -291,10 +292,8 @@ else:
                     combined[-1][1].append([])
                     for qa, prediction, score in zip(qa_pairs, predictions, scores):
                         prediction = dict(**prediction)
-                        prediction['em'] = score['em']
-                        prediction['f1'] = score['f1']
-                        if self.use_lerc:
-                            prediction['lerc'] = score['lerc']
+                        for key in self.scorer.keys():
+                            prediction[key] = score[key]
                         combined[-1][1][-1].append({'question': qa, 'prediction': prediction})
             return combined
 
@@ -306,10 +305,7 @@ else:
             index = 0
             for is_empty in is_empty_list:
                 if is_empty:
-                    if self.use_lerc:
-                        empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0, 'lerc': 0.0}})
-                    else:
-                        empty_metrics = MetricsDict({'qa-eval': {'em': 0.0, 'f1': 0.0}})
+                    empty_metrics = self.scorer.default_scores()
                     if include_qa_list:
                         full_metrics_list.append((empty_metrics, []))
                     else:
