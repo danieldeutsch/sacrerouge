@@ -4,6 +4,7 @@ from sacrerouge.metrics.autosummeng import AutoSummENG
 from sacrerouge.metrics.bertscore import BertScore
 from sacrerouge.metrics.bewte import BEwTE
 from sacrerouge.metrics.blanc import Blanc
+from sacrerouge.metrics.bleu import SentBleu
 from sacrerouge.metrics.bleurt import Bleurt
 from sacrerouge.metrics.decomposed_rouge import DecomposedRouge
 from sacrerouge.metrics.meteor import Meteor

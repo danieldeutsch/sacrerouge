@@ -30,5 +30,6 @@ setuptools.setup(
         'networkx',
         'spacy==2.3.3',
         'matplotlib',
+        'sacrebleu==1.5.1',
     ]
 )
