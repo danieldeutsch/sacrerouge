@@ -4,94 +4,74 @@ It currently only supports single-document summaries.
 Our implementation is a wrapper around the [original library](https://github.com/PrimerAI/blanc).
 The name for this metric is `blanc`.
 
+The scores replicate those calculated in [this](https://colab.research.google.com/drive/17pJ94L2kCL6QMBMflOm-H0ApBiOUWJ1H?usp=sharing) Colab notebook.
+
 ## Setting Up
 Install the `blanc` pip package:
 ```
 pip install blanc
 ```
-Then we manually installed `transformers==2.5.1` based on the instructions on the Github repo.
-The default transformers version which was installed did not work.
-
-Currently, the unit tests do not produce the scores reported in the official Github repository, but I think it might be related to the random seed which is not set in the constructor of the class but in their main function.
+The environment we used to successfully run the metric is located at `environments/blanc.yml`.
 
 ## Correlations
-Here are the correlations of BLANC to the judgments they provided in their paper (see [here](../datasets/vasilyev2020.md)).
-Since there is no identification of which summary was produced by which system in the dataset, these correlations are the global correlations.
-The correlations appear to reproduce the BLANC-Help with gap = 6 that they reported in their paper, around 0.34.  
+Here are the correlations of BLANC-Help to the annotations collected by Fabbri et al. (2020) on the CNN/DailyMail dataset.
+They are very close to the correlations reported in the BLANC repository.
+They are calculated using the default language model, bert-base-uncased.
 
-CNN-DailyMail:
+Global correlations:
 <table>
 <tr>
-<th></th>
-<th colspan="3">cnn-dailymail</th>
+<th>Summary Aspect</th>
+<th>Spearman (Reported)</th>
+<th>Spearman (Ours)</th>
+<th>Kendall (Reported)</th>
+<th>Kendall (Ours)</th>
 </tr>
 <tr>
-<th></th>
-<th>r</th>
-<th>p</th>
-<th>k</th>
+<td>Coherence</td>
+<td>0.122</td>
+<td>0.122</td>
+<td>0.09</td>
+<td>0.09</td>
 </tr>
 <tr>
-<td>BLANC-Help-Gap-2</td>
-<td>0.36</td>
-<td>0.38</td>
-<td>0.27</td>
+<td>Consistency</td>
+<td>0.19</td>
+<td>0.19</td>
+<td>0.094</td>
+<td>0.15</td>
 </tr>
 <tr>
-<td>BLANC-Help-Gap-6</td>
-<td>0.33</td>
-<td>0.34</td>
-<td>0.24</td>
+<td>Fluency</td>
+<td>0.089</td>
+<td>0.089</td>
+<td>0.051</td>
+<td>0.069</td>
 </tr>
 <tr>
-<td>BLANC-Tune-Gap-2</td>
-<td>0.36</td>
-<td>0.38</td>
-<td>0.27</td>
-</tr>
-<tr>
-<td>BLANC-Tune-Gap-6</td>
-<td>0.33</td>
-<td>0.34</td>
-<td>0.24</td>
+<td>Relevance</td>
+<td>0.216</td>
+<td>0.216</td>
+<td>0.156</td>
+<td>0.155</td>
 </tr>
 </table>
 
-DailyNews:
+Summary-Level:
 <table>
 <tr>
-<th></th>
-<th colspan="3">dailynews</th>
+<th>Summary Aspect</th>
+<th>Spearman (Reported)</th>
+<th>Spearman (Ours)</th>
+<th>Kendall (Reported)</th>
+<th>Kendall (Ours)</th>
 </tr>
 <tr>
-<th></th>
-<th>r</th>
-<th>p</th>
-<th>k</th>
-</tr>
-<tr>
-<td>BLANC-Help-Gap-2</td>
-<td>0.38</td>
-<td>0.35</td>
-<td>0.25</td>
-</tr>
-<tr>
-<td>BLANC-Help-Gap-6</td>
-<td>0.35</td>
-<td>0.32</td>
-<td>0.23</td>
-</tr>
-<tr>
-<td>BLANC-Tune-Gap-2</td>
-<td>0.38</td>
-<td>0.35</td>
-<td>0.25</td>
-</tr>
-<tr>
-<td>BLANC-Tune-Gap-6</td>
-<td>0.35</td>
-<td>0.32</td>
-<td>0.23</td>
+<td>Consistency</td>
+<td>0.738</td>
+<td>0.738</td>
+<td>0.567</td>
+<td>0.567</td>
 </tr>
 </table>
 
