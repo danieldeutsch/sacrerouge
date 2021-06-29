@@ -1,6 +1,4 @@
 import argparse
-import numpy as np
-import random
 from overrides import overrides
 from typing import List, Union
 
@@ -31,29 +29,15 @@ else:
         def __init__(self,
                      blanc_type: str = 'blanc_help',
                      device: str = 'cuda',
-                     gap: int = 2,
-                     inference_batch_size: int = 24,
-                     finetune_mask_evenly: bool = False,
-                     finetune_batch_size: int = 24,
-                     show_progress_bar: bool = False,
-                     random_seed: int = 1) -> None:
+                     random_seed: int = 1,
+                     **kwargs) -> None:
             super().__init__()
             self.name = blanc_type
 
-            # The blanc main class sets the random seed. It is not done in BlancTune/BlancHelp,
-            # so we also do it here. 1 is their default value
-            random.seed(random_seed)
-            np.random.seed(random_seed)
-            torch.manual_seed(random_seed)
-
             if blanc_type == 'blanc_tune':
-                self.blanc = BlancTune(device=device, gap=gap, inference_batch_size=inference_batch_size,
-                                       finetune_mask_evenly=finetune_mask_evenly,
-                                       finetune_batch_size=finetune_batch_size,
-                                       show_progress_bar=show_progress_bar)
+                self.blanc = BlancTune(device=device, random_seed=random_seed, **kwargs)
             elif blanc_type == 'blanc_help':
-                self.blanc = BlancHelp(device=device, gap=gap, inference_batch_size=inference_batch_size,
-                                       show_progress_bar=show_progress_bar)
+                self.blanc = BlancHelp(device=device, **kwargs)
             else:
                 raise Exception(f'Unknown BLANC type: {blanc_type}')
 
