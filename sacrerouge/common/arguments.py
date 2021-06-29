@@ -26,6 +26,8 @@ def add_metric_arguments(parser: argparse.ArgumentParser, metric_type: Type):
         name = signature.parameters[param_name].name
         if name == 'self':
             continue  # Ignore self in constructor
+        if name in ['args', 'kwargs']:
+            continue  # args and kwargs are not supported
         default_value = signature.parameters[param_name].default
         annotation = signature.parameters[param_name].annotation
 
@@ -57,6 +59,8 @@ def get_metric_from_arguments(metric_type: Type, args: argparse.Namespace) -> Me
         name = signature.parameters[param_name].name
         if name == 'self':
             continue  # Ignore self in constructor
+        if name in ['args', 'kwargs']:
+            continue  # args and kwargs are not supported
 
         annotation = signature.parameters[param_name].annotation
 
