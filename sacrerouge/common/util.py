@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from google_drive_downloader import GoogleDriveDownloader
 from pathlib import Path
 from shutil import which
-from typing import Generator, T, Union
+from typing import Generator, List, T, Union
 
 PathType = Union[os.PathLike, str]
 ContextManagerFunctionReturnType = Generator[T, None, None]
@@ -102,3 +102,9 @@ def import_module_and_submodules(package_name: str) -> None:
                 continue
             subpackage = f"{package_name}.{name}"
             import_module_and_submodules(subpackage)
+
+
+def flatten(text: Union[str, List[str]]) -> str:
+    if isinstance(text, list):
+        return ' '.join(text)
+    return text

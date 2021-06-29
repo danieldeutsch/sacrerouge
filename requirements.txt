@@ -9,4 +9,5 @@ requests
 scipy>=1.5.2
 networkx
 spacy==2.3.3
+sacrebleu==1.5.1
 matplotlib
