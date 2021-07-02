@@ -9,6 +9,15 @@ from sacrerouge.datasets.fabbri2020.pair_data import run_pair_data
 from sacrerouge.io import JsonlReader, JsonlWriter
 
 
+def download_tars(output_dir: str, force: bool) -> Tuple[str, str]:
+    # Downloads the "story" tarfiles from https://cs.nyu.edu/~kcho/DMQA/
+    cnn_tar = f'{output_dir}/cnn_stories.tgz'
+    dailymail_tar = f'{output_dir}/dailymail_stories.tgz'
+    download_file_from_google_drive('0BwmD_VLjROrfTHk4NFg2SndKcjQ', cnn_tar, force=force)
+    download_file_from_google_drive('0BwmD_VLjROrfM1BxdkxVaTY2bWs', dailymail_tar, force=force)
+    return cnn_tar, dailymail_tar
+
+
 def download_human_judgments(output_dir: str, force: bool) -> str:
     url = 'https://storage.googleapis.com/sfr-summarization-repo-research/model_annotations.aligned.jsonl'
     file_path = f'{output_dir}/model_annotations.aligned.jsonl'
@@ -125,7 +134,9 @@ def save_data(data: List[Any], file_path: str) -> None:
             out.write(item)
 
 
-def setup(cnn_tar: str, dailymail_tar: str, output_dir: str, force: bool) -> None:
+def setup(output_dir: str, force: bool) -> None:
+    cnn_tar, dailymail_tar = download_tars(f'{output_dir}/raw', force)
+
     # Download the expert and turker annotations
     download_human_judgments(f'{output_dir}/raw', force)
 

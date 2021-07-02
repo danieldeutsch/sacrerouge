@@ -4,14 +4,14 @@ The setup command will save the summaries and references for all of the systems 
 See this [Github repository](https://github.com/Yale-LILY/SummEval) for more details.
 
 ```bash
-sacrerouge setup-dataset fabbri2020 <cnn-tar-path> <dailymail-tar-path> <output-dir>
-```
-The `<cnn-tar-path>` and `<dailymail-tar-path>` are paths to the downloaded "story" tarfiles from [here](https://cs.nyu.edu/~kcho/DMQA/). 
+sacrerouge setup-dataset fabbri2020 <output-dir>
+``` 
 
 The output files are the following:
 - `summaries.jsonl`: The model output summaries with their input documents and the ground-truth references
 - `summaries-with-crowd.jsonl`: The model output summaries with their input documents and the ground-truth and ten crowdsourced references
 - `metrics.jsonl`: The expert and Turker annotations that correspond to `summaries.jsonl` and `summaries-with-crowd.jsonl`
+- `all-summaries.jsonl`: 
 
 Notes:
 - The raw data does not identify which reference summary is the original ground-truth reference, but after checking a handful of instances, it appears as if it is always the first reference in the list of references.
