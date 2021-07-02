@@ -11,7 +11,6 @@ The output files are the following:
 - `summaries.jsonl`: The model output summaries with their input documents and the ground-truth references
 - `summaries-with-crowd.jsonl`: The model output summaries with their input documents and the ground-truth and ten crowdsourced references
 - `metrics.jsonl`: The expert and Turker annotations that correspond to `summaries.jsonl` and `summaries-with-crowd.jsonl`
-- `all-summaries.jsonl`: 
 
 Notes:
 - The raw data does not identify which reference summary is the original ground-truth reference, but after checking a handful of instances, it appears as if it is always the first reference in the list of references.
