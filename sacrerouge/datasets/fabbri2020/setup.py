@@ -1,11 +1,12 @@
 import os
 import shutil
 import tarfile
+from tqdm import tqdm
 from typing import Any, Dict, List, Tuple
 
 from sacrerouge.common.util import download_file_from_google_drive, download_url_to_file
 from sacrerouge.data import Metrics, MetricsDict
-from sacrerouge.datasets.fabbri2020.pair_data import run_pair_data
+from sacrerouge.datasets.fabbri2020.pair_data import run_pair_data, parse_story_file
 from sacrerouge.io import JsonlReader, JsonlWriter
 
 
@@ -58,8 +59,8 @@ def load_judgments(file_path: str) -> Tuple[List[Dict[str, Any]], List[Dict[str,
             turker_annotations = instance['turker_annotations']
             document = instance['text']
 
-            # It appears that the first reference is always the ground-truth, the others are crowdsourced, although
-            # this is not 100% confirmed. It is only based on me looking through a handful of examples.
+            # The first reference is always the ground-truth
+            # https://github.com/Yale-LILY/SummEval/issues/8
             assert len(references) == 11
             references[0] = {
                 'summarizer_id': 'ground-truth',
@@ -128,6 +129,61 @@ def setup_documents(cnn_tar: str, dailymail_tar: str, output_dir: str, force: bo
                 tar.extractall(f'{output_dir}/raw/cnndm')
 
 
+def load_system_outputs(dirname: str, documents_root: str) -> List:
+    # Some of the output directories have multiple outputs, likely from different
+    # versions of the models. This mapping marks which of those output files was
+    # used in the annotations
+    # https://github.com/Yale-LILY/SummEval/issues/8
+    model_to_filename = {
+        'M0': 'outputs.aligned.jsonl',
+        'M1': 'outputs.aligned.jsonl',
+        'M2': 'outputs.aligned.jsonl',
+        'M5': 'outputs_rouge.aligned.jsonl',
+        'M8': 'outputs_ptrgen+cov.aligned.jsonl',
+        'M9': 'outputs_extabs+rl+rerank.aligned.jsonl',
+        'M10': 'outputs_encdec.aligned.jsonl',
+        'M11': 'outputs_novelty.aligned.jsonl',
+        'M12': 'outputs.aligned.jsonl',
+        'M13': 'outputs.aligned.jsonl',
+        'M14': 'outputs.aligned.jsonl',
+        'M15': 'outputs_coverage.aligned.jsonl',
+        'M17': 'outputs_11B.aligned.jsonl',
+        'M20': 'outputs_zeroshot.aligned.jsonl',
+        'M22': 'outputs_cnndm.aligned.jsonl',
+        'M23': 'outputs_c4_cnn_dailymail.aligned.jsonl',
+    }
+
+    document_cache = {}
+    outputs = []
+    for summarizer_id, filename in sorted(model_to_filename.items()):
+        file_path = f'{dirname}/{summarizer_id}/aligned/{filename}'
+        print(f'Processing {file_path}')
+        instances = JsonlReader(file_path).read()
+        for instance in tqdm(instances):
+            filepath = instance['filepath']
+            if filepath not in document_cache:
+                with open(f'{documents_root}/{filepath}', 'r') as f:
+                    story_content = f.read()
+                    document_cache[filepath] = parse_story_file(story_content)
+            document = document_cache[filepath]
+            try:
+                summary = instance['decoded']
+            except KeyError:
+                print('Missing summary')
+                continue
+            reference = instance['reference']
+            outputs.append({
+                'instance_id': instance['id'],
+                'summarizer_id': summarizer_id,
+                'summarizer_type': 'peer',
+                'filepath': filepath,
+                'document': {'text': document},
+                'summary': {'text': summary},
+                'reference': {'text': reference}
+            })
+    return outputs
+
+
 def save_data(data: List[Any], file_path: str) -> None:
     with JsonlWriter(file_path) as out:
         for item in data:
@@ -157,8 +213,5 @@ def setup(output_dir: str, force: bool) -> None:
     save_data(summaries_with_crowd, f'{output_dir}/summaries-with-crowd.jsonl')
     save_data(metrics, f'{output_dir}/metrics.jsonl')
 
-    # TODO Save all of the documents + summaries that were not judged. I'm not really sure
-    # what to do with them because several of the models have different output files. We need
-    # to come up with some way of distinguishing them. For instance, M5 has
-    # "outputs_rouge.aligned.jsonl" and "outputs_rouge+coh.aligned.jsonl", but the "summaries.jsonl"
-    # file will just mark whichever summary was judged as "M5"
+    system_outputs = load_system_outputs(model_output_dir, f'{output_dir}/raw')
+    save_data(system_outputs, f'{output_dir}/all-summaries.jsonl.gz')
