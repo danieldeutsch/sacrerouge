@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated `Blanc` to use `blanc==0.2.1`.
 
+### Removed
+- Removed `idf` support for BERTScore so we can remove the dependence on our fork of the original repo.
+
 ## [v0.2.2](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.2) - 2021-06-16
 ### Added
 - Added a `verbose` option to QAEval
