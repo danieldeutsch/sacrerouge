@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added `SentBLEU` under the name `sent-bleu`.
+- Added saving all of the summaries from the 16 models in Fabbri et al. (2020).
 
 ### Changed
 - Updated `Blanc` to use `blanc==0.2.1`.
+- Setting up `fabbri2020` now automatically downloads the tar files
 
 ## [v0.2.2](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.2) - 2021-06-16
 ### Added
