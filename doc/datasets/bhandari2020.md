@@ -17,6 +17,11 @@ The output files are the following:
     The references and inputs are specific to the individual system since there may have been differences in tokenization, etc.
     `abs` contains the abstractive systems, `ext` the extractive, and `mix` both.
     - `metrics-{abs, ext, mix}.jsonl`: The metrics for the corresponding summaries in the `summaries-*.jsonl` files.
+    - `all-summaries-{abs, ext, mix}.jsonl.gz`: All of the model outputs with their corresponding input documents and references.
+    The instance IDs do *not* match with those in `summaries-*.jsonl`.
+    Some summaries are missing because the summaries could not be aligned (see the original Github repo for more details).
+    We found 11,314 out of 11,490 summaries had outputs from all 24 models.
+    This file groups all of the model outputs by their line numbers, which appears to be correct based on examining a few examples. 
     
 ## References
 [1] Manik Bhandari, Pranav Narayan Gour, Atabak Ashfaq, Pengfei Liu, and Graham Neubig. Re-evaluating Evaluation in Text Summarization. EMNLP, 2020.

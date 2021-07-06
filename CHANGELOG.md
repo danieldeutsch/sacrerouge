@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `SentBLEU` under the name `sent-bleu`.
 - Added saving all of the summaries from the 16 models in Fabbri et al. (2020).
+- Added saving all of the summaries from the data in Bhandari et al. (2020).
 
 ### Changed
 - Updated `Blanc` to use `blanc==0.2.1`.
