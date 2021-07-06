@@ -78,8 +78,8 @@ def run_pair_data(data_annotations: str = None, model_outputs: str = None, story
     if data_annotations:
         annotation_pairing(data_annotations, story_files)
 
-    if model_outputs and story_files:
-        output_pairing(aligned_data, story_files, model_outputs)
+    # if model_outputs and story_files:
+    #     output_pairing(aligned_data, story_files, model_outputs)
 
 # if __name__ == "__main__":
 #     PARSER = argparse.ArgumentParser()

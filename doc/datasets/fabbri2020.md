@@ -4,25 +4,25 @@ The setup command will save the summaries and references for all of the systems 
 See this [Github repository](https://github.com/Yale-LILY/SummEval) for more details.
 
 ```bash
-sacrerouge setup-dataset fabbri2020 <cnn-tar-path> <dailymail-tar-path> <output-dir>
-```
-The `<cnn-tar-path>` and `<dailymail-tar-path>` are paths to the downloaded "story" tarfiles from [here](https://cs.nyu.edu/~kcho/DMQA/). 
+sacrerouge setup-dataset fabbri2020 <output-dir>
+``` 
 
 The output files are the following:
 - `summaries.jsonl`: The model output summaries with their input documents and the ground-truth references
 - `summaries-with-crowd.jsonl`: The model output summaries with their input documents and the ground-truth and ten crowdsourced references
 - `metrics.jsonl`: The expert and Turker annotations that correspond to `summaries.jsonl` and `summaries-with-crowd.jsonl`
+- `all-summaries.jsonl.gz`: All of the model outputs across the entire CNN/DM test dataset.
+The corresponding reference was maintained for each model output, which may be different than the reference is included in `summaries.jsonl`.
+That is, the outputs are grouped by the `instance_id`, but each `instance_id` may have many different references due to model preprocessing differences.
+The documents are the same per `instance_id`, so the preprocessing will not be consistent across documents and summaries/references.
+Further, the aligned system outputs have duplicate instances.
+We only keep the first occurrence of any instance and ensure that the summary which was judged is selected.
 
 Notes:
 - The raw data does not identify which reference summary is the original ground-truth reference, but after checking a handful of instances, it appears as if it is always the first reference in the list of references.
 That first reference is the one included in `summaries.jsonl`. ([Confirmed](https://github.com/Yale-LILY/SummEval/issues/8))
 - To make the crowd summaries distinct, each is given a `summarizer_id` of `turker-` followed by a number from 1 to 10.
 It is not necessarily the case that the summaries identified by `turker-i` were all written by the same person and should not be treated as such.
-- There are many (input document, summary) pairs that were not judged and not processed by this script.
-We need to figure out exactly what to do with them.
-Several models have multiple output files (M5 has "outputs_rouge.aligned.jsonl" and "outputs_rouge+coh.aligned.jsonl")
-but the "summaries.jsonl" will only have one of those summaries (e.g. in "summaries.jsonl" there is only one summary for "M5").
-We need to have some way to distinguish the different outputs to put all of the aligned document + summary pairs into one file.
 
 ## Correlations
 Here are the correlations of some of the metrics implemented in this library to the responsiveness scores in this dataset.
