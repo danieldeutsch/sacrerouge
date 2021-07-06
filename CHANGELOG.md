@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [v0.2.3](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.3) - 2021-07-06
 ### Added
 - Added `SentBLEU` under the name `sent-bleu`.
 - Added saving all of the summaries from the 16 models in Fabbri et al. (2020).
