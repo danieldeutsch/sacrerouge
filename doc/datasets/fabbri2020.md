@@ -12,9 +12,11 @@ The output files are the following:
 - `summaries-with-crowd.jsonl`: The model output summaries with their input documents and the ground-truth and ten crowdsourced references
 - `metrics.jsonl`: The expert and Turker annotations that correspond to `summaries.jsonl` and `summaries-with-crowd.jsonl`
 - `all-summaries.jsonl.gz`: All of the model outputs across the entire CNN/DM test dataset.
-The corresponding reference was maintained for each model output.
+The corresponding reference was maintained for each model output, which may be different than the reference is included in `summaries.jsonl`.
 That is, the outputs are grouped by the `instance_id`, but each `instance_id` may have many different references due to model preprocessing differences.
 The documents are the same per `instance_id`, so the preprocessing will not be consistent across documents and summaries/references.
+Further, the aligned system outputs have duplicate instances.
+We only keep the first occurrence of any instance and ensure that the summary which was judged is selected.
 
 Notes:
 - The raw data does not identify which reference summary is the original ground-truth reference, but after checking a handful of instances, it appears as if it is always the first reference in the list of references.

@@ -1,7 +1,8 @@
+import json
 import os
 import shutil
 import tarfile
-from tqdm import tqdm
+from collections import Counter
 from typing import Any, Dict, List, Tuple
 
 from sacrerouge.common.util import download_file_from_google_drive, download_url_to_file
@@ -129,7 +130,7 @@ def setup_documents(cnn_tar: str, dailymail_tar: str, output_dir: str, force: bo
                 tar.extractall(f'{output_dir}/raw/cnndm')
 
 
-def load_system_outputs(dirname: str, documents_root: str) -> List:
+def load_system_outputs(dirname: str, judged_summaries: List, documents_root: str) -> List:
     # Some of the output directories have multiple outputs, likely from different
     # versions of the models. This mapping marks which of those output files was
     # used in the annotations
@@ -155,25 +156,68 @@ def load_system_outputs(dirname: str, documents_root: str) -> List:
 
     document_cache = {}
     outputs = []
+
+    # The model outputs can have duplicate IDs if the instances were mapped
+    # to the same inputs. We only keep the first occurrence of any duplicate.
+    # However, dm-test-2c37d44d03ce2e91310339d884d33ee5aabf9abc is duplicated and selected
+    # to be judged. We want to ensure that the summary saved here is the one which
+    # was judged, so we need to keep track of that information.
+    seen = set()
+    seen_and_judged = set()
+    judged = {}
+    for instance in judged_summaries:
+        instance_id = instance['instance_id']
+        summarizer_id = instance['summarizer_id']
+        summary = instance['summary']['text']
+        judged[(instance_id, summarizer_id)] = summary
+
     for summarizer_id, filename in sorted(model_to_filename.items()):
         file_path = f'{dirname}/{summarizer_id}/aligned/{filename}'
         print(f'Processing {file_path}')
         instances = JsonlReader(file_path).read()
-        for instance in tqdm(instances):
+        for instance in instances:
+            instance_id = instance['id']
+
+            # For some reason, there is an example with the filepath as the ID. The rest are not like this
+            if instance_id == 'cnndm/dailymail/stories/cbed2a778a5e17d729c6e5ee5691b88710620dd7.story':
+                instance_id = 'dm-test-cbed2a778a5e17d729c6e5ee5691b88710620dd7'
+
+            # This json is messed up somehow, but you can see the decoded summary is empty
+            if summarizer_id == 'M2' and instance_id == 'dm-test-9f270039c861e75ee2f01e4e2898a9ea04a96b26':
+                summary = ''
+            else:
+                summary = instance['decoded']
+
+            is_judged = (instance_id, summarizer_id) in judged
+            if is_judged:
+                judged_summary = judged[(instance_id, summarizer_id)]
+
+                # This pair has a weird encoding which causes the summaries to not be equal.
+                # It's not a duplicate instance, so we just take it
+                if summarizer_id == 'M23' and instance_id == 'dm-test-2cf8c2d1d2ceb1980249f77e703f9039e63799d0':
+                    summary = judged_summary
+
+                if summary != judged_summary:
+                    # We do not want this one
+                    continue
+
+            if (instance_id, summarizer_id) in seen:
+                # We only want the first one
+                continue
+            seen.add((instance_id, summarizer_id))
+            if is_judged:
+                seen_and_judged.add((instance_id, summarizer_id))
+
             filepath = instance['filepath']
             if filepath not in document_cache:
                 with open(f'{documents_root}/{filepath}', 'r') as f:
                     story_content = f.read()
                     document_cache[filepath] = parse_story_file(story_content)
             document = document_cache[filepath]
-            try:
-                summary = instance['decoded']
-            except KeyError:
-                print('Missing summary')
-                continue
+
             reference = instance['reference']
             outputs.append({
-                'instance_id': instance['id'],
+                'instance_id': instance_id,
                 'summarizer_id': summarizer_id,
                 'summarizer_type': 'peer',
                 'filepath': filepath,
@@ -181,7 +225,88 @@ def load_system_outputs(dirname: str, documents_root: str) -> List:
                 'summary': {'text': summary},
                 'reference': {'text': reference}
             })
+
+    # Ensure that we saved all of the summaries that were judged
+    assert seen_and_judged == set(judged.keys())
+
     return outputs
+
+
+def ensure_no_duplicates(items: List) -> None:
+    seen = set()
+    for item in items:
+        instance_id = item['instance_id']
+        summarizer_id = item['summarizer_id']
+        key = (instance_id, summarizer_id)
+        assert key not in seen
+        seen.add(key)
+
+
+def sanity_check(judged_summaries: List, all_summaries: List, metrics_list: List[Metrics]) -> None:
+    ensure_no_duplicates(judged_summaries)
+    ensure_no_duplicates(all_summaries)
+
+    judged_summaries = {
+        (instance['instance_id'], instance['summarizer_id']): instance
+        for instance in judged_summaries
+    }
+    all_summaries = {
+        (instance['instance_id'], instance['summarizer_id']): instance
+        for instance in all_summaries
+    }
+    metrics_dict = set([(instance.instance_id, instance.summarizer_id) for instance in metrics_list])
+
+    # Ensure no duplicate metrics
+    assert len(metrics_list) == len(metrics_list)
+
+    # Ensure all judged are in all_summaries and metrics_dict
+    assert len(judged_summaries) == len(metrics_dict)
+    for key in judged_summaries.keys():
+        assert key in all_summaries
+        assert key in metrics_dict
+
+        # Make sure the summaries are identical
+        summary = all_summaries[key]['summary']['text']
+        judged_summary = judged_summaries[key]['summary']['text']
+        assert summary == judged_summary
+
+        # Make sure the documents are identical
+        document = all_summaries[key]['document']['text']
+        judged_document = judged_summaries[key]['document']['text']
+        assert document == judged_document
+
+        # We do not check the references because they are different. The references
+        # in all_summaries seem be normalized, whereas the summaries in judged_summaries
+        # are not.
+        # reference = all_summaries[key]['reference']['text']
+        # judged_reference = judged_summaries[key]['references'][0]['text']
+        # assert reference == judged_reference, key
+
+
+def print_stats(summaries: List):
+    summarizer_ids = Counter()
+    instance_ids = Counter()
+
+    for instance in summaries:
+        instance_id = instance['instance_id']
+        summarizer_id = instance['summarizer_id']
+        summarizer_ids[summarizer_id] += 1
+        instance_ids[instance_id] += 1
+
+    print('Num instances per summarizer')
+    print(json.dumps(summarizer_ids, indent=2))
+
+    max_count = max(instance_ids.values())
+    missing_summaries = {}
+    for instance_id, count in instance_ids.items():
+        if count != max_count:
+            missing_summaries[instance_id] = count
+
+    num_with_max = len(instance_ids) - len(missing_summaries)
+    print('Num instances', len(instance_ids))
+    print('Num instances with all systems having summaries', num_with_max)
+    print('Instnaces with missing summaries')
+    print(json.dumps(missing_summaries, indent=2))
 
 
 def save_data(data: List[Any], file_path: str) -> None:
@@ -213,5 +338,8 @@ def setup(output_dir: str, force: bool) -> None:
     save_data(summaries_with_crowd, f'{output_dir}/summaries-with-crowd.jsonl')
     save_data(metrics, f'{output_dir}/metrics.jsonl')
 
-    system_outputs = load_system_outputs(model_output_dir, f'{output_dir}/raw')
+    system_outputs = load_system_outputs(model_output_dir, summaries, f'{output_dir}/raw')
     save_data(system_outputs, f'{output_dir}/all-summaries.jsonl.gz')
+
+    sanity_check(summaries, system_outputs, metrics)
+    print_stats(system_outputs)
