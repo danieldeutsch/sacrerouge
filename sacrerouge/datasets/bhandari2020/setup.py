@@ -1,6 +1,7 @@
+import json
 import pickle
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Dict, List, Tuple
 
 from sacrerouge.common.util import download_url_to_file, download_file_from_google_drive
@@ -164,7 +165,9 @@ def load_all_data(output_dir: str) -> Tuple[Dict, Dict]:
             'ref': list(map(lambda line: line.strip(), open(f'{output_dir}/raw/{summarizer_id}/ref.txt', 'r').read().splitlines())),
             'out': list(map(lambda line: line.strip(), open(f'{output_dir}/raw/{summarizer_id}/out.txt', 'r').read().splitlines()))
         }
-        assert len(data[summarizer_id]['src']) == len(data[summarizer_id]['ref']) == len(data[summarizer_id]['out'])
+        assert len(data[summarizer_id]['src']) == len(data[summarizer_id]['ref']) == len(data[summarizer_id]['out']), \
+            f'{summarizer_id} has unequal lines in its src, ref, and out files, likely because Google Drive ' \
+            f'began denying requests. Delete the bad files and rerun.'
     return abs_data, ext_data
 
 
@@ -180,6 +183,7 @@ def get_annotated_summaries(data: Dict):
 def filter_to_scored_summaries(raw_data: Dict, annotated_data: Dict):
     annotated_summaries = get_annotated_summaries(annotated_data)
     filtered = {}
+    global_indices_to_keep = None
     for summarizer_id in raw_data.keys():
         indices_to_keep = []
         doc_ids = []
@@ -193,6 +197,14 @@ def filter_to_scored_summaries(raw_data: Dict, annotated_data: Dict):
                             f'likely because Google Drive began denying the download request for all of the system outputs. '
                             f'Please delete the directory: <output-dir>/raw/{summarizer_id} and try again.')
 
+        # Ensures that all of the files are parallel with each other. This ensures that each
+        # doc_id corresponds to the same lines in all of the files. We don't rely on this for
+        # the annotated summaries, but we do for saving all of the model outputs by grouping all
+        # of them by line number
+        if global_indices_to_keep is None:
+            global_indices_to_keep = indices_to_keep
+        assert indices_to_keep == global_indices_to_keep
+
         filtered[summarizer_id] = {doc_id: {
             'src': raw_data[summarizer_id]['src'][i],
             'ref': raw_data[summarizer_id]['ref'][i],
@@ -202,12 +214,11 @@ def filter_to_scored_summaries(raw_data: Dict, annotated_data: Dict):
 
 
 def split_into_sentences(text: str) -> List[str]:
-    assert text.startswith('<t>')
+    assert text.startswith('<t>'), text
     sentence_regex = '<t> (.+?) </t>'
     sentences = []
     for match in re.findall(sentence_regex, text):
         sentences.append(match)
-    assert len(sentences) > 0
     return sentences
 
 
@@ -227,13 +238,19 @@ def convert_to_sacrerouge_instances_and_metrics(annotated_data: Dict, filtered_d
             document_text = filtered_data[summarizer_id][instance_id]['src']
             if '<t>' in document_text:
                 document_text = split_into_sentences(document_text)
+                assert len(document_text) > 0
             document = {'text': document_text}
 
-            summary = {'text': split_into_sentences(filtered_data[summarizer_id][instance_id]['out'])}
+            summary_sentences = split_into_sentences(filtered_data[summarizer_id][instance_id]['out'])
+            assert len(summary_sentences) > 0
+            summary = {'text': summary_sentences}
+
+            reference_sentences = split_into_sentences(filtered_data[summarizer_id][instance_id]['ref'])
+            assert len(reference_sentences) > 0
             reference = {
                 'summarizer_id': 'ground-truth',
                 'summarizer_type': 'reference',
-                'text': split_into_sentences(filtered_data[summarizer_id][instance_id]['ref'])
+                'text': reference_sentences
             }
 
             metrics_dict = MetricsDict({
@@ -281,6 +298,72 @@ def save_to_jsonl(data: List, output_file: str) -> None:
             out.write(item)
 
 
+def collect_all_outputs(raw_data: Dict) -> List:
+    outputs = []
+    for summarizer_id, data in raw_data.items():
+        src = data['src']
+        ref = data['ref']
+        pred = data['out']
+        for i in range(len(src)):
+            summary = pred[i]
+            document = src[i]
+            reference = ref[i]
+
+            # Some of the data could not be aligned and the summary's content was replaced
+            # with this string. We do not include those
+            if '### NO MATCH FOUND ###' in summary:
+                continue
+            if '### IGNORE ###' in summary:
+                continue
+
+            if '<t>' in document:
+                document = split_into_sentences(document)
+            summary = split_into_sentences(summary)
+            reference = split_into_sentences(reference)
+            if len(summary) == 0:
+                # Some of the summaries are "<t>   </t>"
+                continue
+
+            # The instance ids in the annotated data do not align with the line numbers in
+            # the raw files. We change the instance_id to mark they're from all-summaries to
+            # be clear they are different
+            outputs.append({
+                'instance_id': f'all-summaries-{i}',
+                'summarizer_id': summarizer_id,
+                'summarizer_type': 'peer',
+                'document': {'text': document},
+                'summary': {'text': summary},
+                'references': [{'text': reference}],
+            })
+    return outputs
+
+
+def print_stats(instances: List) -> None:
+    summarizer_ids = Counter()
+    instance_ids = Counter()
+
+    for instance in instances:
+        instance_id = instance['instance_id']
+        summarizer_id = instance['summarizer_id']
+        summarizer_ids[summarizer_id] += 1
+        instance_ids[instance_id] += 1
+
+    print('Num instances per summarizer')
+    print(json.dumps(summarizer_ids, indent=2))
+
+    max_count = max(instance_ids.values())
+    missing_summaries = {}
+    for instance_id, count in instance_ids.items():
+        if count != max_count:
+            missing_summaries[instance_id] = count
+
+    num_with_max = len(instance_ids) - len(missing_summaries)
+    print('Num instances', len(instance_ids))
+    print('Num instances with all systems having summaries', num_with_max)
+    print('Instnaces with missing summaries')
+    print(json.dumps(missing_summaries, indent=2))
+
+
 def setup(output_dir: str, force: bool = False) -> None:
     download_raw_data(output_dir, force)
     abs_raw_data, ext_raw_data = load_all_data(output_dir)
@@ -304,3 +387,13 @@ def setup(output_dir: str, force: bool = False) -> None:
     save_to_jsonl(abs_metrics_list, f'{output_dir}/metrics-abs.jsonl')
     save_to_jsonl(ext_metrics_list, f'{output_dir}/metrics-ext.jsonl')
     save_to_jsonl(abs_metrics_list + ext_metrics_list, f'{output_dir}/metrics-mix.jsonl')
+
+    all_abs = collect_all_outputs(abs_raw_data)
+    all_ext = collect_all_outputs(ext_raw_data)
+    all_mix = collect_all_outputs({**abs_raw_data, **ext_raw_data})
+
+    save_to_jsonl(all_abs, f'{output_dir}/all-summaries-abs.jsonl.gz')
+    save_to_jsonl(all_ext, f'{output_dir}/all-summaries-ext.jsonl.gz')
+    save_to_jsonl(all_mix, f'{output_dir}/all-summaries-mix.jsonl.gz')
+
+    print_stats(all_mix)
