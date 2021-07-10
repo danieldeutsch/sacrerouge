@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Tuple
 from sacrerouge.common.util import download_file_from_google_drive, download_url_to_file
 from sacrerouge.data import Metrics, MetricsDict
 from sacrerouge.datasets.fabbri2020.pair_data import run_pair_data, parse_story_file
+from sacrerouge.datasets.fabbri2020.util import get_art_abs
 from sacrerouge.io import JsonlReader, JsonlWriter
 
 
@@ -130,7 +131,7 @@ def setup_documents(cnn_tar: str, dailymail_tar: str, output_dir: str, force: bo
                 tar.extractall(f'{output_dir}/raw/cnndm')
 
 
-def load_system_outputs(dirname: str, judged_summaries: List, documents_root: str) -> List:
+def load_system_outputs(dirname: str, judged_summaries: List, documents_root: str) -> Tuple[List, List]:
     # Some of the output directories have multiple outputs, likely from different
     # versions of the models. This mapping marks which of those output files was
     # used in the annotations
@@ -154,8 +155,14 @@ def load_system_outputs(dirname: str, judged_summaries: List, documents_root: st
         'M23': 'outputs_c4_cnn_dailymail.aligned.jsonl',
     }
 
+    # The `document_cache` keeps the documents as extracted by `pair_data.py`, but
+    # the `document_ref_cache` keeps the documents and references as extracted by `util.py`.
+    # `outputs_preproc` will have the `pair_data.py` documents and references that came with
+    # the model outputs, whereas `outputs_orig` will have the `util.py` documents and references
     document_cache = {}
-    outputs = []
+    document_ref_cache = {}
+    outputs_preproc = []
+    outputs_orig = []
 
     # The model outputs can have duplicate IDs if the instances were mapped
     # to the same inputs. We only keep the first occurrence of any duplicate.
@@ -210,13 +217,26 @@ def load_system_outputs(dirname: str, judged_summaries: List, documents_root: st
 
             filepath = instance['filepath']
             if filepath not in document_cache:
-                with open(f'{documents_root}/{filepath}', 'r') as f:
+                story_path = f'{documents_root}/{filepath}'
+                document_ref_cache[filepath] = get_art_abs(story_path)
+                with open(story_path, 'r') as f:
                     story_content = f.read()
                     document_cache[filepath] = parse_story_file(story_content)
-            document = document_cache[filepath]
 
+            document = document_cache[filepath]
             reference = instance['reference']
-            outputs.append({
+            outputs_preproc.append({
+                'instance_id': instance_id,
+                'summarizer_id': summarizer_id,
+                'summarizer_type': 'peer',
+                'filepath': filepath,
+                'document': {'text': document},
+                'summary': {'text': summary},
+                'reference': {'text': reference}
+            })
+
+            document, reference = document_ref_cache[filepath]
+            outputs_orig.append({
                 'instance_id': instance_id,
                 'summarizer_id': summarizer_id,
                 'summarizer_type': 'peer',
@@ -229,7 +249,7 @@ def load_system_outputs(dirname: str, judged_summaries: List, documents_root: st
     # Ensure that we saved all of the summaries that were judged
     assert seen_and_judged == set(judged.keys())
 
-    return outputs
+    return outputs_preproc, outputs_orig
 
 
 def ensure_no_duplicates(items: List) -> None:
@@ -242,7 +262,9 @@ def ensure_no_duplicates(items: List) -> None:
         seen.add(key)
 
 
-def sanity_check(judged_summaries: List, all_summaries: List, metrics_list: List[Metrics]) -> None:
+def sanity_check(judged_summaries: List, all_summaries: List, metrics_list: List[Metrics],
+                 check_documents: bool,
+                 check_references: bool) -> None:
     ensure_no_duplicates(judged_summaries)
     ensure_no_duplicates(all_summaries)
 
@@ -271,16 +293,15 @@ def sanity_check(judged_summaries: List, all_summaries: List, metrics_list: List
         assert summary == judged_summary
 
         # Make sure the documents are identical
-        document = all_summaries[key]['document']['text']
-        judged_document = judged_summaries[key]['document']['text']
-        assert document == judged_document
+        if check_documents:
+            document = all_summaries[key]['document']['text']
+            judged_document = judged_summaries[key]['document']['text']
+            assert document == judged_document
 
-        # We do not check the references because they are different. The references
-        # in all_summaries seem be normalized, whereas the summaries in judged_summaries
-        # are not.
-        # reference = all_summaries[key]['reference']['text']
-        # judged_reference = judged_summaries[key]['references'][0]['text']
-        # assert reference == judged_reference, key
+        if check_references:
+            reference = all_summaries[key]['reference']['text']
+            judged_reference = judged_summaries[key]['references'][0]['text']
+            assert reference == judged_reference, (key, reference, judged_reference)
 
 
 def print_stats(summaries: List):
@@ -338,8 +359,14 @@ def setup(output_dir: str, force: bool) -> None:
     save_data(summaries_with_crowd, f'{output_dir}/summaries-with-crowd.jsonl')
     save_data(metrics, f'{output_dir}/metrics.jsonl')
 
-    system_outputs = load_system_outputs(model_output_dir, summaries, f'{output_dir}/raw')
-    save_data(system_outputs, f'{output_dir}/all-summaries.jsonl.gz')
+    system_outputs_preproc, system_outputs_orig = load_system_outputs(model_output_dir, summaries, f'{output_dir}/raw')
+    save_data(system_outputs_preproc, f'{output_dir}/all-summaries-preproc-refs.jsonl.gz')
+    save_data(system_outputs_orig, f'{output_dir}/all-summaries-orig-refs.jsonl.gz')
 
-    sanity_check(summaries, system_outputs, metrics)
-    print_stats(system_outputs)
+    # We do not check the references because they are knwon to be different. The references
+    # provided with the system outputs seem be normalized, whereas the references provided in
+    # the set of judged summaries are not. The `system_outputs_orig` should be closer to the
+    # judged references, but they aren't exactly identical.
+    sanity_check(summaries, system_outputs_preproc, metrics, True, False)
+    sanity_check(summaries, system_outputs_orig, metrics, False, False)
+    print_stats(system_outputs_preproc)
