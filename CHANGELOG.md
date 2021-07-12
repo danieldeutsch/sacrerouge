@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added saving the Fabbri data with the original reference summaries and documents
+- Adding some annotations from MultiLing 2019
 
 ## [v0.2.3](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.3) - 2021-07-06
 ### Added
