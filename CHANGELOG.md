@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added saving the Fabbri data with the original reference summaries and documents
 - Adding some annotations from MultiLing 2019
 
+### Changed
+- Moved the actual QAEval metric implementation into the `qaeval` library.
+The new minimum version is `qaeval==0.1.0`.
+
 ## [v0.2.3](https://github.com/danieldeutsch/sacrerouge/releases/tag/0.2.3) - 2021-07-06
 ### Added
 - Added `SentBLEU` under the name `sent-bleu`.
