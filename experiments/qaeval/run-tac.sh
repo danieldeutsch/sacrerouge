@@ -2,7 +2,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 set -e
 
-for dataset in 'tac2008' 'tac2009' 'tac2010' 'tac2011'; do
+for dataset in 'tac2008'; do
   python -m sacrerouge qa-eval score \
     --input-files datasets/duc-tac/${dataset}/v1.0/task1.A.summaries.jsonl \
     --dataset-reader reference-based \
