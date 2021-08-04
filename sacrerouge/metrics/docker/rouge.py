@@ -15,6 +15,16 @@ class DockerRouge(ReferenceBasedDockerMetric):
         sentence_split: bool = True,
         calculate_su4: bool = True,
     ):
+        """
+        Args:
+            image: The name of the Docker image
+            ngram_order: The maximum order n-gram to calculate ROUGE for
+            porter_stemmer: Indicates whether the Porter Stemmer should be used
+            remove_stopwords: Indicates whether stopwords should be removed
+            sentence_split: Indicates whether summaries of type `str` should be sentence-split
+                before calculating ROUGE, which is necessary for accurately calculating ROUGE-L scores
+            calculate_su4: Indicates whether ROUGE-SU4 should be calculated.
+        """
         metric = ROUGE(
             image=image,
             ngram_order=ngram_order,
