@@ -50,10 +50,6 @@ jobs:
       if: steps.cache-bewte.outputs.cache-hit != 'true'
       run: python -m sacrerouge setup-metric bewte
 
-    # Installs spacy models
-    - name: Install DecomposedRouge
-      run: python -m sacrerouge setup-metric decomposed-rouge
-
     - name: Cache METEOR
       id: cache-meteor
       uses: actions/cache@v2

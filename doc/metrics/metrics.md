@@ -7,7 +7,6 @@ The following metrics have been implemented:
 - [BERTScore](bertscore.md)
 - [BEwT-E](bewte.md)
 - [BLANC](blanc.md)
-- [Decomposed ROUGE](decomposed-rouge.md)
 - [METEOR](meteor.md)
 - [MoverScore](moverscore.md)
 - [Pyramid Score](pyramid-score.md)
