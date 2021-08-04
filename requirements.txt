@@ -1,12 +1,12 @@
 googledrivedownloader
 jsons
 lxml
+matplotlib
 nltk
 numpy
 overrides==3.1.0
 pytest
+repro==0.0.3
 requests
 scipy>=1.5.2
 sacrebleu==1.5.1
-matplotlib
-repro==0.0.2

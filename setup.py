@@ -8,6 +8,10 @@ with open('sacrerouge/version.py', 'r') as version_file:
     exec(version_file.read(), VERSION)
 
 
+# Load requirements so we can keep them in a single file
+requirements = open('requirements.txt', 'r').read().splitlines()
+
+
 setuptools.setup(
     name='sacrerouge',
     version=VERSION['VERSION'],
@@ -17,18 +21,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={'console_scripts': ['sacrerouge=sacrerouge.__main__:main']},
     python_requires='>=3.6',
-    install_requires=[
-        'googledrivedownloader',
-        'jsons',
-        'lxml',
-        'nltk',
-        'numpy',
-        'overrides==3.1.0',
-        'pytest',
-        'requests',
-        'scipy>=1.5.2',
-        'matplotlib',
-        'sacrebleu==1.5.1',
-        'repro==0.0.3',
-    ]
+    install_requires=requirements,
 )
