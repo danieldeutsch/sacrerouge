@@ -4,7 +4,7 @@
 **New (2021-08-04):**
 We now have Docker versions of several evaluation metrics included in the library, which makes it even easier to run them as long as you have Docker installed.
 Our implementations are wrappers around the metrics included in the [Repro library](https://github.com/danieldeutsch/repro).
-See [here](docs/docker/Readme.md) for more information about the Dockerized metrics.
+See [here](doc/docker/Readme.md) for more information about the Dockerized metrics.
 
 SacreROUGE is a library dedicated to the development and use of summarization evaluation metrics.
 It can be viewed as an [AllenNLP](https://github.com/allenai/allennlp) for evaluation metrics (with an emphasis on summarization).
