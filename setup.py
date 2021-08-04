@@ -29,5 +29,6 @@ setuptools.setup(
         'scipy>=1.5.2',
         'matplotlib',
         'sacrebleu==1.5.1',
+        'repro==0.0.3',
     ]
 )

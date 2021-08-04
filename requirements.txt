@@ -9,3 +9,4 @@ requests
 scipy>=1.5.2
 sacrebleu==1.5.1
 matplotlib
+repro==0.0.2
