@@ -27,8 +27,6 @@ setuptools.setup(
         'pytest',
         'requests',
         'scipy>=1.5.2',
-        'networkx',
-        'spacy==2.3.3',
         'matplotlib',
         'sacrebleu==1.5.1',
     ]
