@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added saving the Fabbri data with the original reference summaries and documents
 - Adding some annotations from MultiLing 2019
+- Added Dockerized versions of [ROUGE](doc/metrics/docker/rouge.md) and [QAEval](doc/metrics/docker/qaeval.md)
 
 ### Changed
 - Moved the actual QAEval metric implementation into the `qaeval` library.

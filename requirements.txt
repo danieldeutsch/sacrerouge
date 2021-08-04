@@ -11,3 +11,4 @@ networkx
 spacy==2.3.3
 sacrebleu==1.5.1
 matplotlib
+repro==0.0.2

@@ -31,5 +31,6 @@ setuptools.setup(
         'spacy==2.3.3',
         'matplotlib',
         'sacrebleu==1.5.1',
+        'repro==0.0.3',
     ]
 )

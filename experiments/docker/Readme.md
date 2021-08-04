@@ -1,0 +1,1 @@
+This directory contains experiments to compare the scores from a metric and its Docker version.
