@@ -10,3 +10,5 @@ To run this metric, you must have the `deutsch2021` Repro docker image built:
 repro setup deutsch2021
 ```
 Then, you can directly run the metric.
+
+We used [this experiment](../../../experiments/docker/qaeval/run.sh) to verify that the Dockerized and non-Dockerized versions of the metric are identical. 

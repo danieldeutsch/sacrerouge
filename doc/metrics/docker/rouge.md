@@ -10,3 +10,5 @@ To run this metric, you must have the `lin2004` Repro docker image built:
 repro setup lin2004
 ```
 Then, you can directly run the metric.
+
+We used [this experiment](../../../experiments/docker/rouge/run.sh) to verify that the Dockerized and non-Dockerized versions of the metric are identical.
