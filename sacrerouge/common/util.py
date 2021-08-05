@@ -83,6 +83,10 @@ def import_module_and_submodules(package_name: str) -> None:
     can specify their own custom packages and have their custom
     classes get loaded and registered.
     """
+    # We don't want to include anything in the test package
+    if package_name == 'sacrerouge.tests':
+        return
+
     importlib.invalidate_caches()
 
     # For some reason, python doesn't always add this by default to your path, but you pretty much
