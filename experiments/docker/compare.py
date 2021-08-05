@@ -1,11 +1,7 @@
 import argparse
+import json
 import pytest
-import sys
 from typing import Dict, List, Tuple, Union
-
-sys.path.append(".")
-
-from sacrerouge.io import JsonlReader
 
 NestedDict = Union[Dict[str, float], "NestedDict"]
 
@@ -36,8 +32,9 @@ def assert_dicts_approx_equal(
 
 def load_scores(input_file: str):
     scores_dict = {}
-    with JsonlReader(input_file) as f:
-        for instance in f:
+    with open(input_file, "r") as f:
+        for line in f:
+            instance = json.loads(line)
             scores_dict[(instance["instance_id"], instance["summarizer_id"])] = instance
     return scores_dict
 
