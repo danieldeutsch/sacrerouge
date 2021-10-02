@@ -1,4 +1,4 @@
-from repro.models.zhang2020 import BERTScore
+from repro.models.zhang2020 import BERTScore, DEFAULT_IMAGE
 
 from sacrerouge.metrics import Metric
 from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
@@ -8,7 +8,7 @@ from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
 class DockerBertScore(ReferenceBasedDockerMetric):
     def __init__(
         self,
-        image: str = "zhang2020",
+        image: str = DEFAULT_IMAGE,
         model: str = None,
         device: int = 0,
         batch_size: int = 64,

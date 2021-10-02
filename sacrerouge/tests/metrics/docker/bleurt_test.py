@@ -1,17 +1,17 @@
-import os
 import pytest
 from repro.common.docker import image_exists
+from repro.models.sellam2020 import DEFAULT_IMAGE
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
-from sacrerouge.common.testing.util import sacrerouge_command_exists
+from sacrerouge.common.testing.util import sacrerouge_command_exists, get_gpu_device
 from sacrerouge.metrics.docker import DockerBluert
 
 
-@pytest.mark.skipif(not image_exists("sellam2020"), reason="Docker image \"sellam2020\" does not exist")
+@pytest.mark.skipif(not image_exists(DEFAULT_IMAGE), reason=f"Docker image \"{DEFAULT_IMAGE}\" does not exist")
 class TestDockerBleurt(ReferenceBasedMetricTestCase):
     def test_docker_bleurt(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = DockerBluert()
+        metric = DockerBluert(device=get_gpu_device())
         expected_output = [
             {'bleurt': {'mean': -1.0048247178395588, 'max': -0.9933006763458252}},
             {'bleurt': {'mean': -1.0668554306030273, 'max': -1.0025169849395752}},
@@ -29,7 +29,7 @@ class TestDockerBleurt(ReferenceBasedMetricTestCase):
         super().assert_expected_output(metric, expected_output)
 
     def test_bleurt_order_invariant(self):
-        metric = DockerBluert()
+        metric = DockerBluert(device=get_gpu_device())
         self.assert_order_invariant(metric)
 
     def test_command_exists(self):

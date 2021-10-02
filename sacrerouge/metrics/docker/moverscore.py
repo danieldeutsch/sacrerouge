@@ -1,4 +1,4 @@
-from repro.models.zhao2019 import MoverScoreForSummarization
+from repro.models.zhao2019 import DEFAULT_IMAGE, MoverScoreForSummarization
 
 from sacrerouge.metrics import Metric
 from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
@@ -8,7 +8,7 @@ from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
 class DockerMoverScore(ReferenceBasedDockerMetric):
     def __init__(
         self,
-        image: str = "zhao2019",
+        image: str = DEFAULT_IMAGE,
         device: int = 0,
     ):
         metric = MoverScoreForSummarization(

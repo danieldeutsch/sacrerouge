@@ -1,16 +1,17 @@
 import pytest
 from repro.common.docker import image_exists
+from repro.models.zhang2020 import DEFAULT_IMAGE
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
-from sacrerouge.common.testing.util import sacrerouge_command_exists
+from sacrerouge.common.testing.util import sacrerouge_command_exists, get_gpu_device
 from sacrerouge.metrics.docker import DockerBertScore
 
 
-@pytest.mark.skipif(not image_exists("zhang2020"), reason="Docker image \"zhang2020\" does not exist")
+@pytest.mark.skipif(not image_exists(DEFAULT_IMAGE), reason=f"Docker image \"{DEFAULT_IMAGE}\" does not exist")
 class TestDockerBertScore(ReferenceBasedMetricTestCase):
     def test_docker_bertscore(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = DockerBertScore()
+        metric = DockerBertScore(device=get_gpu_device())
         expected_output = [
             {'bertscore': {'precision': 0.8534530401229858, 'recall': 0.8503388166427612, 'f1': 0.8518930673599243}},
             {'bertscore': {'precision': 0.8642909526824951, 'recall': 0.8720692992210388, 'f1': 0.8681626319885254}},
@@ -28,7 +29,7 @@ class TestDockerBertScore(ReferenceBasedMetricTestCase):
         super().assert_expected_output(metric, expected_output)
 
     def test_docker_bertscore_order_invariant(self):
-        metric = DockerBertScore()
+        metric = DockerBertScore(device=get_gpu_device())
         self.assert_order_invariant(metric)
 
     def test_command_exists(self):

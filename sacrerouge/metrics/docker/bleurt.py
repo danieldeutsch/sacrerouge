@@ -1,4 +1,4 @@
-from repro.models.sellam2020 import BLEURT
+from repro.models.sellam2020 import BLEURT, DEFAULT_IMAGE
 
 from sacrerouge.metrics import Metric
 from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
@@ -8,7 +8,7 @@ from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
 class DockerBluert(ReferenceBasedDockerMetric):
     def __init__(
         self,
-        image: str = "sellam2020",
+        image: str = DEFAULT_IMAGE,
         model: str = "bleurt-base-128",
         device: int = 0,
         batch_size: int = 16,

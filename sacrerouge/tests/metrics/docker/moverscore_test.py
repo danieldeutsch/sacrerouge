@@ -1,16 +1,17 @@
 import pytest
 from repro.common.docker import image_exists
+from repro.models.zhao2019 import DEFAULT_IMAGE
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
-from sacrerouge.common.testing.util import sacrerouge_command_exists
+from sacrerouge.common.testing.util import sacrerouge_command_exists, get_gpu_device
 from sacrerouge.metrics.docker import DockerMoverScore
 
 
-@pytest.mark.skipif(not image_exists("zhao2019"), reason="Docker image \"zhao2019\" does not exist")
+@pytest.mark.skipif(not image_exists(DEFAULT_IMAGE), reason=f"Docker image \"{DEFAULT_IMAGE}\" does not exist")
 class TestDockerMoverScore(ReferenceBasedMetricTestCase):
     def test_docker_moverscore(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = DockerMoverScore()
+        metric = DockerMoverScore(device=get_gpu_device())
         expected_output = [
             {"moverscore": 0.5363679808125064},
             {"moverscore": 0.553204695560149},
@@ -28,7 +29,7 @@ class TestDockerMoverScore(ReferenceBasedMetricTestCase):
         super().assert_expected_output(metric, expected_output)
 
     def test_docker_moverscore_order_invariant(self):
-        metric = DockerMoverScore()
+        metric = DockerMoverScore(device=get_gpu_device())
         self.assert_order_invariant(metric)
 
     def test_command_exists(self):
