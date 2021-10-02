@@ -1,4 +1,4 @@
-from repro.models.lin2004 import ROUGE
+from repro.models.lin2004 import DEFAULT_IMAGE, ROUGE
 
 from sacrerouge.metrics import Metric
 from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
@@ -8,7 +8,7 @@ from sacrerouge.metrics.docker import ReferenceBasedDockerMetric
 class DockerRouge(ReferenceBasedDockerMetric):
     def __init__(
         self,
-        image: str = "lin2004",
+        image: str = DEFAULT_IMAGE,
         ngram_order: int = 4,
         porter_stemmer: bool = True,
         remove_stopwords: bool = False,

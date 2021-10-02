@@ -1,12 +1,13 @@
 import pytest
 from repro.common.docker import image_exists
+from repro.models.lin2004 import DEFAULT_IMAGE
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
 from sacrerouge.common.testing.util import sacrerouge_command_exists
 from sacrerouge.metrics.docker import DockerRouge
 
 
-@pytest.mark.skipif(not image_exists("lin2004"), reason="Docker image \"lin2004\" does not exist")
+@pytest.mark.skipif(not image_exists(DEFAULT_IMAGE), reason=f"Docker image \"{DEFAULT_IMAGE}\" does not exist")
 class TestROUGE(ReferenceBasedMetricTestCase):
     def test_rouge(self):
         # This is a regression test, not necessarily a test for correctness

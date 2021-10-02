@@ -1,4 +1,5 @@
 import argparse
+import os
 from collections import defaultdict
 from typing import Dict, List
 
@@ -65,3 +66,11 @@ def sacrerouge_command_exists(command: List[str]) -> bool:
     """Verifies if the command exists for the 'sacrerouge' command."""
     parser = build_argument_parser()
     return command_exists(parser, command)
+
+
+def get_gpu_device() -> int:
+    """Gets the device based on environment variable CUDA_VISIBLE_DEVICES. -1 if not defined"""
+    var = "CUDA_VISIBLE_DEVICES"
+    if var in os.environ:
+        return int(os.environ[var])
+    return -1

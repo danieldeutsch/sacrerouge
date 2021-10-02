@@ -1,4 +1,4 @@
-from repro.models.deutsch2021 import QAEval
+from repro.models.deutsch2021 import DEFAULT_IMAGE, QAEval
 from typing import List, T
 
 from sacrerouge.data import MetricsDict
@@ -10,7 +10,7 @@ from sacrerouge.metrics import Metric, ReferenceBasedMetric
 @Metric.register('docker-qa-eval')
 class DockerQAEval(ReferenceBasedMetric):
     def __init__(self,
-                 image: str = "deutsch2021",
+                 image: str = DEFAULT_IMAGE,
                  device: int = 0,
                  generation_batch_size: int = 8,
                  answering_batch_size: int = 8,

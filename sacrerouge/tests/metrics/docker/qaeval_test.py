@@ -1,16 +1,17 @@
 import pytest
 from repro.common.docker import image_exists
+from repro.models.deutsch2021 import DEFAULT_IMAGE
 
 from sacrerouge.common.testing.metric_test_cases import ReferenceBasedMetricTestCase
-from sacrerouge.common.testing.util import sacrerouge_command_exists
+from sacrerouge.common.testing.util import sacrerouge_command_exists, get_gpu_device
 from sacrerouge.metrics.docker import DockerQAEval
 
 
-@pytest.mark.skipif(not image_exists("deutsch2021"), reason="Docker image \"deutsch2021\" does not exist")
+@pytest.mark.skipif(not image_exists(DEFAULT_IMAGE), reason=f"Docker image \"{DEFAULT_IMAGE}\" does not exist")
 class TestDockerQAEval(ReferenceBasedMetricTestCase):
     def test_qaeval_with_lerc(self):
         # This is a regression test, not necessarily a test for correctness
-        metric = DockerQAEval()
+        metric = DockerQAEval(device=get_gpu_device())
         expected_output = [
             {'qa-eval': {'is_answered': 0.2171952736318408, 'em': 0.03078358208955224, 'f1': 0.05688114487088367, 'lerc': 0.5280342313984585}},
             {'qa-eval': {'is_answered': 0.2706778606965174, 'em': 0.08286691542288557, 'f1': 0.11367400349443259, 'lerc': 0.8588525844061404}},
@@ -28,11 +29,11 @@ class TestDockerQAEval(ReferenceBasedMetricTestCase):
         super().assert_expected_output(metric, expected_output)
 
     def test_qaeval_order_invariant(self):
-        metric = DockerQAEval()
+        metric = DockerQAEval(device=get_gpu_device())
         self.assert_order_invariant(metric)
 
     def test_return_qa_pairs(self):
-        metric = DockerQAEval()
+        metric = DockerQAEval(device=get_gpu_device())
 
         summaries = [
             'Dan walked to the bakery this morning.',
