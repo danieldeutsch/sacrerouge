@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a Dockerized version of [BERTScore](doc/metrics/docker/bertscore.md)
 - Added a Dockerized version of [BLEURT](doc/metrics/docker/bleurt.md)
 - Added a Dockerized version of [MoverScore](doc/metrics/docker/moverscore.md)
+- Added a Dockerized version of [BARTScore](doc/metrics/docker/bartscore.md)
+- Added a Dockerized version of [Lite3Pyramid](doc/metrics/docker/lite3pyramid.md)
 
 ### Changed
 - Moved the actual QAEval metric implementation into the `qaeval` library.
