@@ -62,7 +62,7 @@ If you have any questions or suggestions, please open an issue or contact me (Da
 If you use SacreROUGE for your paper, please cite the following paper:
 ```
 @inproceedings{deutsch-roth-2020-sacrerouge,
-    title = {{SacreROUGE: An Open-Source Library for Using and Developing Summarization Evaluation Metrics},
+    title = {{SacreROUGE: An Open-Source Library for Using and Developing Summarization Evaluation Metrics}},
     author = "Deutsch, Daniel  and
       Roth, Dan",
     booktitle = "Proceedings of Second Workshop for NLP Open Source Software (NLP-OSS)",
