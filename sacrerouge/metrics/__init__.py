@@ -6,6 +6,7 @@ from sacrerouge.metrics.bewte import BEwTE
 from sacrerouge.metrics.blanc import Blanc
 from sacrerouge.metrics.bleu import SentBleu
 from sacrerouge.metrics.bleurt import Bleurt
+from sacrerouge.metrics.chrf import ChrF
 from sacrerouge.metrics.meteor import Meteor
 from sacrerouge.metrics.moverscore import MoverScore
 from sacrerouge.metrics.pyramid_score import PyramidScore
