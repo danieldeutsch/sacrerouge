@@ -1,7 +1,7 @@
 # BLEU
 Our BLEU implementation is a wrapper around [SacreBLEU](https://github.com/mjpost/sacrebleu).
 Although BLEU was intended to be a corpus-level metric, we have only implemented the sentence-level version.
-See `sacrebleu.sentence_bleu` for details.
+See `sacrebleu.BLEU` for details.
 The metric is registered under the name `sent-bleu`.
 
 ## Setting Up

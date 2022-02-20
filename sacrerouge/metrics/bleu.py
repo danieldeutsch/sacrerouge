@@ -1,5 +1,5 @@
 import logging
-from sacrebleu import sentence_bleu
+from sacrebleu import BLEU
 from typing import List
 
 from sacrerouge.common.util import flatten
@@ -16,11 +16,13 @@ class SentBleu(ReferenceBasedMetric):
     def __init__(self, **kwargs) -> None:
         """
         Args:
-            **kwargs: The kwargs that will be passed to `sacrebleu.sentence_bleu`. See
+            **kwargs: The kwargs that will be passed to `sacrebleu.BLEU`. See
                 the `sacrebleu` documentation for details.
         """
         super().__init__()
-        self.kwargs = kwargs
+        if "effective_order" not in kwargs:
+            kwargs["effective_order"] = True
+        self.bleu = BLEU(**kwargs)
 
     def score_multi_all(
         self,
@@ -34,6 +36,6 @@ class SentBleu(ReferenceBasedMetric):
             scores_list.append([])
             for summary in summaries:
                 summary = flatten(summary)
-                score = sentence_bleu(summary, references, **self.kwargs)
+                score = self.bleu.sentence_score(summary, references)
                 scores_list[-1].append(MetricsDict({'sent-bleu': score.score}))
         return scores_list
