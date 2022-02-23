@@ -1,6 +1,7 @@
 import logging
-from sacrebleu import BLEU
 from typing import List
+
+import sacrebleu
 
 from sacrerouge.common.util import flatten
 from sacrerouge.data import MetricsDict
@@ -11,18 +12,16 @@ from sacrerouge.metrics import Metric, ReferenceBasedMetric
 logger = logging.getLogger(__name__)
 
 
-@Metric.register('sent-bleu')
-class SentBleu(ReferenceBasedMetric):
+@Metric.register('chrf')
+class ChrF(ReferenceBasedMetric):
     def __init__(self, **kwargs) -> None:
         """
         Args:
-            **kwargs: The kwargs that will be passed to `sacrebleu.BLEU`. See
+            **kwargs: The kwargs that will be passed to `sacrebleu.CHRF`. See
                 the `sacrebleu` documentation for details.
         """
         super().__init__()
-        if "effective_order" not in kwargs:
-            kwargs["effective_order"] = True
-        self.bleu = BLEU(**kwargs)
+        self.chrf = sacrebleu.CHRF(**kwargs)
 
     def score_multi_all(
         self,
@@ -36,6 +35,6 @@ class SentBleu(ReferenceBasedMetric):
             scores_list.append([])
             for summary in summaries:
                 summary = flatten(summary)
-                score = self.bleu.sentence_score(summary, references)
-                scores_list[-1].append(MetricsDict({'sent-bleu': score.score}))
+                score = self.chrf.sentence_score(summary, references)
+                scores_list[-1].append(MetricsDict({'chrf': score.score}))
         return scores_list

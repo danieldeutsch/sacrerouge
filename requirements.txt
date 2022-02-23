@@ -9,4 +9,4 @@ pytest
 repro==0.1.1
 requests
 scipy>=1.5.2
-sacrebleu==1.5.1
+sacrebleu==2.0.0
