@@ -17,7 +17,7 @@ The development of SacreROUGE was motivated by three problems:
 SacreROUGE wraps many popular evaluation metrics in a common interface so it is straightforward and fast to setup and run a new metric.
 
 - Evaluating metrics can be tricky.
-There are there are several different correlation coefficients commonly used, there are different levels at which the correlation can be calculated, and comparing system summaries to human summaries requires implementing jackknifing.
+There are several different correlation coefficients commonly used, there are different levels at which the correlation can be calculated, and comparing system summaries to human summaries requires implementing jackknifing.
 The evaluation code in SacreROUGE is shared among all of the metrics, so once a new metric implements the common interface, all of the details of the evaluation are taken care of for free.
 
 - Datasets for evaluating summarization metrics formatted differently and can be hard to parse (e.g., DUC and TAC).
