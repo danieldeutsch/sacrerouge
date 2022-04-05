@@ -9,7 +9,7 @@ from typing import List
 
 from sacrerouge.commands import MetricSetupSubcommand
 from sacrerouge.common import DATA_ROOT
-from sacrerouge.common.util import download_file_from_google_drive
+from sacrerouge.common.util import download_url_to_file
 from sacrerouge.data import MetricsDict
 from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
@@ -117,17 +117,17 @@ class QAEvalSetupSubcommand(MetricSetupSubcommand):
     def run(self, args):
         print('This setup command will download the necessary model files. It will not install "qaeval". You must "pip install qaeval" on your own.')
 
-        generation_model_id = '1vVhRgLtsQDAOmxYhY5PMPnxxHUyCOdQU'
+        generation_model_url = "https://cogcomp.seas.upenn.edu/models/qaeval-experiments/model.tar.gz"
         generation_model_path = f'{DATA_ROOT}/metrics/qaeval/models/generation/model.tar.gz'
         if args.force and os.path.exists(generation_model_path):
             os.remove(generation_model_path)
         if not os.path.exists(generation_model_path):
-            download_file_from_google_drive(generation_model_id, generation_model_path)
+            download_url_to_file(generation_model_url, generation_model_path)
         else:
             print('Skipping downloading generation model')
 
-        answering_model_id = '1q2Z3FPP9AYNz0RJKHMlaweNhmLQoyPA8'
-        answering_model_zip_path = f'{DATA_ROOT}/metrics/qaeval/models/answering/model.zip'
+        answering_model_url = "https://cogcomp.seas.upenn.edu/models/qaeval-experiments/qa-model.zip"
+        answering_model_zip_path = f'{DATA_ROOT}/metrics/qaeval/models/answering/qa-model.zip'
         answering_model_path = f'{DATA_ROOT}/metrics/qaeval/models/answering/model'
         if args.force:
             if os.path.exists(answering_model_zip_path):
@@ -136,7 +136,7 @@ class QAEvalSetupSubcommand(MetricSetupSubcommand):
                 shutil.rmtree(answering_model_path)
 
         if not os.path.exists(answering_model_zip_path):
-            download_file_from_google_drive(answering_model_id, answering_model_zip_path)
+            download_url_to_file(answering_model_url, answering_model_zip_path)
         else:
             print('Skipping downloading answering model')
         if not os.path.exists(answering_model_path):
@@ -146,21 +146,21 @@ class QAEvalSetupSubcommand(MetricSetupSubcommand):
         if os.path.exists(answering_model_zip_path):
             os.remove(answering_model_zip_path)
 
-        lerc_model_id = '193K7v6pjOtuXdlMenQW-RzF6ft-xY2qd'
+        lerc_model_url = 'https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/qaeval/lerc/model.tar.gz'
         lerc_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/model.tar.gz'
         if args.force and os.path.exists(lerc_model_path):
             os.remove(lerc_model_path)
         if not os.path.exists(lerc_model_path):
-            download_file_from_google_drive(lerc_model_id, lerc_model_path)
+            download_url_to_file(lerc_model_url, lerc_model_path)
         else:
             print('Skipping downloading LERC model')
 
-        lerc_pretrained_model_id = '1fWBahDT-O1mpsbND300cuZuF73mfObzH'
+        lerc_pretrained_model_url = 'https://danieldeutsch.s3.amazonaws.com/sacrerouge/metrics/qaeval/lerc/pretraining.tar.gz'
         lerc_pretrained_model_path = f'{DATA_ROOT}/metrics/qaeval/models/lerc/pretrained.tar.gz'
         if args.force and os.path.exists(lerc_pretrained_model_path):
             os.remove(lerc_pretrained_model_path)
         if not os.path.exists(lerc_pretrained_model_path):
-            download_file_from_google_drive(lerc_pretrained_model_id, lerc_pretrained_model_path)
+            download_url_to_file(lerc_pretrained_model_url, lerc_pretrained_model_path)
         else:
             print('Skipping downloading LERC pretrained model')
 
