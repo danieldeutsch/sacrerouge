@@ -9,7 +9,7 @@ from sacrerouge.data.types import ReferenceType, SummaryType
 from sacrerouge.metrics import Metric, ReferenceBasedMetric
 
 try:
-    import bert_score
+    from bert_score import BERTScorer
 except ImportError:
     BERTSCORE_INSTALLED = False
 
@@ -31,13 +31,18 @@ else:
                      nthreads: int = 4,
                      batch_size: int = 64,
                      lang: str = 'en',
-                     verbose: bool = False) -> None:
+                     verbose: bool = False,
+                     **kwargs,
+                     ) -> None:
             super().__init__()
-            self.model_type = model_type
-            self.num_layers = num_layers
-            self.nthreads = nthreads
+            self.scorer = BERTScorer(
+                model_type=model_type,
+                num_layers=num_layers,
+                nthreads=nthreads,
+                lang=lang,
+                **kwargs,
+            )
             self.batch_size = batch_size
-            self.lang = lang
             self.verbose = verbose
 
         def _get_unique_references(self, references_list: List[List[str]]) -> List[str]:
@@ -66,16 +71,11 @@ else:
                         input_references.append(references)
 
             # Score the summaries
-            precisions, recalls, f1s = bert_score.score(
+            precisions, recalls, f1s = self.scorer.score(
                 input_candidates,
                 input_references,
-                model_type=self.model_type,
-                num_layers=self.num_layers,
-                idf=False,
-                nthreads=self.nthreads,
                 batch_size=self.batch_size,
-                lang=self.lang,
-                verbose=self.verbose
+                verbose=self.verbose,
             )
 
             # Remap the scores to the summaries
