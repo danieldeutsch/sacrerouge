@@ -1,6 +1,9 @@
 # SacreROUGE
 ![Master](https://github.com/danieldeutsch/sacrerouge/workflows/Master/badge.svg?branch=master&event=push)
 
+**New (2022-04-22):**
+The metric correlation confidence intervals/hypothesis tests from [A Statistical Analysis of Summarization Evaluation Metrics Using Resampling Methods](https://arxiv.org/abs/2104.00054) and the modified system-level correlation calculations from [Re-Examining System-Level Correlations of Automatic Summarization Evaluation Metrics](https://arxiv.org/abs/2204.10216) can more easily be used with the [`nlpstats`](https://nlpstats.readthedocs.io/en/latest/index.html) library. 
+
 **New (2021-08-04):**
 We now have Docker versions of several evaluation metrics included in the library, which makes it even easier to run them as long as you have Docker installed.
 Our implementations are wrappers around the metrics included in the [Repro library](https://github.com/danieldeutsch/repro).
